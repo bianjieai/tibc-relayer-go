@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/irisnet/core-sdk-go"
 	"github.com/irisnet/core-sdk-go/types"
-	"github.com/irisnet/core-sdk-go/types/store"
 )
 
 type TendermintClient struct {
@@ -23,22 +22,19 @@ type Config struct {
 	NodeURI  string
 	GrpcAddr string
 	ChainID  string
+	Options  []types.Option
+	Delay    uint64
 }
 
 func NewTendermintClient(chaiName string, config Config) (*TendermintClient, error) {
-	options := []types.Option{
-		types.KeyDAOOption(store.NewMemory(nil)),
-		types.TimeoutOption(10),
-	}
-	cfg, err := types.NewClientConfig(config.NodeURI, config.GrpcAddr, config.ChainID, options...)
+	cfg, err := types.NewClientConfig(config.NodeURI, config.GrpcAddr, config.ChainID, config.Options...)
 	if err != nil {
 		return nil, err
 	}
-	client := sdk.NewClient(cfg)
 	return &TendermintClient{
-		delay:     0,
+		delay:     config.Delay,
 		chainName: chaiName,
-		Client:    client,
+		Client:    sdk.NewClient(cfg),
 	}, err
 }
 
@@ -47,10 +43,10 @@ func (c *TendermintClient) GetBlockAndPackets(height uint64) (interface{}, error
 	return c.Client.Block(context.Background(), &a)
 }
 
-func (c *TendermintClient) GetBlockHeader(height uint64) (header interface{}, errMsg error) {
+func (c *TendermintClient) GetBlockHeader(height uint64) (interface{}, error) {
 	tmp := int64(height)
 	block, err := c.Client.Block(context.Background(), &tmp)
-	header = block.Block.Header
+	header := block.Block.Header
 	return header, err
 }
 func (c *TendermintClient) GetLightClientState(chainName string) (interface{}, error) {
