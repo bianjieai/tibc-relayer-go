@@ -11,8 +11,6 @@ type TendermintClient struct {
 	delay     uint64
 	chainName string
 	sdk.Client
-	rootAccount  Account
-	randAccounts []Account
 }
 type Account struct {
 	Name, Password string
