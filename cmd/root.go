@@ -12,8 +12,8 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "UCI-Server",
-	Short: "UCI-Server for OTCIBR",
+	Use:   "relayer",
+	Short: "relayer for tibc",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
