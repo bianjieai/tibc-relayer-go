@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/go-kit/kit v0.11.0
 	github.com/irisnet/core-sdk-go v0.0.0-20210729072452-06544f6270f3
-	github.com/jasonlvhit/gocron v0.0.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
