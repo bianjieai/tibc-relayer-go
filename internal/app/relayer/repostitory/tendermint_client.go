@@ -7,6 +7,8 @@ import (
 	"github.com/irisnet/core-sdk-go/types"
 )
 
+var _ IChain = new(TendermintClient)
+
 type TendermintClient struct {
 	sdk.Client
 
@@ -67,7 +69,12 @@ func (c *TendermintClient) GetLatestHeight() (uint64, error) {
 	return uint64(height), err
 }
 
-func (c *TendermintClient) GetDelay() uint64 {
+func (c *TendermintClient) Delay() uint64 {
 	//c.Client.Block()
 	return c.delay
+}
+
+func (c *TendermintClient) ChainName() string {
+	//c.Client.Block()
+	return c.chainName
 }
