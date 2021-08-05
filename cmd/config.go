@@ -2,12 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/bianjieai/tibc-relayer-go/cmd/handlers"
 	"github.com/spf13/cobra"
 )
 
-const defaultConfigDir = ".relayer"
+var (
+	userDir, _       = os.UserHomeDir()
+	defaultConfigDir = filepath.Join(userDir, ".tibc-relayer")
+)
 
 var (
 	home string

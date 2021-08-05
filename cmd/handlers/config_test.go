@@ -1,9 +1,11 @@
 package handlers
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestConfigInit(t *testing.T) {
-	home := ".relayer"
+	home := ".tibc-relayer"
 	err := ConfigInit(home)
 	if err != nil {
 

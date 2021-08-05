@@ -12,13 +12,11 @@ var _ IChain = new(TendermintClient)
 type TendermintClient struct {
 	sdk.Client
 
-	delay     uint64
 	chainName string
 }
 type Config struct {
 	Options []types.Option
 
-	Delay    uint64
 	NodeURI  string
 	GrpcAddr string
 	ChainID  string
@@ -30,7 +28,6 @@ func NewTendermintClient(chaiName string, config Config) (*TendermintClient, err
 		return nil, err
 	}
 	return &TendermintClient{
-		delay:     config.Delay,
 		chainName: chaiName,
 		Client:    sdk.NewClient(cfg),
 	}, err
@@ -49,12 +46,12 @@ func (c *TendermintClient) GetBlockHeader(height uint64) (interface{}, error) {
 }
 
 func (c *TendermintClient) GetLightClientState(chainName string) (interface{}, error) {
-	//status(context.Background(),chainName)
+
 	return c.Client.Status(context.Background())
 }
 
 func (c *TendermintClient) GetLightClientConsensusState(chainName string, height uint64) (interface{}, error) {
-	//status(context.Background(),chainName)
+
 	var tmp = int64(height)
 	return c.Client.ConsensusParams(context.Background(), &tmp)
 }
@@ -69,12 +66,13 @@ func (c *TendermintClient) GetLatestHeight() (uint64, error) {
 	return uint64(height), err
 }
 
-func (c *TendermintClient) Delay() uint64 {
-	//c.Client.Block()
-	return c.delay
+func (c *TendermintClient) GetLightClientDelay() uint64 {
+
+	// todo
+	return 0
 }
 
 func (c *TendermintClient) ChainName() string {
-	//c.Client.Block()
+
 	return c.chainName
 }
