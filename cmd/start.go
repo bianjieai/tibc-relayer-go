@@ -15,7 +15,7 @@ var (
 
 	startCmd = &cobra.Command{
 		Use:   "start",
-		Short: "Start UCI Server.",
+		Short: "Start TIBC relayer.",
 		Run: func(cmd *cobra.Command, args []string) {
 			online()
 		},
