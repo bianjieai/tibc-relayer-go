@@ -21,6 +21,7 @@ format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" | xargs misspell -w
 
+
 setup: build-linux
 	@docker build -t relayer .
 	@rm -rf ./build
