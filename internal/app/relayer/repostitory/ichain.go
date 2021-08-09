@@ -7,6 +7,7 @@ type IChain interface {
 	GetLightClientConsensusState(chainName string, height uint64) (interface{}, error)
 	GetStatus() (interface{}, error)
 	GetLatestHeight() (uint64, error)
-	GetLightClientDelay() uint64
+	GetLightClientDelayHeight() uint64
+	GetLightClientDelayTime() uint64
 	ChainName() string
 }

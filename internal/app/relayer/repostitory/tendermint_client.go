@@ -66,7 +66,13 @@ func (c *TendermintClient) GetLatestHeight() (uint64, error) {
 	return uint64(height), err
 }
 
-func (c *TendermintClient) GetLightClientDelay() uint64 {
+func (c *TendermintClient) GetLightClientDelayHeight() uint64 {
+
+	// todo
+	return 0
+}
+
+func (c *TendermintClient) GetLightClientDelayTime() uint64 {
 
 	// todo
 	return 0
