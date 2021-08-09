@@ -17,13 +17,13 @@ func NewMetric(chaiName string) *Model {
 		Subsystem: "relayer",
 		Name:      "system",
 		Help:      "system status",
-	}, []string{"locality"})
+	}, []string{"chain_name"})
 
 	chainMetric := metricsprometheus.NewGaugeFrom(prometheus.GaugeOpts{
 		Subsystem: "relayer",
 		Name:      "oss",
 		Help:      "oss service status",
-	}, []string{"locality"})
+	}, []string{"chain_name"})
 
 	model := &Model{
 		Sys:      sysMetric,
@@ -36,7 +36,7 @@ func NewMetric(chaiName string) *Model {
 }
 
 func (m *Model) initMetric() {
-	labels := []string{"locality", m.chaiName}
+	labels := []string{"chain_name", m.chaiName}
 	m.Sys.With(labels...).Set(1)
 	m.Chain.With(labels...).Set(1)
 }

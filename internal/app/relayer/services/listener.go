@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
 	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
@@ -14,14 +15,14 @@ type IListener interface {
 }
 
 type Listener struct {
-	relayerMap map[string]IRelayer
+	relayerMap map[string]relayer.IRelayer
 
 	ctxMap sync.Map
 	logger *log.Logger
 }
 
 func NewScanner(
-	relayerMap map[string]IRelayer,
+	relayerMap map[string]relayer.IRelayer,
 	logger *log.Logger) IListener {
 	listener := &Listener{
 		relayerMap: relayerMap,
