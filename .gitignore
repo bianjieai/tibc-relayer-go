@@ -3,4 +3,4 @@
 .DS_Store
 *.log
 build/
-.relayer/
+.tibc-relayer/
