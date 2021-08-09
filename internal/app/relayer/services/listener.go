@@ -34,7 +34,7 @@ func NewScanner(
 func (listener *Listener) Listen() error {
 
 	// 启动N个goroutine去处理
-	for chainName, _ := range listener.relayerMap {
+	for chainName := range listener.relayerMap {
 		ctx, cancel := context.WithCancel(context.Background())
 		listener.ctxMap.Store(chainName, cancel)
 		go listener.start(ctx, chainName)
