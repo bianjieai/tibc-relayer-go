@@ -35,10 +35,6 @@ func (w *Writer) UpdateClient() error {
 	return w.next.UpdateClient()
 }
 
-type cacheData struct {
-	LatestHeight uint64 `json:"latest_height"`
-}
-
 func (w *Writer) PendingDatagrams() error {
 	err := w.next.PendingDatagrams()
 	if err == nil {
