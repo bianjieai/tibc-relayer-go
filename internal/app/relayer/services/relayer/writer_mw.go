@@ -17,12 +17,12 @@ type Writer struct {
 	cacheWriter *domain.CacheFileWriter
 }
 
-func NewWriterMW(svc IRelayer, chainName string, logger *log.Logger, dir, filename string) IRelayer {
+func NewWriterMW(svc IRelayer, chainName string, logger *log.Logger, homeDir, dir, filename string) IRelayer {
 
 	entry := logger.WithFields(log.Fields{
 		"chain_name": chainName,
 	})
-	cacheWriter := domain.NewCacheFileWriter(dir, filename)
+	cacheWriter := domain.NewCacheFileWriter(homeDir, dir, filename)
 	return &Writer{
 		next:        svc,
 		chainName:   chainName,

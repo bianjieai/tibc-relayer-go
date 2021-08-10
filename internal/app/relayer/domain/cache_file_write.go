@@ -4,21 +4,16 @@ import (
 	"encoding/json"
 	"os"
 	"path"
-	"path/filepath"
-)
-
-var (
-	userDir, _ = os.UserHomeDir()
-	homeDir    = filepath.Join(userDir, ".tibc-relayer")
 )
 
 type CacheFileWriter struct {
+	homeDir       string
 	cacheDir      string
 	cacheFilename string
 }
 
-func NewCacheFileWriter(cacheDir string, cacheFilename string) *CacheFileWriter {
-	return &CacheFileWriter{cacheDir: cacheDir, cacheFilename: cacheFilename}
+func NewCacheFileWriter(homeDir, cacheDir, cacheFilename string) *CacheFileWriter {
+	return &CacheFileWriter{homeDir: homeDir, cacheDir: cacheDir, cacheFilename: cacheFilename}
 }
 
 type cacheData struct {
@@ -35,13 +30,13 @@ func (w *CacheFileWriter) Write(height uint64) error {
 		return err
 	}
 
-	cacheDir := path.Join(homeDir, w.cacheDir)
+	cacheDir := path.Join(w.homeDir, w.cacheDir)
 	filename := path.Join(cacheDir, w.cacheFilename)
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// And the home folder doesn't exist
-		if _, err := os.Stat(homeDir); os.IsNotExist(err) {
+		if _, err := os.Stat(w.homeDir); os.IsNotExist(err) {
 			// Create the home folder
-			if err = os.Mkdir(homeDir, os.ModePerm); err != nil {
+			if err = os.Mkdir(w.homeDir, os.ModePerm); err != nil {
 				return err
 			}
 		}

@@ -1,12 +1,19 @@
 package domain
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
 
 func TestCacheFileWriter_Write(t *testing.T) {
+	cfgDirName := ".tibc-relayer"
+	userDir, _ := os.UserHomeDir()
+	homeDir := filepath.Join(userDir, cfgDirName)
 	dir := "cache"
 	filename := "iris.json"
-	writer := NewCacheFileWriter(dir, filename)
-	err := writer.Write(2)
+	writer := NewCacheFileWriter(homeDir, dir, filename)
+	err := writer.Write(1)
 	if err != nil {
 		t.Fatal(err)
 	}

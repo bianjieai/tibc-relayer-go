@@ -30,6 +30,7 @@ func NewRelayer(source repostitory.IChain, dest repostitory.IChain, height uint6
 		dest:      dest,
 		chainName: chainName,
 		height:    height,
+		context:   domain.NewContext(height, chainName),
 	}
 }
 
@@ -49,8 +50,17 @@ func (rly *Relayer) PendingDatagrams() error {
 }
 
 func (rly *Relayer) IsNotRelay() bool {
-	// todo
-	return true
+	curHeight := rly.context.Height()
+	latestHeight, err := rly.source.GetLatestHeight()
+	if err != nil {
+		return false
+	}
+
+	if curHeight < latestHeight {
+		return true
+	}
+
+	return false
 }
 
 func (rly *Relayer) Context() *domain.Context {
