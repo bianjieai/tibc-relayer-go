@@ -2,16 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/bianjieai/tibc-relayer-go/cmd/handlers"
+	"github.com/bianjieai/tibc-relayer-go/tools"
 	"github.com/spf13/cobra"
-)
-
-var (
-	userDir, _       = os.UserHomeDir()
-	defaultConfigDir = filepath.Join(userDir, ".tibc-relayer")
 )
 
 var (
@@ -49,5 +43,5 @@ func createConfig() {
 }
 
 func initConfig() {
-	handlers.ConfigInit(defaultConfigDir)
+	handlers.ConfigInit(tools.DefaultHomePath)
 }

@@ -18,12 +18,18 @@ type (
 		ClientID   string `mapstructure:"client_id"`
 		Timeout    uint   `mapstructure:"timeout"`
 		Signer     string `mapstructure:"signer"`
+		Cache      Cache  `mapstructure:"cache"`
 	}
 
 	App struct {
 		MetricAddr string `mapstructure:"metric_addr"`
 		Env        string `mapstructure:"env"`
 		LogLevel   string `mapstructure:"log_level"`
+	}
+
+	Cache struct {
+		Filename    string `mapstructure:"filename"`
+		StartHeight uint64 `mapstructure:"start_height"`
 	}
 )
 

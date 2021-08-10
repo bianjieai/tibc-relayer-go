@@ -5,12 +5,13 @@ import (
 	"path"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
+	"github.com/bianjieai/tibc-relayer-go/tools"
 	"github.com/pelletier/go-toml"
 )
 
 func ConfigInit(home string) error {
-	cfgDir := path.Join(home, "configs")
-	cfgPath := path.Join(cfgDir, "config.toml")
+	cfgDir := path.Join(home, tools.DefaultConfigDirName)
+	cfgPath := path.Join(cfgDir, tools.DefaultConfigName)
 	if _, err := os.Stat(cfgPath); os.IsNotExist(err) {
 		// And the home folder doesn't exist
 		if _, err := os.Stat(home); os.IsNotExist(err) {
