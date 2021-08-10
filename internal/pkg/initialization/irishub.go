@@ -10,8 +10,7 @@ import (
 )
 
 func IrisHubRelayer(cfg *configs.Config) relayer.IRelayer {
-	cacheDir := path.Join(tools.DefaultConfigDir, cfg.Chain.IrisHub.Cache.Dir)
-	filename := path.Join(cacheDir, cfg.Chain.IrisHub.Cache.Filename)
+	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.IrisHub.Cache.Filename)
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// todo
 		// If the file does not exist, the initial height is the startHeight in the configuration

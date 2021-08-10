@@ -28,7 +28,6 @@ type (
 	}
 
 	Cache struct {
-		Dir         string `mapstructure:"dir"`
 		Filename    string `mapstructure:"filename"`
 		StartHeight uint64 `mapstructure:"start_height"`
 	}

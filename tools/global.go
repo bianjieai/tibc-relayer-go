@@ -5,9 +5,12 @@ import (
 	"path/filepath"
 )
 
-const CfgDirName = ".tibc-relayer"
+const DefaultHomeDirName = ".tibc-relayer"
+const DefaultConfigDirName = "configs"
+const DefaultConfigName = "config.toml"
+const DefaultCacheDirName = "cache"
 
 var (
-	UserDir, _       = os.UserHomeDir()
-	DefaultConfigDir = filepath.Join(UserDir, CfgDirName)
+	UserDir, _      = os.UserHomeDir()
+	DefaultHomePath = filepath.Join(UserDir, DefaultHomeDirName)
 )

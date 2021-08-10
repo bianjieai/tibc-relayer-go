@@ -43,5 +43,5 @@ func createConfig() {
 }
 
 func initConfig() {
-	handlers.ConfigInit(tools.DefaultConfigDir)
+	handlers.ConfigInit(tools.DefaultHomePath)
 }
