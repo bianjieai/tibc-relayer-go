@@ -2,10 +2,11 @@ package services
 
 import (
 	"context"
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
+	log "github.com/sirupsen/logrus"
 )
 
 const DefaultTimeout = 10

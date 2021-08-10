@@ -1,11 +1,11 @@
 package initialization
 
 import (
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
 	"os"
 	"path"
 	"path/filepath"
 
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 )
 
