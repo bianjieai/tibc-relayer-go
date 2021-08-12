@@ -3,6 +3,7 @@ package repostitory
 import (
 	"context"
 
+	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	sdk "github.com/irisnet/core-sdk-go"
 	"github.com/irisnet/core-sdk-go/types"
 )
@@ -38,22 +39,25 @@ func (c *TendermintClient) GetBlockAndPackets(height uint64) (interface{}, error
 	return c.Client.Block(context.Background(), &a)
 }
 
-func (c *TendermintClient) GetBlockHeader(height uint64) (interface{}, error) {
-	tmp := int64(height)
-	block, err := c.Client.Block(context.Background(), &tmp)
-	header := block.Block.Header
-	return header, err
+func (c *TendermintClient) GetBlockHeader(height uint64) (tibctypes.Header, error) {
+	// todo
+	// get block header
+	return nil, nil
 }
 
-func (c *TendermintClient) GetLightClientState(chainName string) (interface{}, error) {
+func (c *TendermintClient) GetLightClientState(chainName string) (tibctypes.ClientState, error) {
 
-	return c.Client.Status(context.Background())
+	// todo
+	// c.Client.Status(context.Background())
+
+	return nil, nil
 }
 
-func (c *TendermintClient) GetLightClientConsensusState(chainName string, height uint64) (interface{}, error) {
+func (c *TendermintClient) GetLightClientConsensusState(chainName string, height uint64) (tibctypes.ConsensusState, error) {
 
-	var tmp = int64(height)
-	return c.Client.ConsensusParams(context.Background(), &tmp)
+	//var tmp = int64(height)
+	//c.Client.ConsensusParams(context.Background(), &tmp)
+	return nil, nil
 }
 
 func (c *TendermintClient) GetStatus() (interface{}, error) {
