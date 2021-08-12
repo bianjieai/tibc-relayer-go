@@ -11,14 +11,19 @@ type (
 	}
 
 	IRITA struct {
-		GrpcAddr   string `mapstructure:"grpc_addr"`
-		RpcAddr    string `mapstructure:"rpc_addr"`
-		ModuleName string `mapstructure:"module_name"`
-		ChainID    string `mapstructure:"chain_id"`
-		ClientID   string `mapstructure:"client_id"`
-		Timeout    uint   `mapstructure:"timeout"`
-		Signer     string `mapstructure:"signer"`
-		Cache      Cache  `mapstructure:"cache"`
+		ChainID  string   `mapstructure:"chain_id"`
+		RPCAddr  string   `mapstructure:"rpc_addr"`
+		GrpcAddr string   `mapstructure:"grpc_addr"`
+		Gas      uint64   `mapstructure:"gas"`
+		Key      ChainKey `mapstructure:"key"`
+		Cache    Cache    `mapstructure:"cache"`
+	}
+
+	ChainKey struct {
+		Name     string `mapstructure:"name"`
+		Password string `mapstructure:"password"`
+		Signer   string `mapstructure:"signer"`
+		Path     string `mapstructure:"path"`
 	}
 
 	App struct {
