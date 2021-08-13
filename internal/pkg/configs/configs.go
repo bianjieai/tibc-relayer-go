@@ -7,16 +7,18 @@ type (
 	}
 
 	Chain struct {
-		IrisHub IRITA `mapstructure:"iris_hub"`
+		Wenchang IRITA `mapstructure:"wenchang"`
+		BsnHub   IRITA `mapstructure:"bsn_hub"`
 	}
 
 	IRITA struct {
-		ChainID  string   `mapstructure:"chain_id"`
-		RPCAddr  string   `mapstructure:"rpc_addr"`
-		GrpcAddr string   `mapstructure:"grpc_addr"`
-		Gas      uint64   `mapstructure:"gas"`
-		Key      ChainKey `mapstructure:"key"`
-		Cache    Cache    `mapstructure:"cache"`
+		ChainName string   `mapstructure:"chain_name"`
+		ChainID   string   `mapstructure:"chain_id"`
+		RPCAddr   string   `mapstructure:"rpc_addr"`
+		GrpcAddr  string   `mapstructure:"grpc_addr"`
+		Gas       uint64   `mapstructure:"gas"`
+		Key       ChainKey `mapstructure:"key"`
+		Cache     Cache    `mapstructure:"cache"`
 	}
 
 	ChainKey struct {

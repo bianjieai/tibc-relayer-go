@@ -15,16 +15,9 @@ type TendermintClient struct {
 
 	chainName string
 }
-type Config struct {
-	Options []types.Option
 
-	NodeURI  string
-	GrpcAddr string
-	ChainID  string
-}
-
-func NewTendermintClient(chaiName string, config Config) (*TendermintClient, error) {
-	cfg, err := types.NewClientConfig(config.NodeURI, config.GrpcAddr, config.ChainID, config.Options...)
+func NewTendermintClient(chaiName string, config *TerndermintConfig) (*TendermintClient, error) {
+	cfg, err := types.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +75,23 @@ func (c *TendermintClient) GetLightClientDelayTime() uint64 {
 	return 0
 }
 
+func (c *TendermintClient) UpdateClient(header tibctypes.Header) error {
+	return nil
+}
+
 func (c *TendermintClient) ChainName() string {
 
 	return c.chainName
+}
+
+type TerndermintConfig struct {
+	Options []types.Option
+
+	RPCAddr  string
+	GrpcAddr string
+	ChainID  string
+}
+
+func NewTerndermintConfig() *TerndermintConfig {
+	return &TerndermintConfig{}
 }

@@ -5,8 +5,11 @@ import "fmt"
 const RootCodeSpace = "relayer"
 
 var (
-	ErrInternal  = Register(RootCodeSpace, 1, "internal")
-	ErrChainConn = Register(RootCodeSpace, 2, "connection chain failed")
+	ErrInternal            = Register(RootCodeSpace, 1, "internal")
+	ErrChainConn           = Register(RootCodeSpace, 2, "connection chain failed")
+	ErrGetLightClientState = Register(RootCodeSpace, 3, "failed to get light client state")
+	ErrGetBlockHeader      = Register(RootCodeSpace, 4, "failed to get block header")
+	ErrUpdateClient        = Register(RootCodeSpace, 5, "failed to update client")
 )
 
 var usedCodes = map[string]*Error{}
