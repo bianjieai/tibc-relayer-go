@@ -3,26 +3,55 @@ package repostitory
 import (
 	"context"
 
+	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/gogo/protobuf/types"
+	sdk "github.com/irisnet/core-sdk-go"
 	coretypes "github.com/irisnet/core-sdk-go/types"
+	"github.com/tendermint/tendermint/libs/log"
 	tenderminttypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func (c *TendermintClient) GetBlockAndPackets(height uint64) (interface{}, error) {
-	a := int64(height)
-	return c.BaseClient.Block(context.Background(), &a)
+var _ IChain = new(Tendermint)
+
+type Tendermint struct {
+	logger log.Logger
+
+	CoreSdk    sdk.Client
+	TibcClient tibc.Client
+
+	chainName string
 }
 
-func (c *TendermintClient) GetBlockHeader(height uint64, trustedHeight tibcclient.Height, trustedValidators *tenderminttypes.ValidatorSet) (tibctypes.Header, error) {
-	block, err := c.QueryBlock(int64(height))
+func NewClient(cfg coretypes.ClientConfig) Tendermint {
+	coreClient := sdk.NewClient(cfg)
+	tibcClient := tibc.NewClient(coreClient.BaseClient, coreClient.AppCodec())
+	client := &Tendermint{
+		logger:     coreClient.BaseClient.Logger(),
+		CoreSdk:    coreClient,
+		TibcClient: tibcClient,
+		chainName:  cfg.ChainID, //todo ? change cfg.chainId to chainName
+	}
+	client.CoreSdk.RegisterModule(
+		tibcClient,
+	)
+	return *client
+}
+
+func (c *Tendermint) GetBlockAndPackets(height uint64) (interface{}, error) {
+	a := int64(height)
+	return c.CoreSdk.Block(context.Background(), &a)
+}
+
+func (c *Tendermint) GetBlockHeader(height uint64, trustedHeight tibcclient.Height, trustedValidators *tenderminttypes.ValidatorSet) (tibctypes.Header, error) {
+	block, err := c.CoreSdk.QueryBlock(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	rescommit, err := c.Commit(context.Background(), &block.BlockResult.Height)
+	rescommit, err := c.CoreSdk.Commit(context.Background(), &block.BlockResult.Height)
 	commit := rescommit.Commit
 	signedHeader := &tenderminttypes.SignedHeader{
 		Header: block.Block.Header.ToProto(),
@@ -42,54 +71,54 @@ func (c *TendermintClient) GetBlockHeader(height uint64, trustedHeight tibcclien
 	}, nil
 }
 
-func (c *TendermintClient) GetLightClientState(chainName string) (tibctypes.ClientState, error) {
-	return c.TendermintClient.GetClientState(chainName)
+func (c *Tendermint) GetLightClientState(chainName string) (tibctypes.ClientState, error) {
+	return c.TibcClient.GetClientState(chainName)
 
 }
 
-func (c *TendermintClient) GetLightClientConsensusState(chainName string, height uint64) (tibctypes.ConsensusState, error) {
-	return c.TendermintClient.GetConsensusState(chainName, height)
+func (c *Tendermint) GetLightClientConsensusState(chainName string, height uint64) (tibctypes.ConsensusState, error) {
+	return c.TibcClient.GetConsensusState(chainName, height)
 }
 
-func (c *TendermintClient) GetStatus() (interface{}, error) {
-	return c.BaseClient.Status(context.Background())
+func (c *Tendermint) GetStatus() (interface{}, error) {
+	return c.TibcClient.Status(context.Background())
 }
 
-func (c *TendermintClient) GetLatestHeight() (uint64, error) {
-	block, err := c.BaseClient.Block(context.Background(), nil)
+func (c *Tendermint) GetLatestHeight() (uint64, error) {
+	block, err := c.CoreSdk.Block(context.Background(), nil)
 	var height = block.Block.Height
 	return uint64(height), err
 }
 
-func (c *TendermintClient) GetLightClientDelayHeight(chainName string) (uint64, error) {
+func (c *Tendermint) GetLightClientDelayHeight(chainName string) (uint64, error) {
 	res, err := c.GetLightClientState(chainName)
 	return res.GetDelayBlock(), err
 }
 
-func (c *TendermintClient) GetLightClientDelayTime(chainName string) (uint64, error) {
+func (c *Tendermint) GetLightClientDelayTime(chainName string) (uint64, error) {
 	res, err := c.GetLightClientState(chainName)
 	return res.GetDelayTime(), err
 }
 
-func (c *TendermintClient) UpdateClient(header tibctypes.Header, chainName string, baseTx coretypes.BaseTx) error {
+func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string, baseTx coretypes.BaseTx) error {
 	request := tibctypes.UpdateClientRequest{
 		ChainName: "testCreateClient1",
 		Header:    header,
 	}
-	_, err := c.TendermintClient.UpdateClient(request, baseTx)
+	_, err := c.TibcClient.UpdateClient(request, baseTx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *TendermintClient) ChainName() string {
+func (c *Tendermint) ChainName() string {
 	return c.chainName
 }
 
-func (c *TendermintClient) queryValidatorSet(height int64) (*tenderminttypes.ValidatorSet, error) {
+func (c *Tendermint) queryValidatorSet(height int64) (*tenderminttypes.ValidatorSet, error) {
 
-	validators, err := c.Validators(context.Background(), &height, nil, nil)
+	validators, err := c.CoreSdk.Validators(context.Background(), &height, nil, nil)
 	if err != nil {
 		return nil, err
 	}
