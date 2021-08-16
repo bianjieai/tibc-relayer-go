@@ -1,4 +1,4 @@
-package relayer
+package channels
 
 import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
@@ -7,16 +7,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var _ IRelayer = new(Relayer)
+var _ IChannel = new(Channel)
 
-type IRelayer interface {
+type IChannel interface {
 	UpdateClient() error
 	PendingDatagrams() error
 	IsNotRelay() bool
 	Context() *domain.Context
 }
 
-type Relayer struct {
+type Channel struct {
 	source repostitory.IChain
 	dest   repostitory.IChain
 
@@ -28,9 +28,9 @@ type Relayer struct {
 	logger log.Logger
 }
 
-func NewRelayer(source repostitory.IChain, dest repostitory.IChain, height uint64) IRelayer {
+func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64) IChannel {
 
-	return &Relayer{
+	return &Channel{
 		source:    source,
 		dest:      dest,
 		chainName: source.ChainName(),
@@ -39,12 +39,12 @@ func NewRelayer(source repostitory.IChain, dest repostitory.IChain, height uint6
 	}
 }
 
-func (rly *Relayer) UpdateClient() error {
+func (channel *Channel) UpdateClient() error {
 
 	// 1. get light client state from dest chain
-	clientState, err := rly.dest.GetLightClientState(rly.source.ChainName())
+	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
-		rly.logger.Info("failed to get light client state")
+		channel.logger.Info("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
 
@@ -52,20 +52,20 @@ func (rly *Relayer) UpdateClient() error {
 	heightObj := clientState.GetLatestHeight()
 	height := heightObj.GetRevisionHeight()
 
-	logger := rly.logger.WithFields(log.Fields{
+	logger := channel.logger.WithFields(log.Fields{
 		"height": height,
 	})
 
 	// 3. get nextHeight block header from source chain
 	nextHeight := height + 1
-	header, err := rly.source.GetBlockHeader(nextHeight)
+	header, err := channel.source.GetBlockHeader(nextHeight)
 	if err != nil {
 		logger.Error("failed to get block header")
 		return typeserr.ErrGetBlockHeader
 	}
 
 	// 4. update client to dest chain
-	if err := rly.dest.UpdateClient(header); err != nil {
+	if err := channel.dest.UpdateClient(header); err != nil {
 		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
@@ -73,14 +73,14 @@ func (rly *Relayer) UpdateClient() error {
 	return nil
 }
 
-func (rly *Relayer) PendingDatagrams() error {
+func (channel *Channel) PendingDatagrams() error {
 	// todo
 	return nil
 }
 
-func (rly *Relayer) IsNotRelay() bool {
-	curHeight := rly.context.Height()
-	latestHeight, err := rly.source.GetLatestHeight()
+func (channel *Channel) IsNotRelay() bool {
+	curHeight := channel.context.Height()
+	latestHeight, err := channel.source.GetLatestHeight()
 	if err != nil {
 		return false
 	}
@@ -92,6 +92,6 @@ func (rly *Relayer) IsNotRelay() bool {
 	return false
 }
 
-func (rly *Relayer) Context() *domain.Context {
-	return rly.context
+func (channel *Channel) Context() *domain.Context {
+	return channel.context
 }

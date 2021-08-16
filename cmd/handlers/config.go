@@ -44,6 +44,9 @@ func ConfigInit(home string) error {
 
 func defaultConfig() []byte {
 	cfg := configs.NewConfig()
+	cfg.App.MetricAddr = "0.0.0.0:8083"
+	cfg.App.Env = "dev"
+	cfg.App.LogLevel = "debug"
 	data, err := toml.Marshal(cfg)
 	if err != nil {
 		panic(err)

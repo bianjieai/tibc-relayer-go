@@ -7,18 +7,22 @@ type (
 	}
 
 	Chain struct {
-		Wenchang IRITA `mapstructure:"wenchang"`
-		BsnHub   IRITA `mapstructure:"bsn_hub"`
+		Source ChainCfg `mapstructure:"source"`
+		Dest   ChainCfg `mapstructure:"dest"`
 	}
 
-	IRITA struct {
+	ChainCfg struct {
+		Cache      Cache      `mapstructure:"cache"`
+		Tendermint Tendermint `mapstructure:"wenchang"`
+	}
+
+	Tendermint struct {
 		ChainName string   `mapstructure:"chain_name"`
 		ChainID   string   `mapstructure:"chain_id"`
 		RPCAddr   string   `mapstructure:"rpc_addr"`
 		GrpcAddr  string   `mapstructure:"grpc_addr"`
 		Gas       uint64   `mapstructure:"gas"`
 		Key       ChainKey `mapstructure:"key"`
-		Cache     Cache    `mapstructure:"cache"`
 	}
 
 	ChainKey struct {

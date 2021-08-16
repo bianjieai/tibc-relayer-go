@@ -5,7 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/relayer"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/channels"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,17 +17,17 @@ type IListener interface {
 }
 
 type Listener struct {
-	relayerMap map[string]relayer.IRelayer
+	channelMap map[string]channels.IChannel
 
 	ctxMap sync.Map
 	logger *log.Logger
 }
 
 func NewListener(
-	relayerMap map[string]relayer.IRelayer,
+	channelMap map[string]channels.IChannel,
 	logger *log.Logger) IListener {
 	listener := &Listener{
-		relayerMap: relayerMap,
+		channelMap: channelMap,
 		ctxMap:     sync.Map{},
 		logger:     logger,
 	}
@@ -36,7 +37,7 @@ func NewListener(
 func (listener *Listener) Listen() error {
 
 	// 启动N个goroutine去处理
-	for chainName := range listener.relayerMap {
+	for chainName := range listener.channelMap {
 		ctx, cancel := context.WithCancel(context.Background())
 		listener.ctxMap.Store(chainName, cancel)
 		go listener.start(ctx, chainName)
@@ -55,10 +56,10 @@ func (listener *Listener) start(ctx context.Context, chainName string) {
 			}).Info("canceled")
 			return
 		default:
-			if !listener.relayerMap[chainName].IsNotRelay() {
+			if !listener.channelMap[chainName].IsNotRelay() {
 				time.Sleep(DefaultTimeout * time.Second)
 			} else {
-				listener.relayerMap[chainName].PendingDatagrams()
+				listener.channelMap[chainName].PendingDatagrams()
 			}
 
 		}
