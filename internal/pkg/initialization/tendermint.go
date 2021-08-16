@@ -53,11 +53,11 @@ func BsnHubToWenchangRelayer(cfg *configs.Config, logger *log.Logger) relayer.IR
 	sourceChain := wenchangChain(cfg, logger)
 	destChain := bsnHubChain(cfg, logger)
 
-	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Wenchang.Cache.Filename)
+	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.BsnHub.Cache.Filename)
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// If the file does not exist, the initial height is the startHeight in the configuration
 
-		return relayer.NewRelayer(sourceChain, destChain, cfg.Chain.Wenchang.Cache.StartHeight)
+		return relayer.NewRelayer(sourceChain, destChain, cfg.Chain.BsnHub.Cache.StartHeight)
 	}
 
 	// If the file exists, the initial height is the latest_height in the file
