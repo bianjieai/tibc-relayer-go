@@ -14,13 +14,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func WenchangToBsnRelayer(cfg *configs.Config, wechangChain, bsnHubChain repostitory.IChain, logger *log.Logger) relayer.IRelayer {
+func WenchangToBsnRelayer(cfg *configs.Config, logger *log.Logger) relayer.IRelayer {
+
+	sourceChain := wenchangChain(cfg, logger)
+	destChain := bsnHubChain(cfg, logger)
 
 	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Wenchang.Cache.Filename)
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// If the file does not exist, the initial height is the startHeight in the configuration
 
-		return relayer.NewRelayer(wechangChain, bsnHubChain, cfg.Chain.Wenchang.Cache.StartHeight)
+		return relayer.NewRelayer(sourceChain, destChain, cfg.Chain.Wenchang.Cache.StartHeight)
 	}
 
 	// If the file exists, the initial height is the latest_height in the file
@@ -42,10 +45,44 @@ func WenchangToBsnRelayer(cfg *configs.Config, wechangChain, bsnHubChain reposti
 		logger.Fatal("read cache file unmarshal err: ", err)
 	}
 
-	return relayer.NewRelayer(wechangChain, bsnHubChain, cacheData.LatestHeight)
+	return relayer.NewRelayer(sourceChain, destChain, cacheData.LatestHeight)
 }
 
-func WenchangChain(cfg *configs.Config, logger *log.Logger) repostitory.IChain {
+func BsnHubToWenchangRelayer(cfg *configs.Config, logger *log.Logger) relayer.IRelayer {
+
+	sourceChain := wenchangChain(cfg, logger)
+	destChain := bsnHubChain(cfg, logger)
+
+	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Wenchang.Cache.Filename)
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		// If the file does not exist, the initial height is the startHeight in the configuration
+
+		return relayer.NewRelayer(sourceChain, destChain, cfg.Chain.Wenchang.Cache.StartHeight)
+	}
+
+	// If the file exists, the initial height is the latest_height in the file
+
+	file, err := os.Open(filename)
+	if err != nil {
+		logger.Fatal("read cache file err: ", err)
+	}
+	defer file.Close()
+
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		logger.Fatal("read cache file err: ", err)
+	}
+
+	cacheData := &cache.Data{}
+	err = json.Unmarshal(content, cacheData)
+	if err != nil {
+		logger.Fatal("read cache file unmarshal err: ", err)
+	}
+
+	return relayer.NewRelayer(sourceChain, destChain, cacheData.LatestHeight)
+}
+
+func wenchangChain(cfg *configs.Config, logger *log.Logger) repostitory.IChain {
 
 	logger.WithFields(log.Fields{
 		"chain_name": cfg.Chain.Wenchang.ChainName,
@@ -65,7 +102,7 @@ func WenchangChain(cfg *configs.Config, logger *log.Logger) repostitory.IChain {
 	return chainRepo
 }
 
-func BsnHubChain(cfg *configs.Config, logger *log.Logger) repostitory.IChain {
+func bsnHubChain(cfg *configs.Config, logger *log.Logger) repostitory.IChain {
 	logger.WithFields(log.Fields{
 		"chain_name": cfg.Chain.BsnHub.ChainName,
 	}).Info(" init chain start")

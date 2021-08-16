@@ -22,7 +22,7 @@ type Listener struct {
 	logger *log.Logger
 }
 
-func NewScanner(
+func NewListener(
 	relayerMap map[string]relayer.IRelayer,
 	logger *log.Logger) IListener {
 	listener := &Listener{
