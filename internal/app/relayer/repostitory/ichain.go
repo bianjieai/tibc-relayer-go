@@ -13,5 +13,6 @@ type IChain interface {
 	GetLatestHeight() (uint64, error)
 	GetLightClientDelayHeight() uint64
 	GetLightClientDelayTime() uint64
+	UpdateClient(header tibctypes.Header) error
 	ChainName() string
 }

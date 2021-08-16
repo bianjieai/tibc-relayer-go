@@ -1,20 +1,20 @@
-package relayer
+package channels
 
 import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
-	merticsmodel "github.com/bianjieai/tibc-relayer-go/internal/pkg/mertics"
 	internelerrors "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
+	merticsmodel "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/mertics"
 )
 
-var _ IRelayer = new(Metric)
+var _ IChannel = new(Metric)
 
 type Metric struct {
-	next IRelayer
+	next IChannel
 
 	metricsModel *merticsmodel.Model
 }
 
-func NewMetricMW(svc IRelayer, metricsModel *merticsmodel.Model) IRelayer {
+func NewMetricMW(svc IChannel, metricsModel *merticsmodel.Model) IChannel {
 
 	return &Metric{
 		next:         svc,

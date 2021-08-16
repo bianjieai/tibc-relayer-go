@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/cache"
 )
 
 type CacheFileWriter struct {
@@ -16,13 +18,9 @@ func NewCacheFileWriter(homeDir, cacheDir, cacheFilename string) *CacheFileWrite
 	return &CacheFileWriter{homeDir: homeDir, cacheDir: cacheDir, cacheFilename: cacheFilename}
 }
 
-type cacheData struct {
-	LatestHeight uint64 `json:"latest_height"`
-}
-
 func (w *CacheFileWriter) Write(height uint64) error {
 
-	cacheDataObj := &cacheData{}
+	cacheDataObj := &cache.Data{}
 	cacheDataObj.LatestHeight = height
 
 	cacheDataWriteBytes, err := json.Marshal(cacheDataObj)

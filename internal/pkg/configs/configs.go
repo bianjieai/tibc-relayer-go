@@ -7,16 +7,22 @@ type (
 	}
 
 	Chain struct {
-		IrisHub IRITA `mapstructure:"iris_hub"`
+		Source ChainCfg `mapstructure:"source"`
+		Dest   ChainCfg `mapstructure:"dest"`
 	}
 
-	IRITA struct {
-		ChainID  string   `mapstructure:"chain_id"`
-		RPCAddr  string   `mapstructure:"rpc_addr"`
-		GrpcAddr string   `mapstructure:"grpc_addr"`
-		Gas      uint64   `mapstructure:"gas"`
-		Key      ChainKey `mapstructure:"key"`
-		Cache    Cache    `mapstructure:"cache"`
+	ChainCfg struct {
+		Cache      Cache      `mapstructure:"cache"`
+		Tendermint Tendermint `mapstructure:"wenchang"`
+	}
+
+	Tendermint struct {
+		ChainName string   `mapstructure:"chain_name"`
+		ChainID   string   `mapstructure:"chain_id"`
+		RPCAddr   string   `mapstructure:"rpc_addr"`
+		GrpcAddr  string   `mapstructure:"grpc_addr"`
+		Gas       uint64   `mapstructure:"gas"`
+		Key       ChainKey `mapstructure:"key"`
 	}
 
 	ChainKey struct {
@@ -27,9 +33,10 @@ type (
 	}
 
 	App struct {
-		MetricAddr string `mapstructure:"metric_addr"`
-		Env        string `mapstructure:"env"`
-		LogLevel   string `mapstructure:"log_level"`
+		MetricAddr   string   `mapstructure:"metric_addr"`
+		Env          string   `mapstructure:"env"`
+		LogLevel     string   `mapstructure:"log_level"`
+		SourceToDest []string `mapstructure:"source_to_dest"`
 	}
 
 	Cache struct {

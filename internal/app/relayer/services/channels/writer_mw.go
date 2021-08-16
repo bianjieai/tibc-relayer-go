@@ -1,14 +1,14 @@
-package relayer
+package channels
 
 import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	log "github.com/sirupsen/logrus"
 )
 
-var _ IRelayer = new(Writer)
+var _ IChannel = new(Writer)
 
 type Writer struct {
-	next IRelayer
+	next IChannel
 
 	logger *log.Entry
 
@@ -17,7 +17,7 @@ type Writer struct {
 	cacheWriter *domain.CacheFileWriter
 }
 
-func NewWriterMW(svc IRelayer, chainName string, logger *log.Logger, homeDir, dir, filename string) IRelayer {
+func NewWriterMW(svc IChannel, chainName string, logger *log.Logger, homeDir, dir, filename string) IChannel {
 
 	entry := logger.WithFields(log.Fields{
 		"chain_name": chainName,

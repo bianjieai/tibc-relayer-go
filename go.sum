@@ -62,6 +62,8 @@ github.com/bianjieai/tendermint v0.34.1-irita-210113 h1:p0sDVhwIBScHlJta4zoO5dDb
 github.com/bianjieai/tendermint v0.34.1-irita-210113/go.mod h1:NJCKYDQ5I18NZSqS98EVpkdBKILvc+potW7xkV/5BUA=
 github.com/bianjieai/tibc-sdk-go v0.0.0-20210812094744-9fc2b663289a h1:UeLOgl2QEbLKwYFqIF8M7JUYOD4HCi0+fePNnO4ruNQ=
 github.com/bianjieai/tibc-sdk-go v0.0.0-20210812094744-9fc2b663289a/go.mod h1:GEWQQfB5UQ5sBb+EjUYVUXgJeT3xAYHDUz7rh5tzkls=
+github.com/bianjieai/tibc-sdk-go v0.0.0-20210813062934-1ae36511a802 h1:fikeFVlQt5PNQCBLzC3hVEMCpxRCvexkoeAeqdohMyU=
+github.com/bianjieai/tibc-sdk-go v0.0.0-20210813062934-1ae36511a802/go.mod h1:GEWQQfB5UQ5sBb+EjUYVUXgJeT3xAYHDUz7rh5tzkls=
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
 github.com/bluele/gcache v0.0.2 h1:WcbfdXICg7G/DGBh1PFfcirkWOQV+v077yF1pSy3DGw=
 github.com/bluele/gcache v0.0.2/go.mod h1:m15KV+ECjptwSPxKhOhQoAFQVtUFjTVkc3H8o0t/fp0=
