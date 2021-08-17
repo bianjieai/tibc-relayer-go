@@ -22,6 +22,10 @@ func NewMetricMW(svc IChannel, metricsModel *merticsmodel.Model) IChannel {
 	}
 }
 
+func (m *Metric) UpdateClientFrequency() uint64 {
+	return m.next.UpdateClientFrequency()
+}
+
 func (m *Metric) UpdateClient() error {
 	return m.next.UpdateClient()
 }

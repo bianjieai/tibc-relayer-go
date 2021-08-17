@@ -13,17 +13,19 @@ var _ IChain = new(TendermintClient)
 type TendermintClient struct {
 	sdk.Client
 
-	chainName string
+	chainName             string
+	updateClientFrequency uint64
 }
 
-func NewTendermintClient(chaiName string, config *TerndermintConfig) (*TendermintClient, error) {
+func NewTendermintClient(chaiName string, updateClientFrequency uint64, config *TerndermintConfig) (*TendermintClient, error) {
 	cfg, err := types.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
 	if err != nil {
 		return nil, err
 	}
 	return &TendermintClient{
-		chainName: chaiName,
-		Client:    sdk.NewClient(cfg),
+		chainName:             chaiName,
+		updateClientFrequency: updateClientFrequency,
+		Client:                sdk.NewClient(cfg),
 	}, err
 }
 
@@ -82,6 +84,10 @@ func (c *TendermintClient) UpdateClient(header tibctypes.Header) error {
 func (c *TendermintClient) ChainName() string {
 
 	return c.chainName
+}
+
+func (c *TendermintClient) UpdateClientFrequency() uint64 {
+	return c.updateClientFrequency
 }
 
 type TerndermintConfig struct {

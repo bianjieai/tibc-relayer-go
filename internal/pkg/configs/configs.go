@@ -23,6 +23,8 @@ type (
 		GrpcAddr  string   `toml:"grpc_addr";mapstructure:"grpc_addr"`
 		Gas       uint64   `toml:"gas";mapstructure:"gas"`
 		Key       ChainKey `toml:"key";mapstructure:"key"`
+
+		UpdateClientFrequency uint64 `toml:"update_client_frequency";mapstructure:"update_client_frequency"`
 	}
 
 	ChainKey struct {
