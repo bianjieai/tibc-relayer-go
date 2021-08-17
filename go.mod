@@ -6,6 +6,7 @@ require (
 	github.com/bianjieai/tibc-sdk-go v0.0.0-20210813062934-1ae36511a802
 	github.com/go-kit/kit v0.11.0
 	github.com/irisnet/core-sdk-go v0.0.0-20210729072452-06544f6270f3
+	github.com/jasonlvhit/gocron v0.0.1
 	github.com/pelletier/go-toml v1.9.3
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1

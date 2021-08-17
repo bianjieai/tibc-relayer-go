@@ -31,6 +31,10 @@ func NewWriterMW(svc IChannel, chainName string, logger *log.Logger, homeDir, di
 	}
 }
 
+func (w *Writer) UpdateClientFrequency() uint64 {
+	return w.next.UpdateClientFrequency()
+}
+
 func (w *Writer) UpdateClient() error {
 	return w.next.UpdateClient()
 }

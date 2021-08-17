@@ -14,6 +14,7 @@ type IChannel interface {
 	PendingDatagrams() error
 	IsNotRelay() bool
 	Context() *domain.Context
+	UpdateClientFrequency() uint64
 }
 
 type Channel struct {
@@ -37,6 +38,10 @@ func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint6
 		height:    height,
 		context:   domain.NewContext(height, source.ChainName()),
 	}
+}
+
+func (channel *Channel) UpdateClientFrequency() uint64 {
+	return channel.source.UpdateClientFrequency()
 }
 
 func (channel *Channel) UpdateClient() error {
