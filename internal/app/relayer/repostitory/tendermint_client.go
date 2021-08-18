@@ -58,6 +58,9 @@ func (c *Tendermint) GetBlockHeader(req *GetBlockHeaderReq) (tibctypes.Header, e
 		return nil, err
 	}
 	rescommit, err := c.coreSdk.Commit(context.Background(), &block.BlockResult.Height)
+	if err != nil {
+		return nil, err
+	}
 	commit := rescommit.Commit
 	signedHeader := &tenderminttypes.SignedHeader{
 		Header: block.Block.Header.ToProto(),
