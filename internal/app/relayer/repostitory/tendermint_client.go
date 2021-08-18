@@ -26,7 +26,7 @@ type Tendermint struct {
 	chainName string
 }
 
-func NewClient(cfg coretypes.ClientConfig,chainName string) Tendermint {
+func NewClient(cfg coretypes.ClientConfig, chainName string) Tendermint {
 	coreClient := sdk.NewClient(cfg)
 	tibcClient := tibc.NewClient(coreClient.BaseClient, coreClient.AppCodec())
 	client := &Tendermint{
