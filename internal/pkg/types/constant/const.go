@@ -1,4 +1,4 @@
 package constant
 
 const Tendermint = "tendermint"
-const Bsc = "bsc"
+const BSC = "bsc"
