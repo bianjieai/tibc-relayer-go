@@ -3,9 +3,11 @@ module github.com/bianjieai/tibc-relayer-go
 go 1.15
 
 require (
-	github.com/bianjieai/tibc-sdk-go v0.0.0-20210816065044-7f1217ea8b6f
+	github.com/bianjieai/tibc-sdk-go v0.0.0-20210818013110-bee2f17436a6
 	github.com/go-kit/kit v0.11.0
-	github.com/irisnet/core-sdk-go v0.0.0-20210729072452-06544f6270f3
+	github.com/gogo/protobuf v1.3.3
+	github.com/irisnet/core-sdk-go v0.0.0-20210817104504-bd2c112847e9
+	github.com/jasonlvhit/gocron v0.0.1
 	github.com/pelletier/go-toml v1.9.3
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1

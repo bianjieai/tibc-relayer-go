@@ -3,7 +3,9 @@ package channels
 import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
+	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,6 +16,7 @@ type IChannel interface {
 	PendingDatagrams() error
 	IsNotRelay() bool
 	Context() *domain.Context
+	UpdateClientFrequency() uint64
 }
 
 type Channel struct {
@@ -39,6 +42,10 @@ func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint6
 	}
 }
 
+func (channel *Channel) UpdateClientFrequency() uint64 {
+	return channel.source.UpdateClientFrequency()
+}
+
 func (channel *Channel) UpdateClient() error {
 
 	// 1. get light client state from dest chain
@@ -55,17 +62,20 @@ func (channel *Channel) UpdateClient() error {
 	logger := channel.logger.WithFields(log.Fields{
 		"height": height,
 	})
-
 	// 3. get nextHeight block header from source chain
-	nextHeight := height + 1
-	header, err := channel.source.GetBlockHeader(nextHeight)
-	if err != nil {
-		logger.Error("failed to get block header")
-		return typeserr.ErrGetBlockHeader
+	var header tibctypes.Header
+	switch channel.source.ChainType() {
+	case constant.Tendermint:
+		nextHeight := height + 1
+		header, err = channel.genTendermintHeader(nextHeight, height)
+		if err != nil {
+			logger.Error("failed to get block header")
+			return typeserr.ErrGetBlockHeader
+		}
 	}
 
 	// 4. update client to dest chain
-	if err := channel.dest.UpdateClient(header); err != nil {
+	if err := channel.dest.UpdateClient(header, channel.source.ChainName()); err != nil {
 		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}

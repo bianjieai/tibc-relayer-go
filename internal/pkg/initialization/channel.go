@@ -15,34 +15,51 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const TendermintToTendermint = "tendermint_to_tendermint"
+const TendermintAndTendermint = "tendermint_and_tendermint"
 
 func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.IChannel {
 	relayerMap := map[string]channels.IChannel{}
 
-	for _, sourceToDest := range cfg.App.SourceToDest {
-		switch sourceToDest {
-		case TendermintToTendermint:
-			var channel channels.IChannel
+	for _, channelType := range cfg.App.ChannelTypes {
+		switch channelType {
+		case TendermintAndTendermint:
+
 			sourceChain := tendermintChain(&cfg.Chain.Source, logger)
 			destChain := tendermintChain(&cfg.Chain.Dest, logger)
-			channel = tendermintToTendermint(cfg, sourceChain, destChain, logger)
+
+			// init source chain channe
+			sourceChannel := tendermintToTendermint(cfg, sourceChain, destChain, logger)
 
 			// add error_handler mw
-			channel = channels.NewWriterMW(
-				channel, sourceChain.ChainName(), logger,
+			sourceChannel = channels.NewWriterMW(
+				sourceChannel, sourceChain.ChainName(), logger,
 				tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename,
 			)
 
 			// add metric mw
-			metricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
-			channel = channels.NewMetricMW(channel, metricsModel)
+			sourceChainMetricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
+			sourceChannel = channels.NewMetricMW(sourceChannel, sourceChainMetricsModel)
 
-			relayerMap[sourceToDest] = channel
+			// init dest chain channel
+			destChannel := tendermintToTendermint(cfg, destChain, sourceChain, logger)
+
+			// add error_handler mw
+			destChannel = channels.NewWriterMW(
+				destChannel, destChain.ChainName(), logger,
+				tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Dest.Cache.Filename,
+			)
+
+			// add metric mw
+			destChainMetricsModel := metricsmodel.NewMetric(destChain.ChainName())
+			destChannel = channels.NewMetricMW(destChannel, destChainMetricsModel)
+
+			relayerMap[sourceChain.ChainName()] = sourceChannel
+			relayerMap[destChain.ChainName()] = destChannel
+
 		default:
 			logger.WithFields(log.Fields{
-				"channel": cfg.App.SourceToDest,
-			}).Fatal("channel does not exist")
+				"channel_type": channelType,
+			}).Fatal("channel type does not exist")
 		}
 	}
 
