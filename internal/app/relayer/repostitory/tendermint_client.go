@@ -5,7 +5,7 @@ import (
 
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	sdk "github.com/irisnet/core-sdk-go"
-	"github.com/irisnet/core-sdk-go/types"
+	coretypes "github.com/irisnet/core-sdk-go/types"
 )
 
 var _ IChain = new(TendermintClient)
@@ -14,15 +14,17 @@ type TendermintClient struct {
 	sdk.Client
 
 	chainName             string
+	chainType             string
 	updateClientFrequency uint64
 }
 
-func NewTendermintClient(chaiName string, updateClientFrequency uint64, config *TerndermintConfig) (*TendermintClient, error) {
-	cfg, err := types.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
+func NewTendermintClient(chainType, chaiName string, updateClientFrequency uint64, config *TerndermintConfig) (*TendermintClient, error) {
+	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
 	if err != nil {
 		return nil, err
 	}
 	return &TendermintClient{
+		chainType:             chainType,
 		chainName:             chaiName,
 		updateClientFrequency: updateClientFrequency,
 		Client:                sdk.NewClient(cfg),
@@ -34,7 +36,7 @@ func (c *TendermintClient) GetBlockAndPackets(height uint64) (interface{}, error
 	return c.Client.Block(context.Background(), &a)
 }
 
-func (c *TendermintClient) GetBlockHeader(height uint64) (tibctypes.Header, error) {
+func (c *TendermintClient) GetBlockHeader(req *GetBlockHeaderReq) (tibctypes.Header, error) {
 	// todo
 	// get block header
 	return nil, nil
@@ -77,21 +79,28 @@ func (c *TendermintClient) GetLightClientDelayTime() uint64 {
 	return 0
 }
 
-func (c *TendermintClient) UpdateClient(header tibctypes.Header) error {
+func (c *TendermintClient) UpdateClient(header tibctypes.Header, chainName string) error {
 	return nil
 }
 
 func (c *TendermintClient) ChainName() string {
-
 	return c.chainName
+}
+
+func (c *TendermintClient) ChainType() string {
+	return c.chainType
 }
 
 func (c *TendermintClient) UpdateClientFrequency() uint64 {
 	return c.updateClientFrequency
 }
 
+func (c *TendermintClient) GetLightClientValidator(height int64, chainName string) (*QueryLightClientValidatorResp, error) {
+	return nil, nil
+}
+
 type TerndermintConfig struct {
-	Options []types.Option
+	Options []coretypes.Option
 
 	RPCAddr  string
 	GrpcAddr string
