@@ -26,14 +26,14 @@ type Tendermint struct {
 	chainName string
 }
 
-func NewClient(cfg coretypes.ClientConfig) Tendermint {
+func NewClient(cfg coretypes.ClientConfig,chainName string) Tendermint {
 	coreClient := sdk.NewClient(cfg)
 	tibcClient := tibc.NewClient(coreClient.BaseClient, coreClient.AppCodec())
 	client := &Tendermint{
 		logger:     coreClient.BaseClient.Logger(),
 		CoreSdk:    coreClient,
 		TibcClient: tibcClient,
-		chainName:  cfg.ChainID, //todo ? change cfg.chainId to chainName
+		chainName:  chainName,
 	}
 	client.CoreSdk.RegisterModule(
 		tibcClient,
@@ -102,7 +102,7 @@ func (c *Tendermint) GetLightClientDelayTime(chainName string) (uint64, error) {
 
 func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string, baseTx coretypes.BaseTx) error {
 	request := tibctypes.UpdateClientRequest{
-		ChainName: "testCreateClient1",
+		ChainName: chainName,
 		Header:    header,
 	}
 	_, err := c.TibcClient.UpdateClient(request, baseTx)
