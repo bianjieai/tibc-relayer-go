@@ -22,18 +22,35 @@ type Tendermint struct {
 
 	CoreSdk    sdk.Client
 	TibcClient tibc.Client
+	BaseTx     coretypes.BaseTx
 
 	chainName string
 }
 
-func NewClient(cfg coretypes.ClientConfig, chainName string) Tendermint {
+func NewClient(cfg coretypes.ClientConfig,
+	chainName string, keyname,
+	passwd, memo string,
+	gas uint64,
+	simulateAndExecute bool,
+	gasAdjustment float64,
+) Tendermint {
 	coreClient := sdk.NewClient(cfg)
 	tibcClient := tibc.NewClient(coreClient.BaseClient, coreClient.AppCodec())
+	baseTx := coretypes.BaseTx{
+		From:               keyname,
+		Gas:                gas,
+		Memo:               memo,
+		Mode:               coretypes.Commit,
+		Password:           passwd,
+		SimulateAndExecute: simulateAndExecute,
+		GasAdjustment:      gasAdjustment,
+	}
 	client := &Tendermint{
 		logger:     coreClient.BaseClient.Logger(),
 		CoreSdk:    coreClient,
 		TibcClient: tibcClient,
 		chainName:  chainName,
+		BaseTx:     baseTx,
 	}
 	client.CoreSdk.RegisterModule(
 		tibcClient,
@@ -46,7 +63,10 @@ func (c *Tendermint) GetBlockAndPackets(height uint64) (interface{}, error) {
 	return c.CoreSdk.Block(context.Background(), &a)
 }
 
-func (c *Tendermint) GetBlockHeader(height uint64, trustedHeight tibcclient.Height, trustedValidators *tenderminttypes.ValidatorSet) (tibctypes.Header, error) {
+func (c *Tendermint) GetBlockHeader(height uint64,
+	trustedHeight tibcclient.Height,
+	trustedValidators *tenderminttypes.ValidatorSet,
+) (tibctypes.Header, error) {
 	block, err := c.CoreSdk.QueryBlock(int64(height))
 	if err != nil {
 		return nil, err
@@ -100,12 +120,13 @@ func (c *Tendermint) GetLightClientDelayTime(chainName string) (uint64, error) {
 	return res.GetDelayTime(), err
 }
 
-func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string, baseTx coretypes.BaseTx) error {
+func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) error {
+
 	request := tibctypes.UpdateClientRequest{
 		ChainName: chainName,
 		Header:    header,
 	}
-	_, err := c.TibcClient.UpdateClient(request, baseTx)
+	_, err := c.TibcClient.UpdateClient(request, c.BaseTx)
 	if err != nil {
 		return err
 	}
