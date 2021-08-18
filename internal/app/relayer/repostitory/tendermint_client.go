@@ -79,7 +79,7 @@ func (c *TendermintClient) GetLightClientDelayTime() uint64 {
 	return 0
 }
 
-func (c *TendermintClient) UpdateClient(header tibctypes.Header) error {
+func (c *TendermintClient) UpdateClient(header tibctypes.Header, chainName string) error {
 	return nil
 }
 

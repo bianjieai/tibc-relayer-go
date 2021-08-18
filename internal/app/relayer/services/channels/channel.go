@@ -75,7 +75,7 @@ func (channel *Channel) UpdateClient() error {
 	}
 
 	// 4. update client to dest chain
-	if err := channel.dest.UpdateClient(header); err != nil {
+	if err := channel.dest.UpdateClient(header, channel.source.ChainName()); err != nil {
 		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}

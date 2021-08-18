@@ -14,7 +14,7 @@ type IChain interface {
 	GetLightClientDelayHeight() uint64
 	GetLightClientDelayTime() uint64
 	GetLightClientValidator(height int64, chainName string) (*QueryLightClientValidatorResp, error)
-	UpdateClient(header tibctypes.Header) error
+	UpdateClient(header tibctypes.Header, chainName string) error
 
 	ChainName() string
 	UpdateClientFrequency() uint64
