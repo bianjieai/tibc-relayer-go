@@ -61,12 +61,18 @@ func (channel *Channel) UpdateClient() error {
 		"height": height,
 	})
 
+	nextHeight, err := channel.source.GetLatestHeight()
+	if err != nil {
+		logger.Error("failed to get block header")
+		return typeserr.ErrGetBlockHeader
+	}
+
 	// 3. get nextHeight block header from source chain
 	var header tibctypes.Header
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
 		req := &repostitory.GetBlockHeaderReq{
-			LatestHeight:  height + 1,
+			LatestHeight:  nextHeight,
 			TrustedHeight: height,
 		}
 		header, err = channel.source.GetBlockHeader(req)

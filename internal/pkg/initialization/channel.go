@@ -37,8 +37,8 @@ func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.ICh
 			)
 
 			// add metric mw
-			sourceChainMetricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
-			sourceChannel = channels.NewMetricMW(sourceChannel, sourceChainMetricsModel)
+			metricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
+			sourceChannel = channels.NewMetricMW(sourceChannel, metricsModel)
 
 			// init dest chain channel
 			destChannel := tendermintToTendermint(cfg, destChain, sourceChain, logger)
@@ -50,8 +50,8 @@ func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.ICh
 			)
 
 			// add metric mw
-			destChainMetricsModel := metricsmodel.NewMetric(destChain.ChainName())
-			destChannel = channels.NewMetricMW(destChannel, destChainMetricsModel)
+
+			destChannel = channels.NewMetricMW(destChannel, metricsModel)
 
 			relayerMap[sourceChain.ChainName()] = sourceChannel
 			relayerMap[destChain.ChainName()] = destChannel

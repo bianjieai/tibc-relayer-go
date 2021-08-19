@@ -23,6 +23,7 @@ type Tendermint struct {
 	coreSdk    sdk.Client
 	tibcClient tibc.Client
 	baseTx     types.BaseTx
+	address    string
 
 	chainName             string
 	chainType             string
@@ -36,6 +37,13 @@ func NewTendermintClient(chainType, chaiName string, updateClientFrequency uint6
 	}
 	coreClient := sdk.NewClient(cfg)
 	tibcClient := tibc.NewClient(coreClient)
+
+	// import key to core-sdk
+	address, err := coreClient.Key.Import(config.Name, config.Password, config.PrivKeyArmor)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Tendermint{
 		chainType:             chainType,
 		chainName:             chaiName,
@@ -44,6 +52,7 @@ func NewTendermintClient(chainType, chaiName string, updateClientFrequency uint6
 		coreSdk:               coreClient,
 		tibcClient:            tibcClient,
 		baseTx:                config.BaseTx,
+		address:               address,
 	}, err
 }
 
@@ -103,6 +112,9 @@ func (c *Tendermint) GetStatus() (interface{}, error) {
 
 func (c *Tendermint) GetLatestHeight() (uint64, error) {
 	block, err := c.coreSdk.Block(context.Background(), nil)
+	if err != nil {
+		return 0, err
+	}
 	var height = block.Block.Height
 	return uint64(height), err
 }
@@ -163,8 +175,11 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 }
 
 type TerndermintConfig struct {
-	Options []coretypes.Option
-	BaseTx  types.BaseTx
+	Options      []coretypes.Option
+	BaseTx       types.BaseTx
+	PrivKeyArmor string
+	Name         string
+	Password     string
 
 	RPCAddr  string
 	GrpcAddr string

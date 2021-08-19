@@ -3,11 +3,12 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"io/ioutil"
 )
 
 var (
