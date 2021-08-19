@@ -24,7 +24,11 @@ func Serve(cfg *configs.Config) {
 func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
 	for channelName := range channelMap {
 		// execute every x hours
-		gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func() {
+		//gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func() {
+		//	channelMap[channelName].UpdateClient()
+		//})
+		interval := channelMap[channelName].UpdateClientFrequency()
+		gocron.Every(interval).Seconds().Do(func() {
 			channelMap[channelName].UpdateClient()
 		})
 	}

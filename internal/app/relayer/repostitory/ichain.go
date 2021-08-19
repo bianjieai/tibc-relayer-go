@@ -6,7 +6,6 @@ import (
 
 type IChain interface {
 	GetBlockAndPackets(height uint64) (interface{}, error)
-
 	GetBlockHeader(*GetBlockHeaderReq) (tibctypes.Header, error)
 	GetLightClientState(string) (tibctypes.ClientState, error)
 	GetLightClientConsensusState(string, uint64) (tibctypes.ConsensusState, error)

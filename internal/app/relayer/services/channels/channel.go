@@ -23,10 +23,9 @@ type Channel struct {
 	source repostitory.IChain
 	dest   repostitory.IChain
 
-	chainName string
-	height    uint64
-	signer    string
-	context   *domain.Context
+	height  uint64
+	signer  string
+	context *domain.Context
 
 	logger log.Logger
 }
@@ -34,11 +33,10 @@ type Channel struct {
 func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64) IChannel {
 
 	return &Channel{
-		source:    source,
-		dest:      dest,
-		chainName: source.ChainName(),
-		height:    height,
-		context:   domain.NewContext(height, source.ChainName()),
+		source:  source,
+		dest:    dest,
+		height:  height,
+		context: domain.NewContext(height, source.ChainName()),
 	}
 }
 
@@ -51,7 +49,7 @@ func (channel *Channel) UpdateClient() error {
 	// 1. get light client state from dest chain
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
-		channel.logger.Info("failed to get light client state")
+		channel.logger.Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
 
@@ -62,12 +60,22 @@ func (channel *Channel) UpdateClient() error {
 	logger := channel.logger.WithFields(log.Fields{
 		"height": height,
 	})
+
+	nextHeight, err := channel.source.GetLatestHeight()
+	if err != nil {
+		logger.Error("failed to get block header")
+		return typeserr.ErrGetBlockHeader
+	}
+
 	// 3. get nextHeight block header from source chain
 	var header tibctypes.Header
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
-		nextHeight := height + 1
-		header, err = channel.genTendermintHeader(nextHeight, height)
+		req := &repostitory.GetBlockHeaderReq{
+			LatestHeight:  nextHeight,
+			TrustedHeight: height,
+		}
+		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {
 			logger.Error("failed to get block header")
 			return typeserr.ErrGetBlockHeader

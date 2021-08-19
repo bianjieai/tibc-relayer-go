@@ -4,6 +4,8 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
+	coretypes "github.com/irisnet/core-sdk-go/types"
+	corestore "github.com/irisnet/core-sdk-go/types/store"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,6 +19,31 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 	chainCfg.ChainID = cfg.Tendermint.ChainID
 	chainCfg.GrpcAddr = cfg.Tendermint.GrpcAddr
 	chainCfg.RPCAddr = cfg.Tendermint.RPCAddr
+
+	fee := coretypes.NewDecCoins(
+		coretypes.NewDecCoin(
+			cfg.Tendermint.Fee.Denom,
+			coretypes.NewInt(cfg.Tendermint.Fee.Amount)))
+
+	chainCfg.BaseTx = coretypes.BaseTx{
+		From:               cfg.Tendermint.Key.Name,
+		Password:           cfg.Tendermint.Key.Password,
+		Gas:                cfg.Tendermint.Gas,
+		Mode:               coretypes.Commit,
+		Fee:                fee,
+		SimulateAndExecute: false,
+		GasAdjustment:      1.5,
+	}
+	chainCfg.Name = cfg.Tendermint.Key.Name
+	chainCfg.Password = cfg.Tendermint.Key.Password
+	chainCfg.PrivKeyArmor = cfg.Tendermint.Key.PrivKeyArmor
+	chainCfg.Options = []coretypes.Option{
+		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
+		coretypes.TimeoutOption(10),
+		coretypes.ModeOption(coretypes.Commit),
+		coretypes.GasOption(cfg.Tendermint.Gas),
+		coretypes.CachedOption(true),
+	}
 	chainRepo, err := repostitory.NewTendermintClient(
 		constant.Tendermint,
 		cfg.Tendermint.ChainName,

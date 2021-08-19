@@ -1,0 +1,54 @@
+[app]
+
+env = "dev"
+log_level = "debug"
+metric_addr = "0.0.0.0:8083"
+channel_types = ["tendermint_and_tendermint"]
+
+[chain]
+[chain.dest]
+[chain.dest.cache]
+filename = "/Users/user/.tibc-relayer/cache/dest.json"
+start_height = 4
+
+[chain.dest.tendermint]
+chain_id = "test"
+chain_name = "testCreateClientB"
+gas = 0
+grpc_addr = "127.0.0.1:9091"
+rpc_addr = "tcp://127.0.0.1:36657"
+update_client_frequency = 10 # update client frequency, unit hour
+
+[chain.dest.tendermint.fee]
+denom = "stake"
+amount = 100
+
+[chain.dest.tendermint.key]
+name = "your_dest_chain_relayer_name"
+password = "your_dest_chain_relayer_password"
+priv_key_armor = "your_dest_chain_relayer_priv_key_armor"
+[chain.source]
+
+[chain.source.cache]
+
+filename = "/Users/user/.tibc-relayer/cache/source.json"
+start_height = 4
+
+[chain.source.tendermint]
+
+chain_id = "test"
+chain_name = "testCreateClientA"
+gas = 0
+grpc_addr = "127.0.0.1:9090"
+rpc_addr = "tcp://127.0.0.1:26657"
+update_client_frequency = 10
+
+[chain.source.tendermint.fee]
+denom = "stake"
+amount = 100
+
+[chain.source.tendermint.key]
+
+name = "your_source_chain_relayer_name"
+password = "your_source_chain_relayer_password"
+priv_key_armor = "your_source_chain_relayer_priv_key_armor"
