@@ -2,6 +2,9 @@ package repostitory
 
 import (
 	"context"
+	"strconv"
+
+	"github.com/bianjieai/tibc-sdk-go/packet"
 
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
@@ -16,6 +19,10 @@ import (
 )
 
 var _ IChain = new(Tendermint)
+
+const EventTypeSendPacket = "send_packet"
+const EventTypeWriteAck = "write_acknowledgement"
+const EventTypeSendCleanPacket = "send_clean_packet"
 
 type Tendermint struct {
 	logger log.Logger
@@ -56,9 +63,63 @@ func NewTendermintClient(chainType, chaiName string, updateClientFrequency uint6
 	}, err
 }
 
-func (c *Tendermint) GetBlockAndPackets(height uint64) (interface{}, error) {
-	a := int64(height)
-	return c.coreSdk.Block(context.Background(), &a)
+func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
+	var bizPackets []packet.Packet
+	var ackPackets []packet.Packet
+	var cleanPackets []packet.Packet
+
+	curHeight := int64(height)
+	block, err := c.coreSdk.Block(context.Background(), &curHeight)
+	if err != nil {
+		return nil, err
+	}
+
+	packets := newPackets()
+
+	for _, tx := range block.Block.Txs {
+		resultTx, err := c.coreSdk.QueryTx(string(tx.Hash()))
+		if err != nil {
+			return nil, err
+		}
+		tmpPacket, err := c.getPacket(EventTypeSendPacket, resultTx)
+		if err != nil {
+			return nil, err
+		}
+		bizPackets = append(bizPackets, *tmpPacket)
+
+		// get ack packet
+		tmpAckPacket, err := c.getPacket(EventTypeWriteAck, resultTx)
+		if err != nil {
+			return nil, err
+		}
+		ackPackets = append(ackPackets, *tmpAckPacket)
+
+		tmpCleanPacket, err := c.getPacket(EventTypeSendCleanPacket, resultTx)
+		if err != nil {
+			return nil, err
+		}
+		cleanPackets = append(cleanPackets, *tmpCleanPacket)
+
+	}
+
+	packets.BizPackets = bizPackets
+	packets.AckPackets = ackPackets
+	packets.CleanPackets = cleanPackets
+	return packets, nil
+}
+
+func (c *Tendermint) GetProof(chainName string, sequence uint64, height uint64) ([]byte, error) {
+	// todo
+	key := packet.PacketCommitmentKey(c.chainName, chainName, sequence)
+	_, proofBz, _, err := tendermint.QueryTendermintProof(c.coreSdk, int64(height), key)
+	if err != nil {
+		return nil, err
+	}
+	return proofBz, nil
+}
+
+func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) {
+	return c.tibcClient.RecvPackets(msgs, c.baseTx)
 }
 
 func (c *Tendermint) GetBlockHeader(req *GetBlockHeaderReq) (tibctypes.Header, error) {
@@ -148,6 +209,22 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) err
 	return nil
 }
 
+func (c *Tendermint) GetCommitmentsPacket(chainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error) {
+	return c.tibcClient.PacketCommitment(chainName, c.chainName, sequence)
+}
+
+func (c *Tendermint) UnreceivedCommitmentsPackets(chainName string, sequences []uint64) (*packet.QueryUnreceivedAcksResponse, error) {
+	return c.tibcClient.UnreceivedAcks(chainName, c.chainName, sequences)
+}
+
+func (c *Tendermint) GetAckPacket(chainName string, sequence uint64) (*packet.QueryPacketAcknowledgementResponse, error) {
+	return c.tibcClient.PacketAcknowledgement(chainName, c.chainName, sequence)
+}
+
+func (c *Tendermint) GetReceiptPacket(chainName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error) {
+	return c.tibcClient.PacketReceipt(chainName, c.chainName, sequence)
+}
+
 func (c *Tendermint) ChainName() string {
 
 	return c.chainName
@@ -172,6 +249,51 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 	}
 
 	return validatorSet, nil
+}
+
+func (c *Tendermint) getPacket(typ string, tx types.ResultQueryTx) (*packet.Packet, error) {
+	sequenceStr, err := tx.Result.Events.GetValue(typ, "packet_sequence")
+	if err != nil {
+		return nil, err
+	}
+
+	srcChain, err := tx.Result.Events.GetValue(typ, "packet_src_chain")
+	if err != nil {
+		return nil, err
+	}
+
+	dstPort, err := tx.Result.Events.GetValue(typ, "packet_dst_port")
+	if err != nil {
+		return nil, err
+	}
+
+	port, err := tx.Result.Events.GetValue(typ, "packet_port")
+	if err != nil {
+		return nil, err
+	}
+
+	rlyChan, err := tx.Result.Events.GetValue(typ, "packet_relay_channel")
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := tx.Result.Events.GetValue(typ, "packet_data")
+	if err != nil {
+		return nil, err
+	}
+
+	sequence, err := strconv.Atoi(sequenceStr)
+	if err != nil {
+		return nil, err
+	}
+	return &packet.Packet{
+		Sequence:         uint64(sequence),
+		SourceChain:      srcChain,
+		DestinationChain: dstPort,
+		Port:             port,
+		RelayChain:       rlyChan,
+		Data:             []byte(data),
+	}, nil
 }
 
 type TerndermintConfig struct {

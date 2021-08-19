@@ -11,9 +11,10 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 )
 
-func TestChannel_UpdateClient(t *testing.T) {
+func sourceChainClient() (*repostitory.Tendermint, error) {
 	chainNameA := "testCreateClientA"
 	updateClientFrequencyA := 10
+
 	cfgA := repostitory.NewTerndermintConfig()
 	cfgA.ChainID = "testB"
 	cfgA.GrpcAddr = "127.0.0.1:9090"
@@ -35,16 +36,17 @@ func TestChannel_UpdateClient(t *testing.T) {
 		coretypes.GasOption(0),
 		coretypes.CachedOption(true),
 	}
-	sourceChian, err := repostitory.NewTendermintClient(
+
+	return repostitory.NewTendermintClient(
 		constant.Tendermint,
 		chainNameA,
 		uint64(updateClientFrequencyA),
 		cfgA,
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
 
+}
+
+func destChainClient() (*repostitory.Tendermint, error) {
 	chainNameB := "testCreateClientB"
 	updateClientFrequencyB := 10
 	cfgB := repostitory.NewTerndermintConfig()
@@ -68,12 +70,21 @@ func TestChannel_UpdateClient(t *testing.T) {
 		coretypes.GasOption(0),
 		coretypes.CachedOption(true),
 	}
-	destChian, err := repostitory.NewTendermintClient(
+	return repostitory.NewTendermintClient(
 		constant.Tendermint,
 		chainNameB,
 		uint64(updateClientFrequencyB),
 		cfgB,
 	)
+}
+
+func TestChannel_UpdateClient(t *testing.T) {
+	sourceChian, err := sourceChainClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	destChian, err := destChainClient()
 
 	if err != nil {
 		return
