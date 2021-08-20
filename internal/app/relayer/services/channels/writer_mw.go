@@ -39,8 +39,8 @@ func (w *Writer) UpdateClient() error {
 	return w.next.UpdateClient()
 }
 
-func (w *Writer) PendingDatagrams() error {
-	err := w.next.PendingDatagrams()
+func (w *Writer) Relay() error {
+	err := w.next.Relay()
 	if err == nil {
 		return nil
 	}

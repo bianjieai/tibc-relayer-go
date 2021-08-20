@@ -30,8 +30,8 @@ func (m *Metric) UpdateClient() error {
 	return m.next.UpdateClient()
 }
 
-func (m *Metric) PendingDatagrams() error {
-	err := m.next.PendingDatagrams()
+func (m *Metric) Relay() error {
+	err := m.next.Relay()
 	defer func(err error) {
 		labels := []string{"chain_name", m.next.Context().ChainName()}
 		sysErr, ok := err.(internelerrors.IError)

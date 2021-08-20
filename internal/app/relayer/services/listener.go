@@ -59,7 +59,10 @@ func (listener *Listener) start(ctx context.Context, chainName string) {
 			if !listener.channelMap[chainName].IsNotRelay() {
 				time.Sleep(DefaultTimeout * time.Second)
 			} else {
-				listener.channelMap[chainName].PendingDatagrams()
+				err := listener.channelMap[chainName].Relay()
+				if err != nil {
+					time.Sleep(DefaultTimeout * time.Second)
+				}
 			}
 
 		}
