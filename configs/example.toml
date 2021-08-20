@@ -27,6 +27,7 @@ amount = 100
 name = "your_dest_chain_relayer_name"
 password = "your_dest_chain_relayer_password"
 priv_key_armor = "your_dest_chain_relayer_priv_key_armor"
+
 [chain.source]
 
 [chain.source.cache]

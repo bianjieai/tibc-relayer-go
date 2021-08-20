@@ -11,26 +11,37 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 )
 
-func sourceChainClient() (*repostitory.Tendermint, error) {
+func hubChainClient() (*repostitory.Tendermint, error) {
 	chainNameA := "testCreateClientA"
 	updateClientFrequencyA := 10
 
 	cfgA := repostitory.NewTerndermintConfig()
-	cfgA.ChainID = "testB"
-	cfgA.GrpcAddr = "127.0.0.1:9090"
-	cfgA.RPCAddr = "tcp://127.0.0.1:26657"
+	cfgA.ChainID = "testA"
+	cfgA.GrpcAddr = "localhost:9090"
+	cfgA.RPCAddr = "tcp://localhost:26657"
+	cfgA.Name = "chainANode0"
+	cfgA.Password = "12345678"
 	cfgA.BaseTx = coretypes.BaseTx{
-		From:               "nodeA",
+		From:               cfgA.Name,
 		Gas:                1000000,
 		Memo:               "TEST",
 		Fee:                coretypes.NewDecCoins(coretypes.NewDecCoin("stake", coretypes.NewInt(100))),
 		Mode:               types.Commit,
-		Password:           "12345678",
+		Password:           cfgA.Password,
 		SimulateAndExecute: false,
 		GasAdjustment:      1.5,
 	}
+	cfgA.PrivKeyArmor = `-----BEGIN TENDERMINT PRIVATE KEY-----
+salt: D80938E846B69BC1E77BDF9E90476FB9
+type: secp256k1
+kdf: bcrypt
+
+tdQjgq3BVr2c2J68eKttmNkA60m5x4FmQ1r1frioy0xBg7u+aIvu2X7n8z72jIkC
+pfyksRgCIOZWgCoGctqCJAZXmEUBjgKuKgepppI=
+=1GJn
+-----END TENDERMINT PRIVATE KEY-----`
 	cfgA.Options = []coretypes.Option{
-		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
+		coretypes.KeyDAOOption(corestore.NewMemory(nil)),
 		coretypes.TimeoutOption(10),
 		coretypes.ModeOption(coretypes.Commit),
 		coretypes.GasOption(0),
@@ -46,25 +57,37 @@ func sourceChainClient() (*repostitory.Tendermint, error) {
 
 }
 
-func destChainClient() (*repostitory.Tendermint, error) {
+func sourceChainClient() (*repostitory.Tendermint, error) {
 	chainNameB := "testCreateClientB"
 	updateClientFrequencyB := 10
 	cfgB := repostitory.NewTerndermintConfig()
 	cfgB.ChainID = "testB"
-	cfgB.GrpcAddr = "127.0.0.1:9091"
-	cfgB.RPCAddr = "tcp://127.0.0.1:36657"
+	cfgB.GrpcAddr = "localhost:9091"
+	cfgB.RPCAddr = "tcp://localhost:36657"
+	cfgB.Name = "chainBNode0"
+	cfgB.Password = "12345678"
 	cfgB.BaseTx = coretypes.BaseTx{
-		From:               "nodeB",
+		From:               cfgB.Name,
 		Gas:                1000000,
-		Fee:                coretypes.NewDecCoins(coretypes.NewDecCoin("stake", coretypes.NewInt(100))),
 		Memo:               "TEST",
+		Fee:                coretypes.NewDecCoins(coretypes.NewDecCoin("stake", coretypes.NewInt(100))),
 		Mode:               types.Commit,
-		Password:           "12345678",
+		Password:           cfgB.Password,
 		SimulateAndExecute: false,
 		GasAdjustment:      1.5,
 	}
+	cfgB.PrivKeyArmor = `-----BEGIN TENDERMINT PRIVATE KEY-----
+type: secp256k1
+kdf: bcrypt
+salt: AA44D1BBDA9BD3D023E493B0A1808EBE
+
+5N103OwPijbmcjoSZwv6UMA9NUe/3cmemmE2Z+rhfd2NgwF5mp02e6Yt3JuqTBs9
+CXxN7kDfbJk8AIL+6/qZgTxhQSRSoVpLVvaZ1BY=
+=2Z08
+-----END TENDERMINT PRIVATE KEY-----`
+
 	cfgB.Options = []coretypes.Option{
-		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
+		coretypes.KeyDAOOption(corestore.NewMemory(nil)),
 		coretypes.TimeoutOption(10),
 		coretypes.ModeOption(coretypes.Commit),
 		coretypes.GasOption(0),
@@ -78,20 +101,112 @@ func destChainClient() (*repostitory.Tendermint, error) {
 	)
 }
 
+func destChainClient() (*repostitory.Tendermint, error) {
+	chainNameC := "testCreateClientC"
+	updateClientFrequencyC := 10
+	cfgC := repostitory.NewTerndermintConfig()
+	cfgC.ChainID = "testC"
+	cfgC.GrpcAddr = "localhost:9092"
+	cfgC.RPCAddr = "tcp://localhost:46657"
+	cfgC.Name = "chainCNode0"
+	cfgC.Password = "12345678"
+	cfgC.BaseTx = coretypes.BaseTx{
+		From:               cfgC.Name,
+		Gas:                1000000,
+		Memo:               "TEST",
+		Fee:                coretypes.NewDecCoins(coretypes.NewDecCoin("stake", coretypes.NewInt(100))),
+		Mode:               types.Commit,
+		Password:           cfgC.Password,
+		SimulateAndExecute: false,
+		GasAdjustment:      1.5,
+	}
+
+	cfgC.PrivKeyArmor = `-----BEGIN TENDERMINT PRIVATE KEY-----
+kdf: bcrypt
+salt: 36CB94F06728DECFFF5D6441C0DAE659
+type: secp256k1
+
+QzpMGWNySlO/IlntQzC7jz5dv6nqDOk0r/DW/oXuYranc6LvHoYad+F4otu/nCZR
+z+4cCoBjltkT7ZupVRh4oFVe/bdWCRflOg2zeRA=
+=uwZ4
+-----END TENDERMINT PRIVATE KEY-----`
+
+	cfgC.Options = []coretypes.Option{
+		coretypes.KeyDAOOption(corestore.NewMemory(nil)),
+		coretypes.TimeoutOption(10),
+		coretypes.ModeOption(coretypes.Commit),
+		coretypes.GasOption(0),
+		coretypes.CachedOption(true),
+	}
+	return repostitory.NewTendermintClient(
+		constant.Tendermint,
+		chainNameC,
+		uint64(updateClientFrequencyC),
+		cfgC,
+	)
+}
+
 func TestChannel_UpdateClient(t *testing.T) {
-	sourceChian, err := sourceChainClient()
+	// b -> a
+	sourceChian, err := sourceChainClient() // b
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	destChian, err := destChainClient()
+	hubChain, err := hubChainClient() // a
 
 	if err != nil {
 		return
 	}
 
-	channel := NewChannel(sourceChian, destChian, 4)
+	channel := NewChannel(sourceChian, hubChain, 4)
+	//channel := NewChannel(hubChain, sourceChian, 4) // A -> B
 	err = channel.UpdateClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChannel_Relay(t *testing.T) {
+	// b -> a
+	sourceChian, err := sourceChainClient() // b
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hubChain, err := hubChainClient() // a
+	channel := NewChannel(sourceChian, hubChain, 430)
+	err = channel.Relay()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChannel_AckRelaySourceToHub(t *testing.T) {
+	// a -> b
+	sourceChian, err := sourceChainClient() // b
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hubChain, err := hubChainClient() // a
+	channel := NewChannel(sourceChian, hubChain, 1323)
+	err = channel.Relay()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChannel_AckRelayHubToDest(t *testing.T) {
+	//a -> c
+	sourceChian, err := sourceChainClient() // b
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hubChain, err := hubChainClient() // a
+	channel := NewChannel(hubChain, sourceChian, 1323)
+	err = channel.Relay()
 	if err != nil {
 		t.Fatal(err)
 	}

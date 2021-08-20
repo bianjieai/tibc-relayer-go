@@ -27,7 +27,6 @@ type Channel struct {
 	dest   repostitory.IChain
 
 	height  uint64
-	signer  string
 	context *domain.Context
 
 	logger log.Logger
@@ -48,48 +47,48 @@ func (channel *Channel) UpdateClientFrequency() uint64 {
 }
 
 func (channel *Channel) UpdateClient() error {
-
 	// 1. get light client state from dest chain
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
 		channel.logger.Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
-
 	// 2. get source chain updated latest height from dest chain
 	heightObj := clientState.GetLatestHeight()
 	height := heightObj.GetRevisionHeight()
 
-	logger := channel.logger.WithFields(log.Fields{
-		"height": height,
-	})
-
 	nextHeight, err := channel.source.GetLatestHeight()
 	if err != nil {
-		logger.Error("failed to get block header")
+		channel.logger.Error("failed to get block header")
 		return typeserr.ErrGetBlockHeader
 	}
+	return channel.updateClient(height, nextHeight)
+}
 
+func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	// 3. get nextHeight block header from source chain
 	var header tibctypes.Header
+	var err error
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
 		req := &repostitory.GetBlockHeaderReq{
-			LatestHeight:  nextHeight,
-			TrustedHeight: height,
+			LatestHeight:  latestHeight,
+			TrustedHeight: trustedHeight,
 		}
 		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {
-			logger.Error("failed to get block header")
+			channel.logger.Error("failed to get block header")
 			return typeserr.ErrGetBlockHeader
 		}
 	}
 
 	// 4. update client to dest chain
-	if err := channel.dest.UpdateClient(header, channel.source.ChainName()); err != nil {
-		logger.Error("failed to update client")
+	hash, err := channel.dest.UpdateClient(header, channel.source.ChainName())
+	if err != nil {
+		channel.logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
+	channel.logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 
 	return nil
 }
@@ -119,6 +118,12 @@ func (channel *Channel) Relay() error {
 		"dest_chain":    channel.dest.ChainName(),
 	})
 
+	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
+	if err != nil {
+		channel.logger.Error("failed to get light client state")
+		return typeserr.ErrGetLightClientState
+	}
+
 	// 2.  Process biz packets
 	var recvPackets types.Msgs
 	for _, pack := range packets.BizPackets {
@@ -128,19 +133,6 @@ func (channel *Channel) Relay() error {
 		if err != nil {
 			logger.Error("failed to get commitment packet")
 			return typeserr.ErrGetCommitmentPacket
-		}
-
-		// 2.2 get ack packet from dest chain
-		ackPacketResp, err := channel.dest.GetAckPacket(channel.source.ChainName(), pack.Sequence)
-		if err != nil {
-			logger.Error("failed to get ack packet")
-			return typeserr.ErrGetAckPacket
-		}
-
-		// 	// if ack exist, skip
-		if ackPacketResp != nil {
-			logger.Info("ack exist, skip cur height ")
-			continue
 		}
 
 		// 2.3 get receipt packet from dest chain
@@ -155,78 +147,58 @@ func (channel *Channel) Relay() error {
 			continue
 		}
 
+		proof, err := channel.source.GetProof(
+			channel.dest.ChainName(), pack.Sequence,
+			latestHeight, repostitory.CommitmentPoof)
+		if err != nil {
+			logger.Error("failed to get proof")
+			return typeserr.ErrGetProof
+		}
+
 		recvPacket := &packet.MsgRecvPacket{
 			Packet:          pack,
-			ProofCommitment: commitmentsPacketResp.Proof,
+			ProofCommitment: proof,
 			ProofHeight: client.Height{
 				RevisionNumber: commitmentsPacketResp.ProofHeight.RevisionNumber,
-				RevisionHeight: commitmentsPacketResp.ProofHeight.RevisionHeight,
+				RevisionHeight: latestHeight,
 			},
 		}
 		recvPackets = append(recvPackets, recvPacket)
 	}
 
-	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
-	if err != nil {
-		channel.logger.Error("failed to get light client state")
-		return typeserr.ErrGetLightClientState
-	}
-
 	//3. Process ack packets
 	for _, pack := range packets.AckPackets {
-		// 3.1 get ack packet from dest chain
-		ackPacketResp, err := channel.dest.GetAckPacket(channel.source.ChainName(), pack.Sequence)
-		if err != nil {
-			logger.Error("failed to get ack packet")
-			return typeserr.ErrGetAckPacket
-		}
-
-		// 	// if ack exist, skip
-		if ackPacketResp != nil {
-			logger.Info("ack exist, skip cur height ")
-			continue
-		}
-
 		// query proof
-		proofHeight := channel.context.Height() + 1
-		proof, err := channel.source.GetProof(channel.dest.ChainName(), pack.Sequence, proofHeight)
+		proof, err := channel.source.GetProof(
+			channel.dest.ChainName(), pack.Packet.Sequence, latestHeight, repostitory.AckProof)
 		if err != nil {
 			logger.Error("failed to get proof")
 			return typeserr.ErrGetProof
 		}
-		recvPacket := &packet.MsgRecvPacket{
-			Packet:          pack,
-			ProofCommitment: proof,
+		recvPacket := &packet.MsgAcknowledgement{
+			Packet:          pack.Packet,
+			Acknowledgement: pack.Acknowledgement,
+			ProofAcked:      proof,
 			ProofHeight: client.Height{
 				RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
-				RevisionHeight: proofHeight,
+				RevisionHeight: latestHeight,
 			},
 		}
 		recvPackets = append(recvPackets, recvPacket)
 	}
 
 	for _, pack := range packets.CleanPackets {
-
-		// query proof
-		proofHeight := channel.context.Height() + 1
-		proof, err := channel.source.GetProof(channel.dest.ChainName(), pack.Sequence, proofHeight)
-		if err != nil {
-			logger.Error("failed to get proof")
-			return typeserr.ErrGetProof
-		}
-
-		recvPacket := &packet.MsgRecvPacket{
-			Packet:          pack,
-			ProofCommitment: proof,
-			ProofHeight: client.Height{
-				RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
-				RevisionHeight: proofHeight,
-			},
+		recvPacket := &packet.MsgCleanPacket{
+			CleanPacket: pack,
 		}
 		recvPackets = append(recvPackets, recvPacket)
 	}
 
 	// boastCommit tx
+	err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+	if err != nil {
+		return typeserr.ErrUpdateClient
+	}
 	resultTx, err := channel.dest.RecvPackets(recvPackets)
 	if err != nil {
 		logger.Error("failed to recv packet")

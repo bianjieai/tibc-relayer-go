@@ -18,6 +18,7 @@ var (
 	ErrGetLatestHeight     = Register(RootCodeSpace, 11, "failed to get latest height")
 	ErrRecvPacket          = Register(RootCodeSpace, 12, "failed to recv packet")
 	ErrNotProduced         = Register(RootCodeSpace, 13, "failed to not produced")
+	ErrUnknownMsg          = Register(RootCodeSpace, 14, "failed to unknown msg type")
 )
 
 var usedCodes = map[string]*Error{}

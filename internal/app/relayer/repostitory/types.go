@@ -9,14 +9,19 @@ type GetBlockHeaderReq struct {
 
 type Packets struct {
 	BizPackets   []packet.Packet
-	AckPackets   []packet.Packet
-	CleanPackets []packet.Packet
+	AckPackets   []AckPacket
+	CleanPackets []packet.CleanPacket
+}
+
+type AckPacket struct {
+	Packet          packet.Packet
+	Acknowledgement []byte
 }
 
 func newPackets() *Packets {
 	return &Packets{
 		BizPackets:   []packet.Packet{},
-		AckPackets:   []packet.Packet{},
-		CleanPackets: []packet.Packet{},
+		AckPackets:   []AckPacket{},
+		CleanPackets: []packet.CleanPacket{},
 	}
 }

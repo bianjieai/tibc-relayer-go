@@ -60,8 +60,8 @@ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6r
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bianjieai/tendermint v0.34.1-irita-210113 h1:p0sDVhwIBScHlJta4zoO5dDbhjBmVKknaM+pwibmi1g=
 github.com/bianjieai/tendermint v0.34.1-irita-210113/go.mod h1:NJCKYDQ5I18NZSqS98EVpkdBKILvc+potW7xkV/5BUA=
-github.com/bianjieai/tibc-sdk-go v0.0.0-20210819112820-f83ee7f8897c h1:J4uD36Y0O6kaSdp0Oi/dd4rpN5OzHbGT6HNsCSZiE4g=
-github.com/bianjieai/tibc-sdk-go v0.0.0-20210819112820-f83ee7f8897c/go.mod h1:PxAZDOymfEUavhLFu3CivjaFFn6PaPcc7EJMwpqPYLg=
+github.com/bianjieai/tibc-sdk-go v0.0.0-20210820103630-36e4175dc8a4 h1:ttnVABxnJwi/or44hv6bMAnxLgZkv4DzS3RF1FUJOSg=
+github.com/bianjieai/tibc-sdk-go v0.0.0-20210820103630-36e4175dc8a4/go.mod h1:PxAZDOymfEUavhLFu3CivjaFFn6PaPcc7EJMwpqPYLg=
 github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c/go.mod h1:MKsuJmJgSg28kpZDP6UIiPt0e0Oz0kqKNGyRaWEPv84=
 github.com/bluele/gcache v0.0.2 h1:WcbfdXICg7G/DGBh1PFfcirkWOQV+v077yF1pSy3DGw=
 github.com/bluele/gcache v0.0.2/go.mod h1:m15KV+ECjptwSPxKhOhQoAFQVtUFjTVkc3H8o0t/fp0=
