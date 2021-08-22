@@ -11,7 +11,7 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 )
 
-func hubChainClient() (*repostitory.Tendermint, error) {
+func BSNChainClient() (*repostitory.Tendermint, error) {
 	chainNameA := "testCreateClientA"
 	updateClientFrequencyA := 10
 
@@ -31,6 +31,7 @@ func hubChainClient() (*repostitory.Tendermint, error) {
 		SimulateAndExecute: false,
 		GasAdjustment:      1.5,
 	}
+
 	cfgA.PrivKeyArmor = `-----BEGIN TENDERMINT PRIVATE KEY-----
 salt: D80938E846B69BC1E77BDF9E90476FB9
 type: secp256k1
@@ -57,7 +58,7 @@ pfyksRgCIOZWgCoGctqCJAZXmEUBjgKuKgepppI=
 
 }
 
-func sourceChainClient() (*repostitory.Tendermint, error) {
+func WenchangChainClient() (*repostitory.Tendermint, error) {
 	chainNameB := "testCreateClientB"
 	updateClientFrequencyB := 10
 	cfgB := repostitory.NewTerndermintConfig()
@@ -101,7 +102,7 @@ CXxN7kDfbJk8AIL+6/qZgTxhQSRSoVpLVvaZ1BY=
 	)
 }
 
-func destChainClient() (*repostitory.Tendermint, error) {
+func IrisHubChainClient() (*repostitory.Tendermint, error) {
 	chainNameC := "testCreateClientC"
 	updateClientFrequencyC := 10
 	cfgC := repostitory.NewTerndermintConfig()
@@ -120,7 +121,6 @@ func destChainClient() (*repostitory.Tendermint, error) {
 		SimulateAndExecute: false,
 		GasAdjustment:      1.5,
 	}
-
 	cfgC.PrivKeyArmor = `-----BEGIN TENDERMINT PRIVATE KEY-----
 kdf: bcrypt
 salt: 36CB94F06728DECFFF5D6441C0DAE659
@@ -147,20 +147,19 @@ z+4cCoBjltkT7ZupVRh4oFVe/bdWCRflOg2zeRA=
 }
 
 func TestChannel_UpdateClient(t *testing.T) {
-	// b -> a
-	sourceChian, err := sourceChainClient() // b
+	// wenchang -> bsn hub
+	wenchangChian, err := WenchangChainClient()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hubChain, err := hubChainClient() // a
+	bsnHubChain, err := BSNChainClient()
 
 	if err != nil {
 		return
 	}
 
-	channel := NewChannel(sourceChian, hubChain, 4)
-	//channel := NewChannel(hubChain, sourceChian, 4) // A -> B
+	channel := NewChannel(wenchangChian, bsnHubChain, 4)
 	err = channel.UpdateClient()
 	if err != nil {
 		t.Fatal(err)
@@ -168,14 +167,51 @@ func TestChannel_UpdateClient(t *testing.T) {
 }
 
 func TestChannel_Relay(t *testing.T) {
-	// b -> a
-	sourceChian, err := sourceChainClient() // b
+	// wenchang -> bsn hub
+	wenchangChian, err := WenchangChainClient()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hubChain, err := hubChainClient() // a
-	channel := NewChannel(sourceChian, hubChain, 430)
+	bsnHubChain, err := BSNChainClient()
+	channel := NewChannel(wenchangChian, bsnHubChain, 430)
+	err = channel.Relay()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChannel_RelaySourceToHub(t *testing.T) {
+	// Iris Hub -> BSN Hub
+	irisHubChian, err := IrisHubChainClient() // b
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bsnHubChain, err := BSNChainClient() // a
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	channel := NewChannel(irisHubChian, bsnHubChain, 4768)
+	err = channel.Relay()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestChannel_RelayHubToSource(t *testing.T) {
+	// BSN Hub -> wenchang
+	sourceChian, err := WenchangChainClient() // b
+	if err != nil {
+		t.Fatal(err)
+	}
+	hubChain, err := BSNChainClient() // a
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	channel := NewChannel(hubChain, sourceChian, 3653)
 	err = channel.Relay()
 	if err != nil {
 		t.Fatal(err)
@@ -183,14 +219,14 @@ func TestChannel_Relay(t *testing.T) {
 }
 
 func TestChannel_AckRelaySourceToHub(t *testing.T) {
-	// a -> b
-	sourceChian, err := sourceChainClient() // b
+	// Wenchang -> BSN Hub
+	wenchangChian, err := WenchangChainClient() // b
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hubChain, err := hubChainClient() // a
-	channel := NewChannel(sourceChian, hubChain, 1323)
+	bsnHubChain, err := BSNChainClient() // a
+	channel := NewChannel(wenchangChian, bsnHubChain, 4882)
 	err = channel.Relay()
 	if err != nil {
 		t.Fatal(err)
@@ -198,14 +234,14 @@ func TestChannel_AckRelaySourceToHub(t *testing.T) {
 }
 
 func TestChannel_AckRelayHubToDest(t *testing.T) {
-	//a -> c
-	sourceChian, err := sourceChainClient() // b
+	// BSN Hub -> Iris Hub
+	irisHubChian, err := IrisHubChainClient() // b
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	hubChain, err := hubChainClient() // a
-	channel := NewChannel(hubChain, sourceChian, 1323)
+	bsnHubChain, err := BSNChainClient() // a
+	channel := NewChannel(bsnHubChain, irisHubChian, 4501)
 	err = channel.Relay()
 	if err != nil {
 		t.Fatal(err)
