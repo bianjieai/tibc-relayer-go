@@ -8,11 +8,10 @@ import (
 
 type IChain interface {
 	GetPackets(height uint64) (*Packets, error)
-	GetProof(chainName string, sequence uint64, height uint64, typ string) ([]byte, error)
+	GetProof(sourChainName, destChainName string, sequence uint64, height uint64, typ string) ([]byte, error)
 	RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error)
-	GetCommitmentsPacket(chainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error)
-	GetReceiptPacket(chainName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error)
-	GetAckPacket(chainName string, sequence uint64) (*packet.QueryPacketAcknowledgementResponse, error)
+	GetCommitmentsPacket(sourChainName, destChainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error)
+	GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error)
 	GetBlockHeader(*GetBlockHeaderReq) (tibctypes.Header, error)
 	GetLightClientState(string) (tibctypes.ClientState, error)
 	GetLightClientConsensusState(string, uint64) (tibctypes.ConsensusState, error)

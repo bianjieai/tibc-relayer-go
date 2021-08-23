@@ -88,7 +88,11 @@ func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
 		hash := hex.EncodeToString(tx.Hash())
 		resultTx, err := c.coreSdk.QueryTx(hash)
 		if err != nil {
-			return nil, err
+			//todo
+			// 需要修改sdk
+			//
+			//return nil, err
+			continue
 		}
 		if c.isExistPacket(EventTypeSendPacket, resultTx) {
 			tmpPacket, err := c.getPacket(resultTx)
@@ -127,13 +131,13 @@ func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
 	return packets, nil
 }
 
-func (c *Tendermint) GetProof(chainName string, sequence uint64, height uint64, typ string) ([]byte, error) {
+func (c *Tendermint) GetProof(sourChainName, destChainName string, sequence uint64, height uint64, typ string) ([]byte, error) {
 	var key []byte
 	switch typ {
 	case CommitmentPoof:
-		key = packet.PacketCommitmentKey(c.chainName, chainName, sequence)
+		key = packet.PacketCommitmentKey(sourChainName, destChainName, sequence)
 	case AckProof:
-		key = packet.PacketAcknowledgementKey(chainName, c.chainName, sequence)
+		key = packet.PacketAcknowledgementKey(sourChainName, destChainName, sequence)
 	default:
 		return nil, errors.ErrGetProof
 	}
@@ -147,7 +151,6 @@ func (c *Tendermint) GetProof(chainName string, sequence uint64, height uint64, 
 
 func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) {
 	for _, d := range msgs {
-		fmt.Println(d.Type())
 		switch d.Type() {
 		case "recv_packet":
 			msg := d.(*packet.MsgRecvPacket)
@@ -248,20 +251,12 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) (st
 	return resTx.Hash, nil
 }
 
-func (c *Tendermint) GetCommitmentsPacket(chainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error) {
-	return c.tibcClient.PacketCommitment(chainName, c.chainName, sequence)
+func (c *Tendermint) GetCommitmentsPacket(sourceChainName, destChainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error) {
+	return c.tibcClient.PacketCommitment(destChainName, sourceChainName, sequence)
 }
 
-func (c *Tendermint) UnreceivedCommitmentsPackets(chainName string, sequences []uint64) (*packet.QueryUnreceivedAcksResponse, error) {
-	return c.tibcClient.UnreceivedAcks(chainName, c.chainName, sequences)
-}
-
-func (c *Tendermint) GetAckPacket(chainName string, sequence uint64) (*packet.QueryPacketAcknowledgementResponse, error) {
-	return c.tibcClient.PacketAcknowledgement(c.chainName, chainName, sequence)
-}
-
-func (c *Tendermint) GetReceiptPacket(chainName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error) {
-	return c.tibcClient.PacketReceipt(chainName, c.chainName, sequence)
+func (c *Tendermint) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error) {
+	return c.tibcClient.PacketReceipt(destChianName, sourChainName, sequence)
 }
 
 func (c *Tendermint) ChainName() string {
