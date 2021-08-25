@@ -153,7 +153,6 @@ func writeCreateClientFiles(filePath string, content string) {
 	if err != nil {
 		panic(err)
 	}
-	//及时关闭file句柄
 	defer file.Close()
 	writer := bufio.NewWriter(file)
 	if _, err := writer.WriteString(content); err != nil {
