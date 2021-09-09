@@ -44,8 +44,10 @@ func (w *Writer) Relay() error {
 	if err == nil {
 		return nil
 	}
-	ctx := w.next.Context()
-	defer w.cacheWriter.Write(ctx.Height())
+	defer func() {
+		ctx := w.next.Context()
+		w.cacheWriter.Write(ctx.Height())
+	}()
 	return err
 }
 

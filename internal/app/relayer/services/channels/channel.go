@@ -3,6 +3,7 @@ package channels
 import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-sdk-go/client"
@@ -88,7 +89,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	var err error
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
-		req := &repostitory.GetBlockHeaderReq{
+		req := &repotypes.GetBlockHeaderReq{
 			LatestHeight:  latestHeight,
 			TrustedHeight: trustedHeight,
 		}
@@ -187,7 +188,7 @@ func (channel *Channel) Relay() error {
 
 		proof, err := channel.source.GetProof(
 			pack.SourceChain, pack.DestinationChain, pack.Sequence,
-			latestHeight, repostitory.CommitmentPoof)
+			latestHeight, repotypes.CommitmentPoof)
 		if err != nil {
 			logger.Error("failed to get proof")
 			return typeserr.ErrGetProof
@@ -222,7 +223,7 @@ func (channel *Channel) Relay() error {
 		proof, err := channel.source.GetProof(
 			pack.Packet.SourceChain,
 			pack.Packet.DestinationChain,
-			pack.Packet.Sequence, latestHeight, repostitory.AckProof)
+			pack.Packet.Sequence, latestHeight, repotypes.AckProof)
 		if err != nil {
 			logger.WithFields(log.Fields{
 				"err_msg": err.Error(),
