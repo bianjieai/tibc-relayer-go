@@ -16,57 +16,64 @@ import (
 )
 
 const TendermintAndTendermint = "tendermint_and_tendermint"
+const TendermintAndETH = "tendermint_and_eth"
 
 func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.IChannel {
-	relayerMap := map[string]channels.IChannel{}
-
+	if len(cfg.App.ChannelTypes) != 1 {
+		logger.Fatal("channel_types should be equal 1")
+	}
 	for _, channelType := range cfg.App.ChannelTypes {
 		switch channelType {
 		case TendermintAndTendermint:
-
 			sourceChain := tendermintChain(&cfg.Chain.Source, logger)
 			destChain := tendermintChain(&cfg.Chain.Dest, logger)
-
-			// init source chain channe
-			sourceChannel := tendermintToTendermint(cfg, sourceChain, destChain, logger)
-
-			// add error_handler mw
-			sourceChannel = channels.NewWriterMW(
-				sourceChannel, sourceChain.ChainName(), logger,
-				tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename,
-			)
-
-			// add metric mw
-			metricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
-			sourceChannel = channels.NewMetricMW(sourceChannel, metricsModel)
-
-			// init dest chain channel
-			destChannel := tendermintToTendermint(cfg, destChain, sourceChain, logger)
-
-			// add error_handler mw
-			destChannel = channels.NewWriterMW(
-				destChannel, destChain.ChainName(), logger,
-				tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Dest.Cache.Filename,
-			)
-
-			// add metric mw
-
-			destChannel = channels.NewMetricMW(destChannel, metricsModel)
-
-			relayerMap[sourceChain.ChainName()] = sourceChannel
-			relayerMap[destChain.ChainName()] = destChannel
-
+			return channelMap(cfg, sourceChain, destChain, logger)
+		case TendermintAndETH:
+			sourceChain := tendermintChain(&cfg.Chain.Source, logger)
+			destChain := ethChain(&cfg.Chain.Dest, logger)
+			return channelMap(cfg, sourceChain, destChain, logger)
 		default:
 			logger.WithFields(log.Fields{
 				"channel_type": channelType,
 			}).Fatal("channel type does not exist")
 		}
 	}
-
-	return relayerMap
+	return nil
 }
 
-func tendermintToTendermint(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) channels.IChannel {
+func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) map[string]channels.IChannel {
+	// init source chain channel
+	sourceChannel := channel(cfg, sourceChain, destChain, logger)
+
+	// add error_handler mw
+	sourceChannel = channels.NewWriterMW(
+		sourceChannel, sourceChain.ChainName(), logger,
+		tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename,
+	)
+
+	// add metric mw
+	metricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
+	sourceChannel = channels.NewMetricMW(sourceChannel, metricsModel)
+
+	// init dest chain channel
+	destChannel := channel(cfg, destChain, sourceChain, logger)
+
+	// add error_handler mw
+	destChannel = channels.NewWriterMW(
+		destChannel, destChain.ChainName(), logger,
+		tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Dest.Cache.Filename,
+	)
+
+	// add metric mw
+
+	destChannel = channels.NewMetricMW(destChannel, metricsModel)
+	channelMap := map[string]channels.IChannel{}
+	channelMap[sourceChain.ChainName()] = sourceChannel
+	channelMap[destChain.ChainName()] = destChannel
+	return channelMap
+}
+
+func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) channels.IChannel {
 
 	var channel channels.IChannel
 	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename)

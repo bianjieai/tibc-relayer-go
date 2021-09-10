@@ -144,7 +144,7 @@ func (c *Tendermint) GetProof(sourChainName, destChainName string, sequence uint
 	return proofBz, nil
 }
 
-func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) {
+func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) {
 	for _, d := range msgs {
 		switch d.Type() {
 		case "recv_packet":
@@ -155,7 +155,25 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) 
 			msg.Signer = c.address
 		}
 	}
-	return c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
+
+	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
+	if err != nil {
+		return nil, err
+	}
+	return &repotypes.ResultTx{
+		GasWanted: resultTx.GasWanted,
+		GasUsed:   resultTx.GasUsed,
+		Hash:      resultTx.Hash,
+		Height:    resultTx.Height,
+	}, nil
+}
+
+func (c *Tendermint) GetBlockTimestamp(height uint64) (uint64, error) {
+	block, err := c.terndermintCli.QueryBlock(int64(height))
+	if err != nil {
+		return 0, err
+	}
+	return uint64(block.Block.Time.Unix()), nil
 }
 
 func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Header, error) {
@@ -203,10 +221,6 @@ func (c *Tendermint) GetLightClientConsensusState(chainName string, height uint6
 
 }
 
-func (c *Tendermint) GetStatus() (interface{}, error) {
-	return c.terndermintCli.Status(context.Background())
-}
-
 func (c *Tendermint) GetLatestHeight() (uint64, error) {
 	block, err := c.terndermintCli.Block(context.Background(), nil)
 	if err != nil {
@@ -246,12 +260,20 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) (st
 	return resTx.Hash, nil
 }
 
-func (c *Tendermint) GetCommitmentsPacket(sourceChainName, destChainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error) {
-	return c.terndermintCli.TIBC.PacketCommitment(destChainName, sourceChainName, sequence)
+func (c *Tendermint) GetCommitmentsPacket(sourceChainName, destChainName string, sequence uint64) error {
+	_, err := c.terndermintCli.TIBC.PacketCommitment(destChainName, sourceChainName, sequence)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (c *Tendermint) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error) {
-	return c.terndermintCli.TIBC.PacketReceipt(destChianName, sourChainName, sequence)
+func (c *Tendermint) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (bool, error) {
+	result, err := c.terndermintCli.TIBC.PacketReceipt(destChianName, sourChainName, sequence)
+	if err != nil {
+		return false, err
+	}
+	return result.Received, nil
 }
 
 func (c *Tendermint) ChainName() string {

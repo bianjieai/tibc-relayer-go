@@ -25,3 +25,10 @@ func NewPackets() *Packets {
 		CleanPackets: []packet.CleanPacket{},
 	}
 }
+
+type ResultTx struct {
+	GasWanted int64  `json:"gas_wanted"`
+	GasUsed   int64  `json:"gas_used"`
+	Hash      string `json:"hash"`
+	Height    int64  `json:"height"`
+}
