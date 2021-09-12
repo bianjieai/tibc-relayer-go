@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/bianjieai/tibc-sdk-go v0.0.0-20210820103630-36e4175dc8a4
+	github.com/ethereum/go-ethereum v1.10.8
 	github.com/go-kit/kit v0.11.0
 	github.com/irisnet/core-sdk-go v0.0.0-20210817104504-bd2c112847e9
 	github.com/jasonlvhit/gocron v0.0.1

@@ -1,12 +1,13 @@
 package initialization
 
 import (
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 	coretypes "github.com/irisnet/core-sdk-go/types"
 	corestore "github.com/irisnet/core-sdk-go/types/store"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 )
 
 func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {

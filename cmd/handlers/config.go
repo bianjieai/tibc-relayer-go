@@ -4,9 +4,10 @@ import (
 	"os"
 	"path"
 
+	"github.com/pelletier/go-toml"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/tools"
-	"github.com/pelletier/go-toml"
 )
 
 func ConfigInit(home string) error {

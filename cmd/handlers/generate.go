@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/commitment"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
@@ -17,6 +15,9 @@ import (
 	corestore "github.com/irisnet/core-sdk-go/types/store"
 	log "github.com/sirupsen/logrus"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 )
 
 const TendermintAndTendermint = "tendermint_and_tendermint"
