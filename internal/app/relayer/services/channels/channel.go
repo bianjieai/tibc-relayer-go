@@ -1,15 +1,16 @@
 package channels
 
 import (
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/irisnet/core-sdk-go/types"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
+	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 )
 
 var _ IChannel = new(Channel)

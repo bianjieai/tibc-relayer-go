@@ -1,8 +1,9 @@
 package initialization
 
 import (
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 )
 
 func Logger(cfg *configs.Config) *log.Logger {
