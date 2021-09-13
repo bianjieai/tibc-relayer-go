@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/bianjieai/tibc-relayer-go/cmd/handlers"
 	"github.com/bianjieai/tibc-relayer-go/tools"
-	"github.com/spf13/cobra"
 )
 
 var (

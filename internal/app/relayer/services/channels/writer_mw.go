@@ -1,8 +1,9 @@
 package channels
 
 import (
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 )
 
 var _ IChannel = new(Writer)

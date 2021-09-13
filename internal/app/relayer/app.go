@@ -1,12 +1,13 @@
 package relayer
 
 import (
+	"github.com/jasonlvhit/gocron"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/channels"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/initialization"
-	"github.com/jasonlvhit/gocron"
-	log "github.com/sirupsen/logrus"
 )
 
 func Serve(cfg *configs.Config) {

@@ -6,13 +6,14 @@ import (
 	"os"
 	"path"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services/channels"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/cache"
 	metricsmodel "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/mertics"
 	"github.com/bianjieai/tibc-relayer-go/tools"
-	log "github.com/sirupsen/logrus"
 )
 
 const TendermintAndTendermint = "tendermint_and_tendermint"
