@@ -28,26 +28,9 @@ var (
 	_ = event.NewSubscription
 )
 
-// FractionData is an auto generated low-level Go binding around an user-defined struct.
-type FractionData struct {
-	Numerator   uint64
-	Denominator uint64
-}
-
-// MerklePrefixData is an auto generated low-level Go binding around an user-defined struct.
-type MerklePrefixData struct {
-	KeyPrefix []byte
-}
-
-// TimestampData is an auto generated low-level Go binding around an user-defined struct.
-type TimestampData struct {
-	Secs  int64
-	Nanos int64
-}
-
 // ClientMetaData contains all meta data concerning the Client contract.
 var ClientMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"clientManagerAddr\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"headerBz\",\"type\":\"bytes\"}],\"name\":\"checkHeaderAndUpdateState\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"clientState\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"chain_id\",\"type\":\"string\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"numerator\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"denominator\",\"type\":\"uint64\"}],\"internalType\":\"structFraction.Data\",\"name\":\"trust_level\",\"type\":\"tuple\"},{\"internalType\":\"int64\",\"name\":\"trusting_period\",\"type\":\"int64\"},{\"internalType\":\"int64\",\"name\":\"unbonding_period\",\"type\":\"int64\"},{\"internalType\":\"int64\",\"name\":\"max_clock_drift\",\"type\":\"int64\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"latest_height\",\"type\":\"tuple\"},{\"components\":[{\"internalType\":\"bytes\",\"name\":\"key_prefix\",\"type\":\"bytes\"}],\"internalType\":\"structMerklePrefix.Data\",\"name\":\"merkle_prefix\",\"type\":\"tuple\"},{\"internalType\":\"uint64\",\"name\":\"time_delay\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"consensusStates\",\"outputs\":[{\"components\":[{\"internalType\":\"int64\",\"name\":\"secs\",\"type\":\"int64\"},{\"internalType\":\"int64\",\"name\":\"nanos\",\"type\":\"int64\"}],\"internalType\":\"structTimestamp.Data\",\"name\":\"timestamp\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"root\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"next_validators_hash\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLatestHeight\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"clientStateBz\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"consensusStateBz\",\"type\":\"bytes\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"status\",\"outputs\":[{\"internalType\":\"int8\",\"name\":\"\",\"type\":\"int8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"clientStateBz\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"consensusStateBz\",\"type\":\"bytes\"}],\"name\":\"upgrade\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"acknowledgement\",\"type\":\"bytes\"}],\"name\":\"verifyPacketAcknowledgement\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"}],\"name\":\"verifyPacketCleanCommitment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"bytes\",\"name\":\"commitmentBytes\",\"type\":\"bytes\"}],\"name\":\"verifyPacketCommitment\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"name\":\"clients\",\"outputs\":[{\"internalType\":\"contractIClient\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"clientAddress\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"clientState\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"consensusState\",\"type\":\"bytes\"}],\"name\":\"createClient\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getChainName\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"}],\"name\":\"getClient\",\"outputs\":[{\"internalType\":\"contractIClient\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"}],\"name\":\"getLatestHeight\",\"outputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"relayer\",\"type\":\"address\"}],\"name\":\"registerRelayer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"relayers\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"header\",\"type\":\"bytes\"}],\"name\":\"updateClient\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"chainName\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"clientState\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"consensusState\",\"type\":\"bytes\"}],\"name\":\"upgradeClient\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // ClientABI is the input ABI used to generate the binding from.
@@ -196,137 +179,74 @@ func (_Client *ClientTransactorRaw) Transact(opts *bind.TransactOpts, method str
 	return _Client.Contract.contract.Transact(opts, method, params...)
 }
 
-// ClientState is a free data retrieval call binding the contract method 0xbd3ce6b0.
+// Clients is a free data retrieval call binding the contract method 0x20ba1e9f.
 //
-// Solidity: function clientState() view returns(string chain_id, (uint64,uint64) trust_level, int64 trusting_period, int64 unbonding_period, int64 max_clock_drift, (uint64,uint64) latest_height, (bytes) merkle_prefix, uint64 time_delay)
-func (_Client *ClientCaller) ClientState(opts *bind.CallOpts) (struct {
-	ChainId         string
-	TrustLevel      FractionData
-	TrustingPeriod  int64
-	UnbondingPeriod int64
-	MaxClockDrift   int64
-	LatestHeight    HeightData
-	MerklePrefix    MerklePrefixData
-	TimeDelay       uint64
-}, error) {
+// Solidity: function clients(string ) view returns(address)
+func (_Client *ClientCaller) Clients(opts *bind.CallOpts, arg0 string) (common.Address, error) {
 	var out []interface{}
-	err := _Client.contract.Call(opts, &out, "clientState")
+	err := _Client.contract.Call(opts, &out, "clients", arg0)
 
-	outstruct := new(struct {
-		ChainId         string
-		TrustLevel      FractionData
-		TrustingPeriod  int64
-		UnbondingPeriod int64
-		MaxClockDrift   int64
-		LatestHeight    HeightData
-		MerklePrefix    MerklePrefixData
-		TimeDelay       uint64
-	})
 	if err != nil {
-		return *outstruct, err
+		return *new(common.Address), err
 	}
 
-	outstruct.ChainId = *abi.ConvertType(out[0], new(string)).(*string)
-	outstruct.TrustLevel = *abi.ConvertType(out[1], new(FractionData)).(*FractionData)
-	outstruct.TrustingPeriod = *abi.ConvertType(out[2], new(int64)).(*int64)
-	outstruct.UnbondingPeriod = *abi.ConvertType(out[3], new(int64)).(*int64)
-	outstruct.MaxClockDrift = *abi.ConvertType(out[4], new(int64)).(*int64)
-	outstruct.LatestHeight = *abi.ConvertType(out[5], new(HeightData)).(*HeightData)
-	outstruct.MerklePrefix = *abi.ConvertType(out[6], new(MerklePrefixData)).(*MerklePrefixData)
-	outstruct.TimeDelay = *abi.ConvertType(out[7], new(uint64)).(*uint64)
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
 
-	return *outstruct, err
+	return out0, err
 
 }
 
-// ClientState is a free data retrieval call binding the contract method 0xbd3ce6b0.
+// Clients is a free data retrieval call binding the contract method 0x20ba1e9f.
 //
-// Solidity: function clientState() view returns(string chain_id, (uint64,uint64) trust_level, int64 trusting_period, int64 unbonding_period, int64 max_clock_drift, (uint64,uint64) latest_height, (bytes) merkle_prefix, uint64 time_delay)
-func (_Client *ClientSession) ClientState() (struct {
-	ChainId         string
-	TrustLevel      FractionData
-	TrustingPeriod  int64
-	UnbondingPeriod int64
-	MaxClockDrift   int64
-	LatestHeight    HeightData
-	MerklePrefix    MerklePrefixData
-	TimeDelay       uint64
-}, error) {
-	return _Client.Contract.ClientState(&_Client.CallOpts)
+// Solidity: function clients(string ) view returns(address)
+func (_Client *ClientSession) Clients(arg0 string) (common.Address, error) {
+	return _Client.Contract.Clients(&_Client.CallOpts, arg0)
 }
 
-// ClientState is a free data retrieval call binding the contract method 0xbd3ce6b0.
+// Clients is a free data retrieval call binding the contract method 0x20ba1e9f.
 //
-// Solidity: function clientState() view returns(string chain_id, (uint64,uint64) trust_level, int64 trusting_period, int64 unbonding_period, int64 max_clock_drift, (uint64,uint64) latest_height, (bytes) merkle_prefix, uint64 time_delay)
-func (_Client *ClientCallerSession) ClientState() (struct {
-	ChainId         string
-	TrustLevel      FractionData
-	TrustingPeriod  int64
-	UnbondingPeriod int64
-	MaxClockDrift   int64
-	LatestHeight    HeightData
-	MerklePrefix    MerklePrefixData
-	TimeDelay       uint64
-}, error) {
-	return _Client.Contract.ClientState(&_Client.CallOpts)
+// Solidity: function clients(string ) view returns(address)
+func (_Client *ClientCallerSession) Clients(arg0 string) (common.Address, error) {
+	return _Client.Contract.Clients(&_Client.CallOpts, arg0)
 }
 
-// ConsensusStates is a free data retrieval call binding the contract method 0x1b738a22.
+// GetChainName is a free data retrieval call binding the contract method 0xd722b0bc.
 //
-// Solidity: function consensusStates(uint256 ) view returns((int64,int64) timestamp, bytes root, bytes next_validators_hash)
-func (_Client *ClientCaller) ConsensusStates(opts *bind.CallOpts, arg0 *big.Int) (struct {
-	Timestamp          TimestampData
-	Root               []byte
-	NextValidatorsHash []byte
-}, error) {
+// Solidity: function getChainName() view returns(string)
+func (_Client *ClientCaller) GetChainName(opts *bind.CallOpts) (string, error) {
 	var out []interface{}
-	err := _Client.contract.Call(opts, &out, "consensusStates", arg0)
+	err := _Client.contract.Call(opts, &out, "getChainName")
 
-	outstruct := new(struct {
-		Timestamp          TimestampData
-		Root               []byte
-		NextValidatorsHash []byte
-	})
 	if err != nil {
-		return *outstruct, err
+		return *new(string), err
 	}
 
-	outstruct.Timestamp = *abi.ConvertType(out[0], new(TimestampData)).(*TimestampData)
-	outstruct.Root = *abi.ConvertType(out[1], new([]byte)).(*[]byte)
-	outstruct.NextValidatorsHash = *abi.ConvertType(out[2], new([]byte)).(*[]byte)
+	out0 := *abi.ConvertType(out[0], new(string)).(*string)
 
-	return *outstruct, err
+	return out0, err
 
 }
 
-// ConsensusStates is a free data retrieval call binding the contract method 0x1b738a22.
+// GetChainName is a free data retrieval call binding the contract method 0xd722b0bc.
 //
-// Solidity: function consensusStates(uint256 ) view returns((int64,int64) timestamp, bytes root, bytes next_validators_hash)
-func (_Client *ClientSession) ConsensusStates(arg0 *big.Int) (struct {
-	Timestamp          TimestampData
-	Root               []byte
-	NextValidatorsHash []byte
-}, error) {
-	return _Client.Contract.ConsensusStates(&_Client.CallOpts, arg0)
+// Solidity: function getChainName() view returns(string)
+func (_Client *ClientSession) GetChainName() (string, error) {
+	return _Client.Contract.GetChainName(&_Client.CallOpts)
 }
 
-// ConsensusStates is a free data retrieval call binding the contract method 0x1b738a22.
+// GetChainName is a free data retrieval call binding the contract method 0xd722b0bc.
 //
-// Solidity: function consensusStates(uint256 ) view returns((int64,int64) timestamp, bytes root, bytes next_validators_hash)
-func (_Client *ClientCallerSession) ConsensusStates(arg0 *big.Int) (struct {
-	Timestamp          TimestampData
-	Root               []byte
-	NextValidatorsHash []byte
-}, error) {
-	return _Client.Contract.ConsensusStates(&_Client.CallOpts, arg0)
+// Solidity: function getChainName() view returns(string)
+func (_Client *ClientCallerSession) GetChainName() (string, error) {
+	return _Client.Contract.GetChainName(&_Client.CallOpts)
 }
 
-// GetLatestHeight is a free data retrieval call binding the contract method 0x4ed1d8cc.
+// GetLatestHeight is a free data retrieval call binding the contract method 0x329681d0.
 //
-// Solidity: function getLatestHeight() view returns((uint64,uint64))
-func (_Client *ClientCaller) GetLatestHeight(opts *bind.CallOpts) (HeightData, error) {
+// Solidity: function getLatestHeight(string chainName) view returns((uint64,uint64))
+func (_Client *ClientCaller) GetLatestHeight(opts *bind.CallOpts, chainName string) (HeightData, error) {
 	var out []interface{}
-	err := _Client.contract.Call(opts, &out, "getLatestHeight")
+	err := _Client.contract.Call(opts, &out, "getLatestHeight", chainName)
 
 	if err != nil {
 		return *new(HeightData), err
@@ -338,18 +258,18 @@ func (_Client *ClientCaller) GetLatestHeight(opts *bind.CallOpts) (HeightData, e
 
 }
 
-// GetLatestHeight is a free data retrieval call binding the contract method 0x4ed1d8cc.
+// GetLatestHeight is a free data retrieval call binding the contract method 0x329681d0.
 //
-// Solidity: function getLatestHeight() view returns((uint64,uint64))
-func (_Client *ClientSession) GetLatestHeight() (HeightData, error) {
-	return _Client.Contract.GetLatestHeight(&_Client.CallOpts)
+// Solidity: function getLatestHeight(string chainName) view returns((uint64,uint64))
+func (_Client *ClientSession) GetLatestHeight(chainName string) (HeightData, error) {
+	return _Client.Contract.GetLatestHeight(&_Client.CallOpts, chainName)
 }
 
-// GetLatestHeight is a free data retrieval call binding the contract method 0x4ed1d8cc.
+// GetLatestHeight is a free data retrieval call binding the contract method 0x329681d0.
 //
-// Solidity: function getLatestHeight() view returns((uint64,uint64))
-func (_Client *ClientCallerSession) GetLatestHeight() (HeightData, error) {
-	return _Client.Contract.GetLatestHeight(&_Client.CallOpts)
+// Solidity: function getLatestHeight(string chainName) view returns((uint64,uint64))
+func (_Client *ClientCallerSession) GetLatestHeight(chainName string) (HeightData, error) {
+	return _Client.Contract.GetLatestHeight(&_Client.CallOpts, chainName)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -383,77 +303,98 @@ func (_Client *ClientCallerSession) Owner() (common.Address, error) {
 	return _Client.Contract.Owner(&_Client.CallOpts)
 }
 
-// Status is a free data retrieval call binding the contract method 0x200d2ed2.
+// Relayers is a free data retrieval call binding the contract method 0xee1ceb62.
 //
-// Solidity: function status() view returns(int8)
-func (_Client *ClientCaller) Status(opts *bind.CallOpts) (int8, error) {
+// Solidity: function relayers(string , address ) view returns(bool)
+func (_Client *ClientCaller) Relayers(opts *bind.CallOpts, arg0 string, arg1 common.Address) (bool, error) {
 	var out []interface{}
-	err := _Client.contract.Call(opts, &out, "status")
+	err := _Client.contract.Call(opts, &out, "relayers", arg0, arg1)
 
 	if err != nil {
-		return *new(int8), err
+		return *new(bool), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(int8)).(*int8)
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
 
 	return out0, err
 
 }
 
-// Status is a free data retrieval call binding the contract method 0x200d2ed2.
+// Relayers is a free data retrieval call binding the contract method 0xee1ceb62.
 //
-// Solidity: function status() view returns(int8)
-func (_Client *ClientSession) Status() (int8, error) {
-	return _Client.Contract.Status(&_Client.CallOpts)
+// Solidity: function relayers(string , address ) view returns(bool)
+func (_Client *ClientSession) Relayers(arg0 string, arg1 common.Address) (bool, error) {
+	return _Client.Contract.Relayers(&_Client.CallOpts, arg0, arg1)
 }
 
-// Status is a free data retrieval call binding the contract method 0x200d2ed2.
+// Relayers is a free data retrieval call binding the contract method 0xee1ceb62.
 //
-// Solidity: function status() view returns(int8)
-func (_Client *ClientCallerSession) Status() (int8, error) {
-	return _Client.Contract.Status(&_Client.CallOpts)
+// Solidity: function relayers(string , address ) view returns(bool)
+func (_Client *ClientCallerSession) Relayers(arg0 string, arg1 common.Address) (bool, error) {
+	return _Client.Contract.Relayers(&_Client.CallOpts, arg0, arg1)
 }
 
-// CheckHeaderAndUpdateState is a paid mutator transaction binding the contract method 0xb47a619a.
+// CreateClient is a paid mutator transaction binding the contract method 0x76262a47.
 //
-// Solidity: function checkHeaderAndUpdateState(bytes headerBz) returns()
-func (_Client *ClientTransactor) CheckHeaderAndUpdateState(opts *bind.TransactOpts, headerBz []byte) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "checkHeaderAndUpdateState", headerBz)
+// Solidity: function createClient(string chainName, address clientAddress, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientTransactor) CreateClient(opts *bind.TransactOpts, chainName string, clientAddress common.Address, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.contract.Transact(opts, "createClient", chainName, clientAddress, clientState, consensusState)
 }
 
-// CheckHeaderAndUpdateState is a paid mutator transaction binding the contract method 0xb47a619a.
+// CreateClient is a paid mutator transaction binding the contract method 0x76262a47.
 //
-// Solidity: function checkHeaderAndUpdateState(bytes headerBz) returns()
-func (_Client *ClientSession) CheckHeaderAndUpdateState(headerBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.CheckHeaderAndUpdateState(&_Client.TransactOpts, headerBz)
+// Solidity: function createClient(string chainName, address clientAddress, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientSession) CreateClient(chainName string, clientAddress common.Address, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.Contract.CreateClient(&_Client.TransactOpts, chainName, clientAddress, clientState, consensusState)
 }
 
-// CheckHeaderAndUpdateState is a paid mutator transaction binding the contract method 0xb47a619a.
+// CreateClient is a paid mutator transaction binding the contract method 0x76262a47.
 //
-// Solidity: function checkHeaderAndUpdateState(bytes headerBz) returns()
-func (_Client *ClientTransactorSession) CheckHeaderAndUpdateState(headerBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.CheckHeaderAndUpdateState(&_Client.TransactOpts, headerBz)
+// Solidity: function createClient(string chainName, address clientAddress, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientTransactorSession) CreateClient(chainName string, clientAddress common.Address, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.Contract.CreateClient(&_Client.TransactOpts, chainName, clientAddress, clientState, consensusState)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0x1af19f77.
+// GetClient is a paid mutator transaction binding the contract method 0x7eb78932.
 //
-// Solidity: function initialize(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientTransactor) Initialize(opts *bind.TransactOpts, clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "initialize", clientStateBz, consensusStateBz)
+// Solidity: function getClient(string chainName) returns(address)
+func (_Client *ClientTransactor) GetClient(opts *bind.TransactOpts, chainName string) (*types.Transaction, error) {
+	return _Client.contract.Transact(opts, "getClient", chainName)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0x1af19f77.
+// GetClient is a paid mutator transaction binding the contract method 0x7eb78932.
 //
-// Solidity: function initialize(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientSession) Initialize(clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.Initialize(&_Client.TransactOpts, clientStateBz, consensusStateBz)
+// Solidity: function getClient(string chainName) returns(address)
+func (_Client *ClientSession) GetClient(chainName string) (*types.Transaction, error) {
+	return _Client.Contract.GetClient(&_Client.TransactOpts, chainName)
 }
 
-// Initialize is a paid mutator transaction binding the contract method 0x1af19f77.
+// GetClient is a paid mutator transaction binding the contract method 0x7eb78932.
 //
-// Solidity: function initialize(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientTransactorSession) Initialize(clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.Initialize(&_Client.TransactOpts, clientStateBz, consensusStateBz)
+// Solidity: function getClient(string chainName) returns(address)
+func (_Client *ClientTransactorSession) GetClient(chainName string) (*types.Transaction, error) {
+	return _Client.Contract.GetClient(&_Client.TransactOpts, chainName)
+}
+
+// RegisterRelayer is a paid mutator transaction binding the contract method 0x5330a758.
+//
+// Solidity: function registerRelayer(string chainName, address relayer) returns()
+func (_Client *ClientTransactor) RegisterRelayer(opts *bind.TransactOpts, chainName string, relayer common.Address) (*types.Transaction, error) {
+	return _Client.contract.Transact(opts, "registerRelayer", chainName, relayer)
+}
+
+// RegisterRelayer is a paid mutator transaction binding the contract method 0x5330a758.
+//
+// Solidity: function registerRelayer(string chainName, address relayer) returns()
+func (_Client *ClientSession) RegisterRelayer(chainName string, relayer common.Address) (*types.Transaction, error) {
+	return _Client.Contract.RegisterRelayer(&_Client.TransactOpts, chainName, relayer)
+}
+
+// RegisterRelayer is a paid mutator transaction binding the contract method 0x5330a758.
+//
+// Solidity: function registerRelayer(string chainName, address relayer) returns()
+func (_Client *ClientTransactorSession) RegisterRelayer(chainName string, relayer common.Address) (*types.Transaction, error) {
+	return _Client.Contract.RegisterRelayer(&_Client.TransactOpts, chainName, relayer)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -498,88 +439,46 @@ func (_Client *ClientTransactorSession) TransferOwnership(newOwner common.Addres
 	return _Client.Contract.TransferOwnership(&_Client.TransactOpts, newOwner)
 }
 
-// Upgrade is a paid mutator transaction binding the contract method 0xc93ab3fd.
+// UpdateClient is a paid mutator transaction binding the contract method 0x6fbf8079.
 //
-// Solidity: function upgrade(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientTransactor) Upgrade(opts *bind.TransactOpts, clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "upgrade", clientStateBz, consensusStateBz)
+// Solidity: function updateClient(string chainName, bytes header) returns()
+func (_Client *ClientTransactor) UpdateClient(opts *bind.TransactOpts, chainName string, header []byte) (*types.Transaction, error) {
+	return _Client.contract.Transact(opts, "updateClient", chainName, header)
 }
 
-// Upgrade is a paid mutator transaction binding the contract method 0xc93ab3fd.
+// UpdateClient is a paid mutator transaction binding the contract method 0x6fbf8079.
 //
-// Solidity: function upgrade(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientSession) Upgrade(clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.Upgrade(&_Client.TransactOpts, clientStateBz, consensusStateBz)
+// Solidity: function updateClient(string chainName, bytes header) returns()
+func (_Client *ClientSession) UpdateClient(chainName string, header []byte) (*types.Transaction, error) {
+	return _Client.Contract.UpdateClient(&_Client.TransactOpts, chainName, header)
 }
 
-// Upgrade is a paid mutator transaction binding the contract method 0xc93ab3fd.
+// UpdateClient is a paid mutator transaction binding the contract method 0x6fbf8079.
 //
-// Solidity: function upgrade(bytes clientStateBz, bytes consensusStateBz) returns()
-func (_Client *ClientTransactorSession) Upgrade(clientStateBz []byte, consensusStateBz []byte) (*types.Transaction, error) {
-	return _Client.Contract.Upgrade(&_Client.TransactOpts, clientStateBz, consensusStateBz)
+// Solidity: function updateClient(string chainName, bytes header) returns()
+func (_Client *ClientTransactorSession) UpdateClient(chainName string, header []byte) (*types.Transaction, error) {
+	return _Client.Contract.UpdateClient(&_Client.TransactOpts, chainName, header)
 }
 
-// VerifyPacketAcknowledgement is a paid mutator transaction binding the contract method 0xc7ada807.
+// UpgradeClient is a paid mutator transaction binding the contract method 0x935aee64.
 //
-// Solidity: function verifyPacketAcknowledgement((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes acknowledgement) returns()
-func (_Client *ClientTransactor) VerifyPacketAcknowledgement(opts *bind.TransactOpts, height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, acknowledgement []byte) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "verifyPacketAcknowledgement", height, proof, sourceChain, destChain, sequence, acknowledgement)
+// Solidity: function upgradeClient(string chainName, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientTransactor) UpgradeClient(opts *bind.TransactOpts, chainName string, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.contract.Transact(opts, "upgradeClient", chainName, clientState, consensusState)
 }
 
-// VerifyPacketAcknowledgement is a paid mutator transaction binding the contract method 0xc7ada807.
+// UpgradeClient is a paid mutator transaction binding the contract method 0x935aee64.
 //
-// Solidity: function verifyPacketAcknowledgement((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes acknowledgement) returns()
-func (_Client *ClientSession) VerifyPacketAcknowledgement(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, acknowledgement []byte) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketAcknowledgement(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence, acknowledgement)
+// Solidity: function upgradeClient(string chainName, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientSession) UpgradeClient(chainName string, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.Contract.UpgradeClient(&_Client.TransactOpts, chainName, clientState, consensusState)
 }
 
-// VerifyPacketAcknowledgement is a paid mutator transaction binding the contract method 0xc7ada807.
+// UpgradeClient is a paid mutator transaction binding the contract method 0x935aee64.
 //
-// Solidity: function verifyPacketAcknowledgement((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes acknowledgement) returns()
-func (_Client *ClientTransactorSession) VerifyPacketAcknowledgement(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, acknowledgement []byte) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketAcknowledgement(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence, acknowledgement)
-}
-
-// VerifyPacketCleanCommitment is a paid mutator transaction binding the contract method 0x06023111.
-//
-// Solidity: function verifyPacketCleanCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence) returns()
-func (_Client *ClientTransactor) VerifyPacketCleanCommitment(opts *bind.TransactOpts, height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "verifyPacketCleanCommitment", height, proof, sourceChain, destChain, sequence)
-}
-
-// VerifyPacketCleanCommitment is a paid mutator transaction binding the contract method 0x06023111.
-//
-// Solidity: function verifyPacketCleanCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence) returns()
-func (_Client *ClientSession) VerifyPacketCleanCommitment(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketCleanCommitment(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence)
-}
-
-// VerifyPacketCleanCommitment is a paid mutator transaction binding the contract method 0x06023111.
-//
-// Solidity: function verifyPacketCleanCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence) returns()
-func (_Client *ClientTransactorSession) VerifyPacketCleanCommitment(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketCleanCommitment(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence)
-}
-
-// VerifyPacketCommitment is a paid mutator transaction binding the contract method 0x52904aac.
-//
-// Solidity: function verifyPacketCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes commitmentBytes) returns()
-func (_Client *ClientTransactor) VerifyPacketCommitment(opts *bind.TransactOpts, height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, commitmentBytes []byte) (*types.Transaction, error) {
-	return _Client.contract.Transact(opts, "verifyPacketCommitment", height, proof, sourceChain, destChain, sequence, commitmentBytes)
-}
-
-// VerifyPacketCommitment is a paid mutator transaction binding the contract method 0x52904aac.
-//
-// Solidity: function verifyPacketCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes commitmentBytes) returns()
-func (_Client *ClientSession) VerifyPacketCommitment(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, commitmentBytes []byte) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketCommitment(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence, commitmentBytes)
-}
-
-// VerifyPacketCommitment is a paid mutator transaction binding the contract method 0x52904aac.
-//
-// Solidity: function verifyPacketCommitment((uint64,uint64) height, bytes proof, string sourceChain, string destChain, uint64 sequence, bytes commitmentBytes) returns()
-func (_Client *ClientTransactorSession) VerifyPacketCommitment(height HeightData, proof []byte, sourceChain string, destChain string, sequence uint64, commitmentBytes []byte) (*types.Transaction, error) {
-	return _Client.Contract.VerifyPacketCommitment(&_Client.TransactOpts, height, proof, sourceChain, destChain, sequence, commitmentBytes)
+// Solidity: function upgradeClient(string chainName, bytes clientState, bytes consensusState) returns()
+func (_Client *ClientTransactorSession) UpgradeClient(chainName string, clientState []byte, consensusState []byte) (*types.Transaction, error) {
+	return _Client.Contract.UpgradeClient(&_Client.TransactOpts, chainName, clientState, consensusState)
 }
 
 // ClientOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Client contract.

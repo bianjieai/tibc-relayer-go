@@ -10,6 +10,8 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/eth/contracts"
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
+	"github.com/bianjieai/tibc-relayer-go/tools"
 
 	geth "github.com/ethereum/go-ethereum"
 	gethcmn "github.com/ethereum/go-ethereum/common"
@@ -24,6 +26,7 @@ import (
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	tibctendermint "github.com/bianjieai/tibc-sdk-go/tendermint"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
+	"github.com/irisnet/core-sdk-go/common/codec"
 	"github.com/irisnet/core-sdk-go/types"
 )
 
@@ -42,6 +45,8 @@ type Eth struct {
 
 	ethClient *gethethclient.Client
 	gethCli   *gethclient.Client
+
+	amino *codec.LegacyAmino
 }
 
 func NewEth(chainType, chainName string, updateClientFrequency uint64, uri string, cfgGroup *ContractCfgGroup) (repostitory.IChain, error) {
@@ -58,6 +63,7 @@ func NewEth(chainType, chainName string, updateClientFrequency uint64, uri strin
 	if err != nil {
 		return nil, err
 	}
+	codecAmino := codec.NewLegacyAmino()
 
 	return &Eth{
 		chainType:             chainType,
@@ -67,17 +73,74 @@ func NewEth(chainType, chainName string, updateClientFrequency uint64, uri strin
 		ethClient:             ethClient,
 		gethCli:               gethCli,
 		contracts:             filter,
+		amino:                 codecAmino,
 	}, nil
 }
 
 func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) {
-	// todo
-	return nil, nil
+	resultTx := &repotypes.ResultTx{}
+	for _, d := range msgs {
+
+		switch d.Type() {
+		case "recv_packet":
+			msg := d.(*packet.MsgRecvPacket)
+
+			tmpPack := contracts.PacketTypesPacket{
+				Sequence:    msg.Packet.Sequence,
+				Port:        msg.Packet.Port,
+				DestChain:   msg.Packet.DestinationChain,
+				SourceChain: msg.Packet.SourceChain,
+				RelayChain:  msg.Packet.RelayChain,
+				Data:        msg.Packet.Data,
+			}
+			height := contracts.HeightData{
+				RevisionNumber: msg.ProofHeight.RevisionNumber,
+				RevisionHeight: msg.ProofHeight.RevisionHeight,
+			}
+			result, err := eth.contracts.Packet.RecvPacket(nil, tmpPack, msg.ProofCommitment, height)
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+			resultTx.GasUsed += int64(result.Gas())
+			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
+		case "acknowledge_packet":
+			msg := d.(*packet.MsgAcknowledgement)
+			tmpPack := contracts.PacketTypesPacket{
+				Sequence:    msg.Packet.Sequence,
+				Port:        msg.Packet.Port,
+				DestChain:   msg.Packet.DestinationChain,
+				SourceChain: msg.Packet.SourceChain,
+				RelayChain:  msg.Packet.RelayChain,
+				Data:        msg.Packet.Data,
+			}
+			height := contracts.HeightData{
+				RevisionNumber: msg.ProofHeight.RevisionNumber,
+				RevisionHeight: msg.ProofHeight.RevisionHeight,
+			}
+			result, err := eth.contracts.Packet.RecvPacket(nil, tmpPack, msg.ProofAcked, height)
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+			resultTx.GasUsed += int64(result.Gas())
+			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
+		}
+
+	}
+
+	return resultTx, nil
 }
 
 func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string, error) {
-	// todo
-	return "", nil
+	headerBytes, err := eth.amino.MarshalJSON(header)
+	if err != nil {
+		return "", err
+	}
+	result, err := eth.contracts.Client.UpdateClient(nil, chainName, headerBytes)
+	if err != nil {
+		return "", err
+	}
+
+	return result.Hash().String(), nil
 }
 
 func (eth *Eth) GetPackets(height uint64) (*repotypes.Packets, error) {
@@ -110,7 +173,28 @@ func (eth *Eth) GetPackets(height uint64) (*repotypes.Packets, error) {
 }
 
 func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, height uint64, typ string) ([]byte, error) {
-	return nil, nil
+	pkConstr := tools.NewProofKeyConstructor(sourChainName, destChainName, sequence)
+	var key []byte
+	switch typ {
+	case repotypes.CommitmentPoof:
+		key = pkConstr.GetPacketCommitmentProofKey()
+	case repotypes.AckProof:
+		key = pkConstr.GetAckProofKey()
+	default:
+		return nil, errors.ErrGetProof
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+	address := gethcmn.HexToAddress(eth.contractCfgGroup.Packet.Addr)
+	result, err := eth.gethCli.GetProof(ctx, address, []string{string(key)}, new(big.Int).SetUint64(height))
+	if err != nil {
+		return nil, err
+	}
+	proofBz, err := eth.amino.MarshalBinaryBare(result.AccountProof)
+	if err != nil {
+		return nil, err
+	}
+	return proofBz, nil
 }
 
 func (eth *Eth) GetCommitmentsPacket(sourChainName, destChainName string, sequence uint64) error {
@@ -176,7 +260,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 }
 
 func (eth *Eth) GetLightClientState(chainName string) (tibctypes.ClientState, error) {
-	latestHeight, err := eth.contracts.Tendermint.GetLatestHeight(nil)
+	latestHeight, err := eth.contracts.Client.GetLatestHeight(nil, chainName)
 	if err != nil {
 		return nil, err
 	}
@@ -311,8 +395,8 @@ func (eth *Eth) getLogs(address gethcmn.Address, topic string, hash *gethcmn.Has
 }
 
 type filter struct {
-	Packet     *contracts.Packet
-	Tendermint *contracts.Client
+	Packet *contracts.Packet
+	Client *contracts.Client
 }
 
 func newFilter(ethClient *gethethclient.Client, cfgGroup *ContractCfgGroup) (*filter, error) {
@@ -329,8 +413,8 @@ func newFilter(ethClient *gethethclient.Client, cfgGroup *ContractCfgGroup) (*fi
 	}
 
 	return &filter{
-		Packet:     packetFilter,
-		Tendermint: clientFilter,
+		Packet: packetFilter,
+		Client: clientFilter,
 	}, nil
 }
 
