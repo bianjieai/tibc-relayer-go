@@ -3,9 +3,12 @@ package eth
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/eth/contracts"
@@ -42,6 +45,7 @@ type Eth struct {
 
 	contractCfgGroup *ContractCfgGroup
 	contracts        *filter
+	bindOpts         *bindOpts
 
 	ethClient *gethethclient.Client
 	gethCli   *gethclient.Client
@@ -63,6 +67,13 @@ func NewEth(chainType, chainName string, updateClientFrequency uint64, uri strin
 	if err != nil {
 		return nil, err
 	}
+
+	tmpBindOpts, err := newBindOpts(cfgGroup.Packet.OptPrivKey, cfgGroup.Client.OptPrivKey)
+
+	if err != nil {
+		return nil, err
+	}
+
 	codecAmino := codec.NewLegacyAmino()
 
 	return &Eth{
@@ -74,11 +85,13 @@ func NewEth(chainType, chainName string, updateClientFrequency uint64, uri strin
 		gethCli:               gethCli,
 		contracts:             filter,
 		amino:                 codecAmino,
+		bindOpts:              tmpBindOpts,
 	}, nil
 }
 
 func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) {
 	resultTx := &repotypes.ResultTx{}
+
 	for _, d := range msgs {
 
 		switch d.Type() {
@@ -131,11 +144,13 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 }
 
 func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string, error) {
-	headerBytes, err := eth.amino.MarshalJSON(header)
+	h := header.(*tibctendermint.Header)
+	headerBytes, err := h.Marshal()
 	if err != nil {
 		return "", err
 	}
-	result, err := eth.contracts.Client.UpdateClient(nil, chainName, headerBytes)
+	fmt.Println(hex.EncodeToString(headerBytes))
+	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
 	}
@@ -190,7 +205,7 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	if err != nil {
 		return nil, err
 	}
-	proofBz, err := eth.amino.MarshalBinaryBare(result.AccountProof)
+	proofBz, err := eth.amino.MarshalBinaryBare(result)
 	if err != nil {
 		return nil, err
 	}
@@ -394,6 +409,42 @@ func (eth *Eth) getLogs(address gethcmn.Address, topic string, hash *gethcmn.Has
 	return eth.ethClient.FilterLogs(context.Background(), filter)
 }
 
+type bindOpts struct {
+	client *bind.TransactOpts
+	packet *bind.TransactOpts
+}
+
+func newBindOpts(clientPrivKey, packetPrivKey string) (*bindOpts, error) {
+
+	cliPriv, err := gethcrypto.HexToECDSA(clientPrivKey)
+	if err != nil {
+		return nil, err
+	}
+	chainID := new(big.Int).SetUint64(4)
+	clientOpts, err := bind.NewKeyedTransactorWithChainID(cliPriv, chainID)
+	if err != nil {
+		return nil, err
+	}
+	var tmpPacketPrivKey string
+	if len(packetPrivKey) == 0 {
+		tmpPacketPrivKey = clientPrivKey
+	} else {
+		tmpPacketPrivKey = packetPrivKey
+	}
+	clientOpts.GasLimit = 20000000
+	clientOpts.GasPrice = new(big.Int).SetUint64(1500000000)
+	packPriv, err := gethcrypto.HexToECDSA(tmpPacketPrivKey)
+	if err != nil {
+		return nil, err
+	}
+	packOpts := bind.NewKeyedTransactor(packPriv)
+
+	return &bindOpts{
+		client: clientOpts,
+		packet: packOpts,
+	}, nil
+}
+
 type filter struct {
 	Packet *contracts.Packet
 	Client *contracts.Client
@@ -426,8 +477,9 @@ type ContractCfgGroup struct {
 }
 
 type ContractCfg struct {
-	Addr  string
-	Topic string
+	Addr       string
+	Topic      string
+	OptPrivKey string
 }
 
 func NewContracts() *ContractCfgGroup {

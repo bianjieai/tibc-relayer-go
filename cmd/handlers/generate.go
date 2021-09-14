@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
+
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/commitment"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
@@ -21,6 +23,7 @@ import (
 )
 
 const TendermintAndTendermint = "tendermint_and_tendermint"
+const TendermintAndETH = "tendermint_and_eth"
 
 const tibcTendermintMerklePrefix = "tibc"
 const tibcTendermintRoot = "app_hash"
@@ -52,6 +55,17 @@ func CreateClientFiles(cfg *configs.Config) {
 				destChain,
 				int64(cfg.Chain.Dest.Cache.StartHeight),
 				cfg.Chain.Dest.Tendermint.ChainName,
+			)
+		case TendermintAndETH:
+			logger := log.WithFields(log.Fields{
+				"source_chain": &cfg.Chain.Source.Tendermint.ChainName,
+			})
+			logger.Info("1. init source chain")
+			sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
+			getTendermintBytes(
+				sourceChain,
+				int64(cfg.Chain.Source.Cache.StartHeight),
+				cfg.Chain.Source.Tendermint.ChainName,
 			)
 		}
 	}
@@ -95,6 +109,73 @@ func tendermintCreateClientFiles(cfg *configs.ChainCfg, logger *log.Entry) cores
 	}
 
 	return coresdk.NewClient(coreSdkCfg)
+}
+
+func getTendermintBytes(client coresdk.Client, height int64, chainName string) {
+
+	//ClientState
+	var fra = tendermint.Fraction{
+		Numerator:   1,
+		Denominator: 3,
+	}
+	res, err := client.QueryBlock(height)
+	if err != nil {
+		fmt.Println("QueryBlock fail:  ", err)
+	}
+	tmHeader := res.Block.Header
+	lastHeight := tibcclient.NewHeight(0, 4)
+	var clientState = &tendermint.ClientState{
+		ChainId:         tmHeader.ChainID,
+		TrustLevel:      fra,
+		TrustingPeriod:  time.Hour * 24 * 7 * 2,
+		UnbondingPeriod: time.Hour * 24 * 7 * 3,
+		MaxClockDrift:   time.Second * 10,
+		LatestHeight:    lastHeight,
+		ProofSpecs:      commitment.GetSDKSpecs(),
+		MerklePrefix:    commitment.MerklePrefix{KeyPrefix: []byte(tibcTendermintMerklePrefix)},
+		TimeDelay:       0,
+	}
+	//ConsensusState
+	var consensusState = &tendermint.ConsensusState{
+		Timestamp:          tmHeader.Time,
+		Root:               commitment.NewMerkleRoot([]byte(tibcTendermintRoot)),
+		NextValidatorsHash: tendermintQueryValidatorSet(res.Block.Height, client).Hash(),
+	}
+
+	clientStateBytes, err := clientState.Marshal()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	clientStateBytes1, err := client.AppCodec().MarshalJSON(clientState)
+	if err != nil {
+		panic(err)
+	}
+	// write file
+	clientStateStr1 := string(clientStateBytes1)
+	clientStateStr1 = clientStatePrefix + clientStateStr1[1:]
+	clientStateFilename1 := fmt.Sprintf("%s_clientState.json", chainName)
+	writeCreateClientFiles(clientStateFilename1, clientStateStr1)
+
+	consensusStateBytes1, err := client.AppCodec().MarshalJSON(consensusState)
+	if err != nil {
+		panic(err)
+	}
+	consensusStateStr1 := string(consensusStateBytes1)
+	consensusStateStr1 = consensusStatePrefix + consensusStateStr1[1:]
+	consensusStateFilename1 := fmt.Sprintf("%s_consensusState.json", chainName)
+	writeCreateClientFiles(consensusStateFilename1, consensusStateStr1)
+
+	// write file
+	clientStateFilename := fmt.Sprintf("%s_lientState.txt", chainName)
+	writeCreateClientFiles(clientStateFilename, hexutil.Encode(clientStateBytes))
+
+	consensusStateBytes, err := consensusState.Marshal()
+	if err != nil {
+		log.Fatal(err)
+	}
+	consensusStateFilename := fmt.Sprintf("%s_consensusState.txt", chainName)
+	writeCreateClientFiles(consensusStateFilename, hexutil.Encode(consensusStateBytes))
 }
 
 func getTendermintJson(client coresdk.Client, height int64, chainName string) {

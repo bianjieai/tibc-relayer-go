@@ -331,16 +331,25 @@ func (channel *Channel) relay() error {
 	if (len(packets.CleanPackets) == 0 && len(packets.AckPackets) == 0 && len(packets.BizPackets) == 0) || len(recvPackets) == 0 {
 		logger.Info("there are no packets to be relayed at the current altitude")
 		// When the packet is empty, tendermint does not need to update the client
-		if channel.source.ChainType() != constant.Tendermint {
-			//update client
-			err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
-			if err != nil {
-				logger.WithFields(log.Fields{
-					"err_msg": err.Error(),
-				}).Error("failed to update client")
-				return typeserr.ErrGetLightClientState
-			}
+
+		//update client
+		err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err_msg": err.Error(),
+			}).Error("failed to update client")
+			return typeserr.ErrGetLightClientState
 		}
+		//if channel.source.ChainType() != constant.Tendermint {
+		//	//update client
+		//	err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+		//	if err != nil {
+		//		logger.WithFields(log.Fields{
+		//			"err_msg": err.Error(),
+		//		}).Error("failed to update client")
+		//		return typeserr.ErrGetLightClientState
+		//	}
+		//}
 	} else {
 		//update client
 		err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)

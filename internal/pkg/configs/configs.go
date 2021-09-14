@@ -26,14 +26,15 @@ type (
 
 	EthContracts struct {
 		Packet      EthContractCfg `mapstructure:"packet"`
-		AckPacket   EthContractCfg `mapstructure:"packet"`
-		CleanPacket EthContractCfg `mapstructure:"packet"`
+		AckPacket   EthContractCfg `mapstructure:"ack_packet"`
+		CleanPacket EthContractCfg `mapstructure:"clean_packet"`
 		Client      EthContractCfg `mapstructure:"client"`
 	}
 
 	EthContractCfg struct {
-		Addr  string `mapstructure:"addr"`
-		Topic string `mapstructure:"topic"`
+		Addr       string `mapstructure:"addr"`
+		Topic      string `mapstructure:"topic"`
+		OptPrivKey string `mapstructure:"opt_priv_key"`
 	}
 	// =====================================================================
 	// Tendermit config=====================================================
