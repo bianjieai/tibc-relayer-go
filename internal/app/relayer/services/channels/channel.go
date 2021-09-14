@@ -1,16 +1,16 @@
 package channels
 
 import (
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
+	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/irisnet/core-sdk-go/types"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 )
 
 var _ IChannel = new(Channel)
@@ -89,7 +89,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	var err error
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
-		req := &repostitory.GetBlockHeaderReq{
+		req := &repotypes.GetBlockHeaderReq{
 			LatestHeight:  latestHeight,
 			TrustedHeight: trustedHeight,
 		}
@@ -103,7 +103,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	// 4. update client to dest chain
 	hash, err := channel.dest.UpdateClient(header, channel.source.ChainName())
 	if err != nil {
-		channel.logger.Error("failed to update client")
+		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
 	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
@@ -112,6 +112,28 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 }
 
 func (channel *Channel) Relay() error {
+	return channel.relay()
+}
+
+func (channel *Channel) IsNotRelay() bool {
+	curHeight := channel.context.Height()
+	latestHeight, err := channel.source.GetLatestHeight()
+	if err != nil {
+		return false
+	}
+
+	if curHeight < latestHeight {
+		return true
+	}
+
+	return false
+}
+
+func (channel *Channel) Context() *domain.Context {
+	return channel.context
+}
+
+func (channel *Channel) relay() error {
 
 	logger := channel.logger.WithFields(log.Fields{
 		"source_height": channel.context.Height(),
@@ -119,26 +141,20 @@ func (channel *Channel) Relay() error {
 		"dest_chain":    channel.dest.ChainName(),
 		"option":        "relay",
 	})
+
 	latestHeight, err := channel.source.GetLatestHeight()
 	if err != nil {
-		channel.logger.Error("failed to get latest height")
+		logger.Error("failed to get latest height")
 		return typeserr.ErrGetLatestHeight
 	}
 
 	if latestHeight <= channel.context.Height() {
-		channel.logger.Info("the current height cannot be relayed yet")
+		logger.Info("the current height cannot be relayed yet")
 		return typeserr.ErrNotProduced
 	}
 
-	// 1. get packets from source chain
-	packets, err := channel.source.GetPackets(channel.context.Height())
-	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get packets")
-		return typeserr.ErrGetPackets
-	}
-
+	// 1. update client
+	// 1.1 get eth clientState from tendermint
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
 		logger.WithFields(log.Fields{
@@ -147,7 +163,71 @@ func (channel *Channel) Relay() error {
 		return typeserr.ErrGetLightClientState
 	}
 
-	// 2.  Process biz packets
+	delayHeight, err := channel.dest.GetLightClientDelayHeight(channel.source.ChainName())
+	if err != nil {
+		logger.Error("failed to get delay height")
+		return typeserr.ErrGetLatestHeight
+	}
+
+	delayTime, err := channel.dest.GetLightClientDelayTime(channel.source.ChainName())
+	if err != nil {
+		logger.Error("failed to get delay time")
+		return typeserr.ErrGetLatestHeight
+	}
+
+	curBlockTimestamp, err := channel.source.GetBlockTimestamp(channel.Context().Height())
+	if err != nil {
+		logger.Error("failed to get block time")
+		return typeserr.ErrGetLatestHeight
+	}
+
+	var boastCommitPackets types.Msgs
+	popLength := 0
+	recvPacketQueue := channel.context.Queue()
+	for _, recvPack := range recvPacketQueue {
+		if recvPack.Height+delayHeight < latestHeight && recvPack.Timestamp+delayTime < curBlockTimestamp {
+			popLength += 1
+			boastCommitPackets = append(boastCommitPackets, recvPack.RecvPackets...)
+		}
+	}
+
+	if len(boastCommitPackets) > 0 {
+		//  boastCommit tx
+		err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+		if err != nil {
+			return typeserr.ErrUpdateClient
+		}
+		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err_msg": err.Error(),
+			}).Error("failed to recv packet")
+			return typeserr.ErrRecvPacket
+		}
+		logger.WithFields(log.Fields{
+			"tx_height":  resultTx.Height,
+			"tx_hash":    resultTx.Hash,
+			"gas_wanted": resultTx.GasWanted,
+			"gas_used":   resultTx.GasUsed,
+		}).Info("success")
+		// remove the packets that have been chained
+		channel.context.SetQueue(recvPacketQueue[popLength:])
+	}
+	/**
+	* ========================================================
+	* get cur block packet
+	* ========================================================
+	**/
+	// 2. get packets from eth
+	packets, err := channel.source.GetPackets(channel.context.Height())
+	if err != nil {
+		logger.WithFields(log.Fields{
+			"err_msg": err.Error(),
+		}).Error("failed to get packets")
+		return typeserr.ErrGetPackets
+	}
+
+	// 3.  Process biz packets
 	var recvPackets types.Msgs
 	for _, pack := range packets.BizPackets {
 
@@ -158,10 +238,10 @@ func (channel *Channel) Relay() error {
 			continue
 		}
 
-		// 2.1 get commitments packets from source chain
+		// 3.1 get commitments packets from source chain
 		// The source and dest in the packet must be used here
 		// commitment path is determined
-		commitmentsPacketResp, err := channel.source.GetCommitmentsPacket(
+		err := channel.source.GetCommitmentsPacket(
 			pack.SourceChain, pack.DestinationChain, pack.Sequence)
 		if err != nil {
 			logger.WithFields(log.Fields{
@@ -170,10 +250,10 @@ func (channel *Channel) Relay() error {
 			return typeserr.ErrGetCommitmentPacket
 		}
 
-		// 2.2 get receipt packet from dest chain
+		// 3.2 get receipt packet from dest chain
 		// The source and dest in the packet must be used here
 		// commitment path is determined
-		receiptPacketResp, err := channel.dest.GetReceiptPacket(pack.SourceChain, pack.DestinationChain, pack.Sequence)
+		isNotReceipt, err := channel.dest.GetReceiptPacket(pack.SourceChain, pack.DestinationChain, pack.Sequence)
 		if err != nil {
 			logger.WithFields(log.Fields{
 				"err_msg": err.Error(),
@@ -181,14 +261,14 @@ func (channel *Channel) Relay() error {
 			return typeserr.ErrGetReceiptPacket
 		}
 		// if receipt exist, skip
-		if receiptPacketResp.Received {
+		if isNotReceipt {
 			logger.Info("receipt exist, skip cur height ")
 			continue
 		}
 
 		proof, err := channel.source.GetProof(
 			pack.SourceChain, pack.DestinationChain, pack.Sequence,
-			latestHeight, repostitory.CommitmentPoof)
+			latestHeight, repotypes.CommitmentPoof)
 		if err != nil {
 			logger.Error("failed to get proof")
 			return typeserr.ErrGetProof
@@ -198,14 +278,13 @@ func (channel *Channel) Relay() error {
 			Packet:          pack,
 			ProofCommitment: proof,
 			ProofHeight: client.Height{
-				RevisionNumber: commitmentsPacketResp.ProofHeight.RevisionNumber,
+				RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
 				RevisionHeight: latestHeight,
 			},
 		}
 		recvPackets = append(recvPackets, recvPacket)
 	}
-
-	//3. Process ack packets
+	//4. Process ack packets
 	for _, pack := range packets.AckPackets {
 		// query proof
 
@@ -213,7 +292,7 @@ func (channel *Channel) Relay() error {
 		// Indicates that the current packet is sent by dest.
 		// So data packets should not be relayed back
 
-		_, err := channel.dest.GetCommitmentsPacket(
+		err := channel.dest.GetCommitmentsPacket(
 			pack.Packet.SourceChain, pack.Packet.DestinationChain, pack.Packet.Sequence)
 		if err != nil {
 			logger.Info("the current packet has been confirmed")
@@ -223,7 +302,7 @@ func (channel *Channel) Relay() error {
 		proof, err := channel.source.GetProof(
 			pack.Packet.SourceChain,
 			pack.Packet.DestinationChain,
-			pack.Packet.Sequence, latestHeight, repostitory.AckProof)
+			pack.Packet.Sequence, latestHeight, repotypes.AckProof)
 		if err != nil {
 			logger.WithFields(log.Fields{
 				"err_msg": err.Error(),
@@ -251,45 +330,35 @@ func (channel *Channel) Relay() error {
 
 	if (len(packets.CleanPackets) == 0 && len(packets.AckPackets) == 0 && len(packets.BizPackets) == 0) || len(recvPackets) == 0 {
 		logger.Info("there are no packets to be relayed at the current altitude")
-		channel.Context().IncrHeight()
-		return nil
+		// When the packet is empty, tendermint does not need to update the client
+		if channel.source.ChainType() != constant.Tendermint {
+			//update client
+			err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+			if err != nil {
+				logger.WithFields(log.Fields{
+					"err_msg": err.Error(),
+				}).Error("failed to update client")
+				return typeserr.ErrGetLightClientState
+			}
+		}
+	} else {
+		//update client
+		err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err_msg": err.Error(),
+			}).Error("failed to update client")
+			return typeserr.ErrGetLightClientState
+		}
+
+		queraMetaData := domain.QueueMetaData{
+			Height:      channel.context.Height(),
+			Timestamp:   curBlockTimestamp,
+			RecvPackets: recvPackets,
+		}
+		channel.Context().PushQueue(queraMetaData)
 	}
 
-	// boastCommit tx
-	err = channel.updateClient(clientState.GetLatestHeight().GetRevisionHeight(), latestHeight)
-	if err != nil {
-		return typeserr.ErrUpdateClient
-	}
-	resultTx, err := channel.dest.RecvPackets(recvPackets)
-	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to recv packet")
-		return typeserr.ErrRecvPacket
-	}
-	logger.WithFields(log.Fields{
-		"tx_height":  resultTx.Height,
-		"tx_hash":    resultTx.Hash,
-		"gas_wanted": resultTx.GasWanted,
-		"gas_used":   resultTx.GasUsed,
-	}).Info("success")
+	channel.Context().IncrHeight()
 	return nil
-}
-
-func (channel *Channel) IsNotRelay() bool {
-	curHeight := channel.context.Height()
-	latestHeight, err := channel.source.GetLatestHeight()
-	if err != nil {
-		return false
-	}
-
-	if curHeight < latestHeight {
-		return true
-	}
-
-	return false
-}
-
-func (channel *Channel) Context() *domain.Context {
-	return channel.context
 }

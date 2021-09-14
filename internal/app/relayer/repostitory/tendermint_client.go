@@ -6,17 +6,25 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/irisnet/core-sdk-go/bank"
+	"github.com/irisnet/core-sdk-go/client"
+	"github.com/irisnet/core-sdk-go/gov"
+	"github.com/irisnet/core-sdk-go/staking"
+	"github.com/irisnet/irismod-sdk-go/nft"
+
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
-
-	"github.com/bianjieai/tibc-sdk-go/packet"
-
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
+	"github.com/bianjieai/tibc-sdk-go/packet"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
-	sdk "github.com/irisnet/core-sdk-go"
+	"github.com/irisnet/core-sdk-go/common/codec"
+	cdctypes "github.com/irisnet/core-sdk-go/common/codec/types"
+	cryptocodec "github.com/irisnet/core-sdk-go/common/crypto/codec"
 	"github.com/irisnet/core-sdk-go/types"
 	coretypes "github.com/irisnet/core-sdk-go/types"
+	txtypes "github.com/irisnet/core-sdk-go/types/tx"
 	"github.com/tendermint/tendermint/libs/log"
 	tenderminttypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmttypes "github.com/tendermint/tendermint/types"
@@ -24,77 +32,64 @@ import (
 
 var _ IChain = new(Tendermint)
 
-const EventTypeSendPacket = "send_packet"
-const EventTypeWriteAck = "write_acknowledgement"
-const EventTypeSendCleanPacket = "send_clean_packet"
-
-const CommitmentPoof = "commitment"
-const AckProof = "ack"
-const CleanProof = "clean"
-
 type Tendermint struct {
 	logger log.Logger
 
-	coreSdk    sdk.Client
-	tibcClient tibc.Client
-	baseTx     types.BaseTx
-	address    string
+	terndermintCli tendermintClient
+	baseTx         types.BaseTx
+	address        string
 
 	chainName             string
 	chainType             string
 	updateClientFrequency uint64
 }
 
-func NewTendermintClient(chainType, chaiName string, updateClientFrequency uint64, config *TerndermintConfig) (*Tendermint, error) {
+func NewTendermintClient(chainType, chainName string, updateClientFrequency uint64, config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
 	if err != nil {
 		return nil, err
 	}
-	coreClient := sdk.NewClient(cfg)
-	tibcClient := tibc.NewClient(coreClient)
+	tc := newTendermintClient(cfg, chainName)
 
 	// import key to core-sdk
-	address, err := coreClient.Key.Import(config.Name, config.Password, config.PrivKeyArmor)
+	address, err := tc.BaseClient.Import(config.Name, config.Password, config.PrivKeyArmor)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Tendermint{
 		chainType:             chainType,
-		chainName:             chaiName,
+		chainName:             chainName,
+		terndermintCli:        tc,
 		updateClientFrequency: updateClientFrequency,
-		logger:                coreClient.BaseClient.Logger(),
-		coreSdk:               coreClient,
-		tibcClient:            tibcClient,
+		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
 		address:               address,
 	}, err
 }
 
-func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
+func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 	var bizPackets []packet.Packet
-	var ackPackets []AckPacket
+	var ackPackets []repotypes.AckPacket
 	var cleanPackets []packet.CleanPacket
 
 	curHeight := int64(height)
-	block, err := c.coreSdk.Block(context.Background(), &curHeight)
+	block, err := c.terndermintCli.Block(context.Background(), &curHeight)
 	if err != nil {
 		return nil, err
 	}
 
-	packets := newPackets()
+	packets := repotypes.NewPackets()
 
 	for _, tx := range block.Block.Txs {
 		hash := hex.EncodeToString(tx.Hash())
-		resultTx, err := c.coreSdk.QueryTx(hash)
+		resultTx, err := c.terndermintCli.BaseClient.QueryTx(hash)
 		if err != nil {
 			//todo
 			// 需要修改sdk
-			//
-			//return nil, err
 			continue
 		}
-		if c.isExistPacket(EventTypeSendPacket, resultTx) {
+		if c.isExistPacket(repotypes.EventTypeSendPacket, resultTx) {
 			tmpPacket, err := c.getPacket(resultTx)
 			if err != nil {
 				return nil, err
@@ -102,20 +97,20 @@ func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
 			bizPackets = append(bizPackets, *tmpPacket)
 		}
 
-		if c.isExistPacket(EventTypeWriteAck, resultTx) {
+		if c.isExistPacket(repotypes.EventTypeWriteAck, resultTx) {
 			// get ack packet
 			tmpAckPack, ack, err := c.getAckPackets(resultTx)
 			if err != nil {
 				return nil, err
 			}
-			tmpAckPacket := AckPacket{
+			tmpAckPacket := repotypes.AckPacket{
 				Packet:          tmpAckPack,
 				Acknowledgement: ack,
 			}
 			ackPackets = append(ackPackets, tmpAckPacket)
 		}
 
-		if c.isExistPacket(EventTypeSendCleanPacket, resultTx) {
+		if c.isExistPacket(repotypes.EventTypeSendCleanPacket, resultTx) {
 			tmpCleanPacket, err := c.getCleanPacket(resultTx)
 			if err != nil {
 				return nil, err
@@ -134,22 +129,22 @@ func (c *Tendermint) GetPackets(height uint64) (*Packets, error) {
 func (c *Tendermint) GetProof(sourChainName, destChainName string, sequence uint64, height uint64, typ string) ([]byte, error) {
 	var key []byte
 	switch typ {
-	case CommitmentPoof:
+	case repotypes.CommitmentPoof:
 		key = packet.PacketCommitmentKey(sourChainName, destChainName, sequence)
-	case AckProof:
+	case repotypes.AckProof:
 		key = packet.PacketAcknowledgementKey(sourChainName, destChainName, sequence)
 	default:
 		return nil, errors.ErrGetProof
 	}
 
-	_, proofBz, _, err := tendermint.QueryTendermintProof(c.coreSdk, int64(height), key)
+	_, proofBz, _, err := c.terndermintCli.TIBC.QueryTendermintProof(int64(height), key)
 	if err != nil {
 		return nil, err
 	}
 	return proofBz, nil
 }
 
-func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) {
+func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) {
 	for _, d := range msgs {
 		switch d.Type() {
 		case "recv_packet":
@@ -160,15 +155,33 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (types.ResultTx, types.Error) 
 			msg.Signer = c.address
 		}
 	}
-	return c.tibcClient.RecvPackets(msgs, c.baseTx)
-}
 
-func (c *Tendermint) GetBlockHeader(req *GetBlockHeaderReq) (tibctypes.Header, error) {
-	block, err := c.coreSdk.QueryBlock(int64(req.LatestHeight))
+	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
 	if err != nil {
 		return nil, err
 	}
-	rescommit, err := c.coreSdk.Commit(context.Background(), &block.BlockResult.Height)
+	return &repotypes.ResultTx{
+		GasWanted: resultTx.GasWanted,
+		GasUsed:   resultTx.GasUsed,
+		Hash:      resultTx.Hash,
+		Height:    resultTx.Height,
+	}, nil
+}
+
+func (c *Tendermint) GetBlockTimestamp(height uint64) (uint64, error) {
+	block, err := c.terndermintCli.QueryBlock(int64(height))
+	if err != nil {
+		return 0, err
+	}
+	return uint64(block.Block.Time.Unix()), nil
+}
+
+func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Header, error) {
+	block, err := c.terndermintCli.QueryBlock(int64(req.LatestHeight))
+	if err != nil {
+		return nil, err
+	}
+	rescommit, err := c.terndermintCli.Commit(context.Background(), &block.BlockResult.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -199,21 +212,17 @@ func (c *Tendermint) GetBlockHeader(req *GetBlockHeaderReq) (tibctypes.Header, e
 }
 
 func (c *Tendermint) GetLightClientState(chainName string) (tibctypes.ClientState, error) {
-	return c.tibcClient.GetClientState(chainName)
+	return c.terndermintCli.TIBC.GetClientState(chainName)
 
 }
 
 func (c *Tendermint) GetLightClientConsensusState(chainName string, height uint64) (tibctypes.ConsensusState, error) {
-	return c.tibcClient.GetConsensusState(chainName, height)
+	return c.terndermintCli.TIBC.GetConsensusState(chainName, height)
 
-}
-
-func (c *Tendermint) GetStatus() (interface{}, error) {
-	return c.coreSdk.Status(context.Background())
 }
 
 func (c *Tendermint) GetLatestHeight() (uint64, error) {
-	block, err := c.coreSdk.Block(context.Background(), nil)
+	block, err := c.terndermintCli.Block(context.Background(), nil)
 	if err != nil {
 		return 0, err
 	}
@@ -243,7 +252,7 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) (st
 		ChainName: chainName,
 		Header:    header,
 	}
-	resTx, err := c.tibcClient.UpdateClient(request, c.baseTx)
+	resTx, err := c.terndermintCli.TIBC.UpdateClient(request, c.baseTx)
 	if err != nil {
 		return "", err
 	}
@@ -251,12 +260,20 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) (st
 	return resTx.Hash, nil
 }
 
-func (c *Tendermint) GetCommitmentsPacket(sourceChainName, destChainName string, sequence uint64) (*packet.QueryPacketCommitmentResponse, error) {
-	return c.tibcClient.PacketCommitment(destChainName, sourceChainName, sequence)
+func (c *Tendermint) GetCommitmentsPacket(sourceChainName, destChainName string, sequence uint64) error {
+	_, err := c.terndermintCli.TIBC.PacketCommitment(destChainName, sourceChainName, sequence)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (c *Tendermint) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (*packet.QueryPacketReceiptResponse, error) {
-	return c.tibcClient.PacketReceipt(destChianName, sourChainName, sequence)
+func (c *Tendermint) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (bool, error) {
+	result, err := c.terndermintCli.TIBC.PacketReceipt(destChianName, sourChainName, sequence)
+	if err != nil {
+		return false, err
+	}
+	return result.Received, nil
 }
 
 func (c *Tendermint) ChainName() string {
@@ -273,7 +290,7 @@ func (c *Tendermint) UpdateClientFrequency() uint64 {
 }
 
 func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, error) {
-	validators, err := c.coreSdk.Validators(context.Background(), &height, nil, nil)
+	validators, err := c.terndermintCli.TIBC.Validators(context.Background(), &height, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -286,32 +303,32 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 }
 
 func (c *Tendermint) getPacket(tx types.ResultQueryTx) (*packet.Packet, error) {
-	sequenceStr, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_sequence")
+	sequenceStr, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_sequence")
 	if err != nil {
 		return nil, err
 	}
 
-	srcChain, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_src_chain")
+	srcChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_src_chain")
 	if err != nil {
 		return nil, err
 	}
 
-	dstPort, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_dst_port")
+	dstPort, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_dst_port")
 	if err != nil {
 		return nil, err
 	}
 
-	port, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_port")
+	port, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_port")
 	if err != nil {
 		return nil, err
 	}
 
-	rlyChan, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_relay_channel")
+	rlyChan, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_relay_channel")
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := tx.Result.Events.GetValue(EventTypeSendPacket, "packet_data")
+	data, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_data")
 	if err != nil {
 		return nil, err
 	}
@@ -331,37 +348,37 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) (*packet.Packet, error) {
 }
 
 func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) (packet.Packet, []byte, error) {
-	sequence, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_sequence")
+	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_sequence")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	sourceChain, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_src_chain")
+	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_src_chain")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	destinationChain, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_dst_port")
+	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_dst_port")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	port, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_port")
+	port, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_port")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	relayChain, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_relay_channel")
+	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_relay_channel")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	data, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_data")
+	data, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_data")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	ack, err := tx.Result.Events.GetValue(EventTypeWriteAck, "packet_ack")
+	ack, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_ack")
 	if err != nil {
 		fmt.Println(err)
 		return packet.Packet{}, nil, err
@@ -383,22 +400,22 @@ func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) (packet.Packet, []byt
 }
 
 func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx) (packet.CleanPacket, error) {
-	sequence, err := tx.Result.Events.GetValue(EventTypeSendCleanPacket, "packet_sequence")
+	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_sequence")
 	if err != nil {
 		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
-	sourceChain, err := tx.Result.Events.GetValue(EventTypeSendCleanPacket, "packet_src_chain")
+	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_src_chain")
 	if err != nil {
 		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
-	destinationChain, err := tx.Result.Events.GetValue(EventTypeSendCleanPacket, "packet_dst_port")
+	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_dst_port")
 	if err != nil {
 		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
-	relayChain, err := tx.Result.Events.GetValue(EventTypeSendCleanPacket, "packet_relay_channel")
+	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_relay_channel")
 	if err != nil {
 		fmt.Println(err)
 		return packet.CleanPacket{}, nil
@@ -424,6 +441,90 @@ func (c *Tendermint) isExistPacket(typ string, tx types.ResultQueryTx) bool {
 		return false
 	}
 	return true
+}
+
+//======================================
+
+type tendermintClient struct {
+	encodingConfig types.EncodingConfig
+	coretypes.BaseClient
+	Bank      bank.Client
+	Staking   staking.Client
+	Gov       gov.Client
+	NFT       nft.Client
+	TIBC      tibc.Client
+	ChainName string
+}
+
+func newTendermintClient(cfg types.ClientConfig, chainName string) tendermintClient {
+	encodingConfig := makeEncodingConfig()
+	// create a instance of baseClient
+	baseClient := client.NewBaseClient(cfg, encodingConfig, nil)
+	bankClient := bank.NewClient(baseClient, encodingConfig.Marshaler)
+	stakingClient := staking.NewClient(baseClient, encodingConfig.Marshaler)
+	govClient := gov.NewClient(baseClient, encodingConfig.Marshaler)
+	tibcClient := tibc.NewClient(baseClient, encodingConfig)
+	nftClient := nft.NewClient(baseClient, encodingConfig.Marshaler)
+
+	tc := &tendermintClient{
+		encodingConfig: encodingConfig,
+		BaseClient:     baseClient,
+		Bank:           bankClient,
+		Staking:        stakingClient,
+		Gov:            govClient,
+		NFT:            nftClient,
+		TIBC:           tibcClient,
+		ChainName:      chainName,
+	}
+
+	tc.RegisterModule(
+		bankClient,
+		stakingClient,
+		govClient,
+	)
+	return *tc
+}
+
+func (tc tendermintClient) Manager() types.BaseClient {
+	return tc.BaseClient
+}
+
+func (tc tendermintClient) RegisterModule(ms ...types.Module) {
+	for _, m := range ms {
+		m.RegisterInterfaceTypes(tc.encodingConfig.InterfaceRegistry)
+	}
+}
+
+//client init
+func makeEncodingConfig() types.EncodingConfig {
+	amino := codec.NewLegacyAmino()
+	interfaceRegistry := cdctypes.NewInterfaceRegistry()
+	marshaler := codec.NewProtoCodec(interfaceRegistry)
+	txCfg := txtypes.NewTxConfig(marshaler, txtypes.DefaultSignModes)
+
+	encodingConfig := types.EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Marshaler:         marshaler,
+		TxConfig:          txCfg,
+		Amino:             amino,
+	}
+	registerLegacyAminoCodec(encodingConfig.Amino)
+	registerInterfaces(encodingConfig.InterfaceRegistry)
+	return encodingConfig
+}
+
+// RegisterLegacyAminoCodec registers the sdk message type.
+func registerLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterInterface((*types.Msg)(nil), nil)
+	cdc.RegisterInterface((*types.Tx)(nil), nil)
+	cryptocodec.RegisterCrypto(cdc)
+}
+
+// RegisterInterfaces registers the sdk message type.
+func registerInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterInterface("cosmos.v1beta1.Msg", (*types.Msg)(nil))
+	txtypes.RegisterInterfaces(registry)
+	cryptocodec.RegisterInterfaces(registry)
 }
 
 type TerndermintConfig struct {

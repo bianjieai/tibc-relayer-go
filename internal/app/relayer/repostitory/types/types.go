@@ -1,4 +1,4 @@
-package repostitory
+package types
 
 import "github.com/bianjieai/tibc-sdk-go/packet"
 
@@ -18,10 +18,17 @@ type AckPacket struct {
 	Acknowledgement []byte
 }
 
-func newPackets() *Packets {
+func NewPackets() *Packets {
 	return &Packets{
 		BizPackets:   []packet.Packet{},
 		AckPackets:   []AckPacket{},
 		CleanPackets: []packet.CleanPacket{},
 	}
+}
+
+type ResultTx struct {
+	GasWanted int64  `json:"gas_wanted"`
+	GasUsed   int64  `json:"gas_used"`
+	Hash      string `json:"hash"`
+	Height    int64  `json:"height"`
 }

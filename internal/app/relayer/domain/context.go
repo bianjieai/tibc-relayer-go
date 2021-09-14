@@ -1,12 +1,22 @@
 package domain
 
+import "github.com/irisnet/core-sdk-go/types"
+
+type QueueMetaData struct {
+	Timestamp   uint64
+	Height      uint64
+	RecvPackets types.Msgs
+}
+
 type Context struct {
 	height    uint64
 	chainName string
+
+	queue []QueueMetaData
 }
 
 func NewContext(height uint64, chainName string) *Context {
-	return &Context{height: height, chainName: chainName}
+	return &Context{height: height, chainName: chainName, queue: []QueueMetaData{}}
 }
 
 // Height return the current height of the chain
@@ -25,4 +35,16 @@ func (ctx *Context) SetHeight(height uint64) {
 // ChainName return the ChainName of the chain
 func (ctx *Context) ChainName() string {
 	return ctx.chainName
+}
+
+func (ctx *Context) Queue() []QueueMetaData {
+	return ctx.queue
+}
+
+func (ctx *Context) SetQueue(queue []QueueMetaData) {
+	ctx.queue = queue
+}
+
+func (ctx *Context) PushQueue(queue QueueMetaData) {
+	ctx.queue = append(ctx.queue, queue)
 }

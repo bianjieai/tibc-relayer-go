@@ -14,8 +14,29 @@ type (
 	ChainCfg struct {
 		Cache      Cache      `mapstructure:"cache"`
 		Tendermint Tendermint `mapstructure:"tendermint"`
+		Eth        Eth        `mapstructure:"eth"`
+	}
+	// eth config============================================================
+	Eth struct {
+		URI                   string       `mapstructure:"uri"`
+		ChainName             string       `mapstructure:"chain_name"`
+		Contracts             EthContracts `mapstructure:"eth_contracts"`
+		UpdateClientFrequency uint64       `mapstructure:"update_client_frequency"`
 	}
 
+	EthContracts struct {
+		Packet      EthContractCfg `mapstructure:"packet"`
+		AckPacket   EthContractCfg `mapstructure:"packet"`
+		CleanPacket EthContractCfg `mapstructure:"packet"`
+		Client      EthContractCfg `mapstructure:"client"`
+	}
+
+	EthContractCfg struct {
+		Addr  string `mapstructure:"addr"`
+		Topic string `mapstructure:"topic"`
+	}
+	// =====================================================================
+	// Tendermit config=====================================================
 	Tendermint struct {
 		ChainName string   `mapstructure:"chain_name"`
 		ChainID   string   `mapstructure:"chain_id"`
@@ -38,6 +59,7 @@ type (
 		Password     string `mapstructure:"password"`
 		PrivKeyArmor string `mapstructure:"priv_key_armor"`
 	}
+	// =====================================================================
 
 	App struct {
 		MetricAddr   string   `mapstructure:"metric_addr"`
