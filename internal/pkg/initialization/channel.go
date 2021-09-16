@@ -19,6 +19,9 @@ import (
 const TendermintAndTendermint = "tendermint_and_tendermint"
 const TendermintAndETH = "tendermint_and_eth"
 
+const TypSource = "source"
+const TypDest = "dest"
+
 func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.IChannel {
 	if len(cfg.App.ChannelTypes) != 1 {
 		logger.Fatal("channel_types should be equal 1")
@@ -44,7 +47,7 @@ func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.ICh
 
 func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) map[string]channels.IChannel {
 	// init source chain channel
-	sourceChannel := channel(cfg, sourceChain, destChain, logger)
+	sourceChannel := channel(cfg, sourceChain, destChain, TypSource, logger)
 
 	// add error_handler mw
 	sourceChannel = channels.NewWriterMW(
@@ -57,7 +60,7 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 	sourceChannel = channels.NewMetricMW(sourceChannel, metricsModel)
 
 	// init dest chain channel
-	destChannel := channel(cfg, destChain, sourceChain, logger)
+	destChannel := channel(cfg, destChain, sourceChain, TypDest, logger)
 
 	// add error_handler mw
 	destChannel = channels.NewWriterMW(
@@ -70,18 +73,28 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 	destChannel = channels.NewMetricMW(destChannel, metricsModel)
 	channelMap := map[string]channels.IChannel{}
 	channelMap[sourceChain.ChainName()] = sourceChannel
-	channelMap[destChain.ChainName()] = destChannel
+	if cfg.Chain.Dest.Eth.ChainName == "" {
+		// todo
+		// The process of eth -> tendermint has not been implemented yet
+		channelMap[destChain.ChainName()] = destChannel
+	}
+
 	return channelMap
 }
 
-func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) channels.IChannel {
+func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ string, logger *log.Logger) channels.IChannel {
 
 	var channel channels.IChannel
 	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename)
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// If the file does not exist, the initial height is the startHeight in the configuration
+		switch typ {
+		case TypSource:
+			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight)
+		case TypDest:
+			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Dest.Cache.StartHeight)
+		}
 
-		channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight)
 	} else {
 		// If the file exists, the initial height is the latest_height in the file
 		file, err := os.Open(filename)

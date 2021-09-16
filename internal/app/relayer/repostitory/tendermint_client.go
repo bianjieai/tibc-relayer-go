@@ -3,7 +3,6 @@ package repostitory
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 
 	"github.com/irisnet/core-sdk-go/bank"
@@ -350,45 +349,37 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) (*packet.Packet, error) {
 func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) (packet.Packet, []byte, error) {
 	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_sequence")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_src_chain")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_dst_port")
 	if err != nil {
-		fmt.Println(err)
+
 		return packet.Packet{}, nil, err
 	}
 	port, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_port")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_relay_channel")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	data, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_data")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	ack, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_ack")
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
 	num, err := strconv.Atoi(sequence)
 	if err != nil {
-		fmt.Println(err)
 		return packet.Packet{}, nil, err
 	}
-	fmt.Println(num)
 	return packet.Packet{
 		Sequence:         uint64(num),
 		SourceChain:      sourceChain,
@@ -402,30 +393,24 @@ func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) (packet.Packet, []byt
 func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx) (packet.CleanPacket, error) {
 	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_sequence")
 	if err != nil {
-		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
 	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_src_chain")
 	if err != nil {
-		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
 	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_dst_port")
 	if err != nil {
-		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
 	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_relay_channel")
 	if err != nil {
-		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
 	num, err := strconv.Atoi(sequence)
 	if err != nil {
-		fmt.Println(err)
 		return packet.CleanPacket{}, nil
 	}
-	//fmt.Println(num)
 	return packet.CleanPacket{
 		Sequence:         uint64(num),
 		SourceChain:      sourceChain,

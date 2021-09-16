@@ -19,6 +19,7 @@ type (
 	// eth config============================================================
 	Eth struct {
 		URI                   string       `mapstructure:"uri"`
+		ChainID               uint64       `mapstructure:"chain_id"`
 		ChainName             string       `mapstructure:"chain_name"`
 		Contracts             EthContracts `mapstructure:"eth_contracts"`
 		UpdateClientFrequency uint64       `mapstructure:"update_client_frequency"`

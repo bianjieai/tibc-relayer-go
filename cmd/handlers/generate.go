@@ -4,8 +4,14 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math/big"
 	"os"
 	"time"
+
+	tibceth "github.com/bianjieai/tibc-sdk-go/eth"
+
+	gethethclient "github.com/ethereum/go-ethereum/ethclient"
+	gethrpc "github.com/ethereum/go-ethereum/rpc"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
@@ -28,8 +34,14 @@ const TendermintAndETH = "tendermint_and_eth"
 const tibcTendermintMerklePrefix = "tibc"
 const tibcTendermintRoot = "app_hash"
 
-const clientStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ClientState",`
-const consensusStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ConsensusState",`
+const (
+	clientStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ClientState",`
+
+	consensusStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ConsensusState",`
+
+	EthConsensusStatePrefix = `{"@type":"/tibc.lightclients.eth.v1.ConsensusState",`
+	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.eth.v1.ClientState",`
+)
 
 func CreateClientFiles(cfg *configs.Config) {
 
@@ -59,6 +71,7 @@ func CreateClientFiles(cfg *configs.Config) {
 		case TendermintAndETH:
 			logger := log.WithFields(log.Fields{
 				"source_chain": &cfg.Chain.Source.Tendermint.ChainName,
+				"dest_chain":   &cfg.Chain.Dest.Eth.ChainName,
 			})
 			logger.Info("1. init source chain")
 			sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
@@ -67,8 +80,90 @@ func CreateClientFiles(cfg *configs.Config) {
 				int64(cfg.Chain.Source.Cache.StartHeight),
 				cfg.Chain.Source.Tendermint.ChainName,
 			)
+			logger.Info("2. init dest chain")
+			getETHJson(&cfg.Chain.Dest, sourceChain, logger)
 		}
 	}
+}
+
+func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10)
+	defer cancel()
+	rpcClient, err := gethrpc.DialContext(ctx, cfg.Eth.URI)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	ethClient := gethethclient.NewClient(rpcClient)
+	latestHeight, err := ethClient.BlockNumber(context.Background())
+	if err != nil {
+		logger.Fatal(err)
+	}
+	startHeight := latestHeight - 100
+	logger.Info("eth height = ", startHeight)
+
+	//gethCli := gethclient.New(rpcClient)
+	blockRes, err := ethClient.BlockByNumber(
+		context.Background(),
+		new(big.Int).SetUint64(startHeight))
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	blockHeader := blockRes.Header()
+	header := &tibceth.EthHeader{
+		ParentHash:  blockHeader.ParentHash,
+		UncleHash:   blockHeader.UncleHash,
+		Coinbase:    blockHeader.Coinbase,
+		Root:        blockHeader.Root,
+		TxHash:      blockHeader.TxHash,
+		ReceiptHash: blockHeader.ReceiptHash,
+		Bloom:       blockHeader.Bloom,
+		Difficulty:  blockHeader.Difficulty,
+		Number:      blockHeader.Number,
+		GasLimit:    blockHeader.GasLimit,
+		GasUsed:     blockHeader.GasUsed,
+		Time:        blockHeader.Time,
+		Extra:       blockHeader.Extra,
+		MixDigest:   blockHeader.MixDigest,
+		Nonce:       blockHeader.Nonce,
+		BaseFee:     blockHeader.BaseFee,
+	}
+	number := tibcclient.NewHeight(0, header.Number.Uint64())
+
+	clientState := &tibceth.ClientState{
+		Header:          header.ToHeader(),
+		ChainId:         cfg.Eth.ChainID,
+		ContractAddress: []byte(cfg.Eth.Contracts.Client.Addr),
+		TrustingPeriod:  200,
+		TimeDelay:       0,
+		BlockDelay:      7,
+	}
+	consensusState := &tibceth.ConsensusState{
+		Timestamp: header.Time,
+		Number:    number,
+		Root:      header.Root[:],
+		Header:    header.ToHeader(),
+	}
+
+	clientStateBytes, err := client.AppCodec().MarshalJSON(clientState)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	clientStateStr := string(clientStateBytes)
+	clientStateStr = EthClientStatePrefix + clientStateStr[1:]
+	clientStateFilename := fmt.Sprintf("%s_clientState.json", cfg.Eth.ChainName)
+	writeCreateClientFiles(clientStateFilename, clientStateStr)
+
+	consensusStateBytes, err := client.AppCodec().MarshalJSON(consensusState)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	consensusStateStr := string(consensusStateBytes)
+	consensusStateStr = EthConsensusStatePrefix + consensusStateStr[1:]
+	consensusStateFilename1 := fmt.Sprintf("%s_consensusState.json", cfg.Eth.ChainName)
+	writeCreateClientFiles(consensusStateFilename1, consensusStateStr)
 }
 
 func tendermintCreateClientFiles(cfg *configs.ChainCfg, logger *log.Entry) coresdk.Client {

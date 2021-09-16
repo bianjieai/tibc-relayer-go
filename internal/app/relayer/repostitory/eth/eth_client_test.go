@@ -16,7 +16,7 @@ func TestNewEth(t *testing.T) {
 	contractCfgGroup.AckPacket.Topic = "AckWritten((uint64,string,string,string,string,bytes) packet, bytes ack)"
 	contractCfgGroup.CleanPacket.Addr = ""
 	contractCfgGroup.CleanPacket.Topic = "CleanPacketSent((uint64,string,string,string) packet)"
-	contractCfgGroup.Client.Addr = "0xfE9edD8c6948F5Eb30Efb29D4a6F576Bf42d6266"
+	contractCfgGroup.Client.Addr = "0xC8352bfdBE3c2A3a98342527250b0a8bBc2BFae3"
 	contractCfgGroup.Client.Topic = ""
 	contractCfgGroup.Client.OptPrivKey = "45760456b8181a0c3a313e8d9031b1f9343b1f45baaf5043262c19b63b163d5f"
 
@@ -29,7 +29,7 @@ func TestNewEth(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(latestHeight)
-	clientStatus, err := ethClient.GetLightClientState("irishub-testnet10")
+	clientStatus, err := ethClient.GetLightClientState("irishub")
 	if err != nil {
 		t.Fatal(err)
 	}
