@@ -285,7 +285,6 @@ func getTendermintJson(client coresdk.Client, height int64, chainName string) {
 		fmt.Println("QueryBlock fail:  ", err)
 	}
 	tmHeader := res.Block.Header
-	fmt.Println(tmHeader.ChainID)
 	lastHeight := tibcclient.NewHeight(0, 4)
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,

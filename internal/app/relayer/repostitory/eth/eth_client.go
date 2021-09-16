@@ -3,7 +3,6 @@ package eth
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"time"
@@ -149,7 +148,6 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(hex.EncodeToString(headerBytes))
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
