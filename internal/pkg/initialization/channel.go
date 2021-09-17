@@ -85,7 +85,14 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ string, logger *log.Logger) channels.IChannel {
 
 	var channel channels.IChannel
-	filename := path.Join(tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename)
+	var filename string
+	switch typ {
+	case TypSource:
+		filename = path.Join(tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Source.Cache.Filename)
+	case TypDest:
+		filename = path.Join(tools.DefaultHomePath, tools.DefaultCacheDirName, cfg.Chain.Dest.Cache.Filename)
+	}
+
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		// If the file does not exist, the initial height is the startHeight in the configuration
 		switch typ {

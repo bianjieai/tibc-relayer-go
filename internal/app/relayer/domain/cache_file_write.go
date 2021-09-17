@@ -39,8 +39,11 @@ func (w *CacheFileWriter) Write(height uint64) error {
 			}
 		}
 		// Create the home config folder
-		if err = os.Mkdir(cacheDir, os.ModePerm); err != nil {
-			return err
+		if _, err := os.Stat(cacheDir); os.IsNotExist(err) {
+			// Create the home folder
+			if err = os.Mkdir(cacheDir, os.ModePerm); err != nil {
+				return err
+			}
 		}
 		// Then create the file...
 		file, err := os.Create(filename)
