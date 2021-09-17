@@ -256,6 +256,11 @@ func (channel *Channel) relay() error {
 			continue
 		}
 
+		// determine whether dest_chain or relay_chain is the target chain
+		if pack.DestinationChain != channel.dest.ChainName() && pack.RelayChain != channel.dest.ChainName() {
+			continue
+		}
+
 		// 3.1 get commitments packets from source chain
 		// The source and dest in the packet must be used here
 		// commitment path is determined
@@ -323,6 +328,10 @@ func (channel *Channel) relay() error {
 			logger.Info("the current packet has been confirmed")
 			continue
 		}
+		// determine whether source_chain  is the target chain
+		if pack.Packet.SourceChain != channel.dest.ChainName() {
+			continue
+		}
 
 		proof, err := channel.source.GetProof(
 			pack.Packet.SourceChain,
@@ -349,6 +358,11 @@ func (channel *Channel) relay() error {
 	}
 
 	for _, pack := range packets.CleanPackets {
+		// determine whether dest_chain or relay_chain is the target chain
+		if pack.DestinationChain != channel.dest.ChainName() && pack.RelayChain != channel.dest.ChainName() {
+			continue
+		}
+
 		proof, err := channel.source.GetProof(
 			pack.SourceChain,
 			pack.DestinationChain,

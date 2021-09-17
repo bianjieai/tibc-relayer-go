@@ -42,14 +42,15 @@ func (w *Writer) UpdateClient() error {
 
 func (w *Writer) Relay() error {
 	err := w.next.Relay()
-	if err == nil {
-		return nil
+	if err != nil {
+		return err
 	}
-	defer func() {
-		ctx := w.next.Context()
+	ctx := w.next.Context()
+	if ctx.Height()%100 == 0 {
 		w.cacheWriter.Write(ctx.Height())
-	}()
-	return err
+	}
+
+	return nil
 }
 
 func (w *Writer) IsNotRelay() bool {
