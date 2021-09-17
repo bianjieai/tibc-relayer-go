@@ -19,6 +19,7 @@ type (
 	// eth config============================================================
 	Eth struct {
 		URI                   string       `mapstructure:"uri"`
+		ChainID               uint64       `mapstructure:"chain_id"`
 		ChainName             string       `mapstructure:"chain_name"`
 		Contracts             EthContracts `mapstructure:"eth_contracts"`
 		UpdateClientFrequency uint64       `mapstructure:"update_client_frequency"`
@@ -26,14 +27,15 @@ type (
 
 	EthContracts struct {
 		Packet      EthContractCfg `mapstructure:"packet"`
-		AckPacket   EthContractCfg `mapstructure:"packet"`
-		CleanPacket EthContractCfg `mapstructure:"packet"`
+		AckPacket   EthContractCfg `mapstructure:"ack_packet"`
+		CleanPacket EthContractCfg `mapstructure:"clean_packet"`
 		Client      EthContractCfg `mapstructure:"client"`
 	}
 
 	EthContractCfg struct {
-		Addr  string `mapstructure:"addr"`
-		Topic string `mapstructure:"topic"`
+		Addr       string `mapstructure:"addr"`
+		Topic      string `mapstructure:"topic"`
+		OptPrivKey string `mapstructure:"opt_priv_key"`
 	}
 	// =====================================================================
 	// Tendermit config=====================================================

@@ -54,7 +54,7 @@ type PacketTypesPacket struct {
 
 // PacketMetaData contains all meta data concerning the Packet contract.
 var PacketMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_clientManager\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_routing\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"ack\",\"type\":\"bytes\"}],\"name\":\"AckWritten\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"CleanPacketSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketSent\",\"type\":\"event\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"acknowledgement\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"proofAcked\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"acknowledgePacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"cleanPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"clientManager\",\"outputs\":[{\"internalType\":\"contractIClientManager\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"commitments\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"}],\"name\":\"getNextSequenceSend\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"receipts\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"recvCleanPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"recvPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"routing\",\"outputs\":[{\"internalType\":\"contractIRouting\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"sendPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"sequences\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_clientManager\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_routing\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"indexed\":false,\"internalType\":\"bytes\",\"name\":\"ack\",\"type\":\"bytes\"}],\"name\":\"AckWritten\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"CleanPacketSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"indexed\":false,\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"PacketSent\",\"type\":\"event\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"acknowledgement\",\"type\":\"bytes\"},{\"internalType\":\"bytes\",\"name\":\"proofAcked\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"acknowledgePacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"cleanPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"clientManager\",\"outputs\":[{\"internalType\":\"contractIClientManager\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"commitments\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"}],\"name\":\"getNextSequenceSend\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"receipts\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"}],\"internalType\":\"structPacketTypes.CleanPacket\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"recvCleanPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"},{\"internalType\":\"bytes\",\"name\":\"proof\",\"type\":\"bytes\"},{\"components\":[{\"internalType\":\"uint64\",\"name\":\"revision_number\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"revision_height\",\"type\":\"uint64\"}],\"internalType\":\"structHeight.Data\",\"name\":\"height\",\"type\":\"tuple\"}],\"name\":\"recvPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"routing\",\"outputs\":[{\"internalType\":\"contractIRouting\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint64\",\"name\":\"sequence\",\"type\":\"uint64\"},{\"internalType\":\"string\",\"name\":\"port\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"sourceChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"destChain\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"relayChain\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"data\",\"type\":\"bytes\"}],\"internalType\":\"structPacketTypes.Packet\",\"name\":\"packet\",\"type\":\"tuple\"}],\"name\":\"sendPacket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"name\":\"sequences\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_clientManager\",\"type\":\"address\"}],\"name\":\"setClientManager\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_routing\",\"type\":\"address\"}],\"name\":\"setRouting\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // PacketABI is the input ABI used to generate the binding from.
@@ -265,6 +265,68 @@ func (_Packet *PacketCallerSession) Commitments(arg0 []byte) ([32]byte, error) {
 	return _Packet.Contract.Commitments(&_Packet.CallOpts, arg0)
 }
 
+// GetNextSequenceSend is a free data retrieval call binding the contract method 0x582418b6.
+//
+// Solidity: function getNextSequenceSend(string sourceChain, string destChain) view returns(uint64)
+func (_Packet *PacketCaller) GetNextSequenceSend(opts *bind.CallOpts, sourceChain string, destChain string) (uint64, error) {
+	var out []interface{}
+	err := _Packet.contract.Call(opts, &out, "getNextSequenceSend", sourceChain, destChain)
+
+	if err != nil {
+		return *new(uint64), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
+
+	return out0, err
+
+}
+
+// GetNextSequenceSend is a free data retrieval call binding the contract method 0x582418b6.
+//
+// Solidity: function getNextSequenceSend(string sourceChain, string destChain) view returns(uint64)
+func (_Packet *PacketSession) GetNextSequenceSend(sourceChain string, destChain string) (uint64, error) {
+	return _Packet.Contract.GetNextSequenceSend(&_Packet.CallOpts, sourceChain, destChain)
+}
+
+// GetNextSequenceSend is a free data retrieval call binding the contract method 0x582418b6.
+//
+// Solidity: function getNextSequenceSend(string sourceChain, string destChain) view returns(uint64)
+func (_Packet *PacketCallerSession) GetNextSequenceSend(sourceChain string, destChain string) (uint64, error) {
+	return _Packet.Contract.GetNextSequenceSend(&_Packet.CallOpts, sourceChain, destChain)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Packet *PacketCaller) Owner(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Packet.contract.Call(opts, &out, "owner")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Packet *PacketSession) Owner() (common.Address, error) {
+	return _Packet.Contract.Owner(&_Packet.CallOpts)
+}
+
+// Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
+//
+// Solidity: function owner() view returns(address)
+func (_Packet *PacketCallerSession) Owner() (common.Address, error) {
+	return _Packet.Contract.Owner(&_Packet.CallOpts)
+}
+
 // Receipts is a free data retrieval call binding the contract method 0xa6992b83.
 //
 // Solidity: function receipts(bytes ) view returns(bool)
@@ -400,27 +462,6 @@ func (_Packet *PacketTransactorSession) CleanPacket(packet PacketTypesCleanPacke
 	return _Packet.Contract.CleanPacket(&_Packet.TransactOpts, packet)
 }
 
-// GetNextSequenceSend is a paid mutator transaction binding the contract method 0x582418b6.
-//
-// Solidity: function getNextSequenceSend(string sourceChain, string destChain) returns(uint64)
-func (_Packet *PacketTransactor) GetNextSequenceSend(opts *bind.TransactOpts, sourceChain string, destChain string) (*types.Transaction, error) {
-	return _Packet.contract.Transact(opts, "getNextSequenceSend", sourceChain, destChain)
-}
-
-// GetNextSequenceSend is a paid mutator transaction binding the contract method 0x582418b6.
-//
-// Solidity: function getNextSequenceSend(string sourceChain, string destChain) returns(uint64)
-func (_Packet *PacketSession) GetNextSequenceSend(sourceChain string, destChain string) (*types.Transaction, error) {
-	return _Packet.Contract.GetNextSequenceSend(&_Packet.TransactOpts, sourceChain, destChain)
-}
-
-// GetNextSequenceSend is a paid mutator transaction binding the contract method 0x582418b6.
-//
-// Solidity: function getNextSequenceSend(string sourceChain, string destChain) returns(uint64)
-func (_Packet *PacketTransactorSession) GetNextSequenceSend(sourceChain string, destChain string) (*types.Transaction, error) {
-	return _Packet.Contract.GetNextSequenceSend(&_Packet.TransactOpts, sourceChain, destChain)
-}
-
 // RecvCleanPacket is a paid mutator transaction binding the contract method 0x56d889ee.
 //
 // Solidity: function recvCleanPacket((uint64,string,string,string) packet, bytes proof, (uint64,uint64) height) returns()
@@ -463,6 +504,27 @@ func (_Packet *PacketTransactorSession) RecvPacket(packet PacketTypesPacket, pro
 	return _Packet.Contract.RecvPacket(&_Packet.TransactOpts, packet, proof, height)
 }
 
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Packet *PacketTransactor) RenounceOwnership(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Packet.contract.Transact(opts, "renounceOwnership")
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Packet *PacketSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Packet.Contract.RenounceOwnership(&_Packet.TransactOpts)
+}
+
+// RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
+//
+// Solidity: function renounceOwnership() returns()
+func (_Packet *PacketTransactorSession) RenounceOwnership() (*types.Transaction, error) {
+	return _Packet.Contract.RenounceOwnership(&_Packet.TransactOpts)
+}
+
 // SendPacket is a paid mutator transaction binding the contract method 0x7d086e38.
 //
 // Solidity: function sendPacket((uint64,string,string,string,string,bytes) packet) returns()
@@ -482,6 +544,69 @@ func (_Packet *PacketSession) SendPacket(packet PacketTypesPacket) (*types.Trans
 // Solidity: function sendPacket((uint64,string,string,string,string,bytes) packet) returns()
 func (_Packet *PacketTransactorSession) SendPacket(packet PacketTypesPacket) (*types.Transaction, error) {
 	return _Packet.Contract.SendPacket(&_Packet.TransactOpts, packet)
+}
+
+// SetClientManager is a paid mutator transaction binding the contract method 0x8f3de42e.
+//
+// Solidity: function setClientManager(address _clientManager) returns()
+func (_Packet *PacketTransactor) SetClientManager(opts *bind.TransactOpts, _clientManager common.Address) (*types.Transaction, error) {
+	return _Packet.contract.Transact(opts, "setClientManager", _clientManager)
+}
+
+// SetClientManager is a paid mutator transaction binding the contract method 0x8f3de42e.
+//
+// Solidity: function setClientManager(address _clientManager) returns()
+func (_Packet *PacketSession) SetClientManager(_clientManager common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.SetClientManager(&_Packet.TransactOpts, _clientManager)
+}
+
+// SetClientManager is a paid mutator transaction binding the contract method 0x8f3de42e.
+//
+// Solidity: function setClientManager(address _clientManager) returns()
+func (_Packet *PacketTransactorSession) SetClientManager(_clientManager common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.SetClientManager(&_Packet.TransactOpts, _clientManager)
+}
+
+// SetRouting is a paid mutator transaction binding the contract method 0x109f543f.
+//
+// Solidity: function setRouting(address _routing) returns()
+func (_Packet *PacketTransactor) SetRouting(opts *bind.TransactOpts, _routing common.Address) (*types.Transaction, error) {
+	return _Packet.contract.Transact(opts, "setRouting", _routing)
+}
+
+// SetRouting is a paid mutator transaction binding the contract method 0x109f543f.
+//
+// Solidity: function setRouting(address _routing) returns()
+func (_Packet *PacketSession) SetRouting(_routing common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.SetRouting(&_Packet.TransactOpts, _routing)
+}
+
+// SetRouting is a paid mutator transaction binding the contract method 0x109f543f.
+//
+// Solidity: function setRouting(address _routing) returns()
+func (_Packet *PacketTransactorSession) SetRouting(_routing common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.SetRouting(&_Packet.TransactOpts, _routing)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Packet *PacketTransactor) TransferOwnership(opts *bind.TransactOpts, newOwner common.Address) (*types.Transaction, error) {
+	return _Packet.contract.Transact(opts, "transferOwnership", newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Packet *PacketSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.TransferOwnership(&_Packet.TransactOpts, newOwner)
+}
+
+// TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
+//
+// Solidity: function transferOwnership(address newOwner) returns()
+func (_Packet *PacketTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
+	return _Packet.Contract.TransferOwnership(&_Packet.TransactOpts, newOwner)
 }
 
 // PacketAckWrittenIterator is returned from FilterAckWritten and is used to iterate over the raw logs and unpacked data for AckWritten events raised by the Packet contract.
@@ -747,6 +872,159 @@ func (_Packet *PacketFilterer) WatchCleanPacketSent(opts *bind.WatchOpts, sink c
 func (_Packet *PacketFilterer) ParseCleanPacketSent(log types.Log) (*PacketCleanPacketSent, error) {
 	event := new(PacketCleanPacketSent)
 	if err := _Packet.contract.UnpackLog(event, "CleanPacketSent", log); err != nil {
+		return nil, err
+	}
+	event.Raw = log
+	return event, nil
+}
+
+// PacketOwnershipTransferredIterator is returned from FilterOwnershipTransferred and is used to iterate over the raw logs and unpacked data for OwnershipTransferred events raised by the Packet contract.
+type PacketOwnershipTransferredIterator struct {
+	Event *PacketOwnershipTransferred // Event containing the contract specifics and raw log
+
+	contract *bind.BoundContract // Generic contract to use for unpacking event data
+	event    string              // Event name to use for unpacking event data
+
+	logs chan types.Log        // Log channel receiving the found contract events
+	sub  ethereum.Subscription // Subscription for errors, completion and termination
+	done bool                  // Whether the subscription completed delivering logs
+	fail error                 // Occurred error to stop iteration
+}
+
+// Next advances the iterator to the subsequent event, returning whether there
+// are any more events found. In case of a retrieval or parsing error, false is
+// returned and Error() can be queried for the exact failure.
+func (it *PacketOwnershipTransferredIterator) Next() bool {
+	// If the iterator failed, stop iterating
+	if it.fail != nil {
+		return false
+	}
+	// If the iterator completed, deliver directly whatever's available
+	if it.done {
+		select {
+		case log := <-it.logs:
+			it.Event = new(PacketOwnershipTransferred)
+			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+				it.fail = err
+				return false
+			}
+			it.Event.Raw = log
+			return true
+
+		default:
+			return false
+		}
+	}
+	// Iterator still in progress, wait for either a data or an error event
+	select {
+	case log := <-it.logs:
+		it.Event = new(PacketOwnershipTransferred)
+		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
+			it.fail = err
+			return false
+		}
+		it.Event.Raw = log
+		return true
+
+	case err := <-it.sub.Err():
+		it.done = true
+		it.fail = err
+		return it.Next()
+	}
+}
+
+// Error returns any retrieval or parsing error occurred during filtering.
+func (it *PacketOwnershipTransferredIterator) Error() error {
+	return it.fail
+}
+
+// Close terminates the iteration process, releasing any pending underlying
+// resources.
+func (it *PacketOwnershipTransferredIterator) Close() error {
+	it.sub.Unsubscribe()
+	return nil
+}
+
+// PacketOwnershipTransferred represents a OwnershipTransferred event raised by the Packet contract.
+type PacketOwnershipTransferred struct {
+	PreviousOwner common.Address
+	NewOwner      common.Address
+	Raw           types.Log // Blockchain specific contextual infos
+}
+
+// FilterOwnershipTransferred is a free log retrieval operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Packet *PacketFilterer) FilterOwnershipTransferred(opts *bind.FilterOpts, previousOwner []common.Address, newOwner []common.Address) (*PacketOwnershipTransferredIterator, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Packet.contract.FilterLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return &PacketOwnershipTransferredIterator{contract: _Packet.contract, event: "OwnershipTransferred", logs: logs, sub: sub}, nil
+}
+
+// WatchOwnershipTransferred is a free log subscription operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Packet *PacketFilterer) WatchOwnershipTransferred(opts *bind.WatchOpts, sink chan<- *PacketOwnershipTransferred, previousOwner []common.Address, newOwner []common.Address) (event.Subscription, error) {
+
+	var previousOwnerRule []interface{}
+	for _, previousOwnerItem := range previousOwner {
+		previousOwnerRule = append(previousOwnerRule, previousOwnerItem)
+	}
+	var newOwnerRule []interface{}
+	for _, newOwnerItem := range newOwner {
+		newOwnerRule = append(newOwnerRule, newOwnerItem)
+	}
+
+	logs, sub, err := _Packet.contract.WatchLogs(opts, "OwnershipTransferred", previousOwnerRule, newOwnerRule)
+	if err != nil {
+		return nil, err
+	}
+	return event.NewSubscription(func(quit <-chan struct{}) error {
+		defer sub.Unsubscribe()
+		for {
+			select {
+			case log := <-logs:
+				// New log arrived, parse the event and forward to the user
+				event := new(PacketOwnershipTransferred)
+				if err := _Packet.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
+					return err
+				}
+				event.Raw = log
+
+				select {
+				case sink <- event:
+				case err := <-sub.Err():
+					return err
+				case <-quit:
+					return nil
+				}
+			case err := <-sub.Err():
+				return err
+			case <-quit:
+				return nil
+			}
+		}
+	}), nil
+}
+
+// ParseOwnershipTransferred is a log parse operation binding the contract event 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0.
+//
+// Solidity: event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+func (_Packet *PacketFilterer) ParseOwnershipTransferred(log types.Log) (*PacketOwnershipTransferred, error) {
+	event := new(PacketOwnershipTransferred)
+	if err := _Packet.contract.UnpackLog(event, "OwnershipTransferred", log); err != nil {
 		return nil, err
 	}
 	event.Raw = log

@@ -18,12 +18,16 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 	contractCfgGroup := repoeth.NewContracts()
 	contractCfgGroup.Packet.Addr = cfg.Eth.Contracts.Packet.Addr
 	contractCfgGroup.Packet.Topic = cfg.Eth.Contracts.Packet.Topic
+	contractCfgGroup.Packet.OptPrivKey = cfg.Eth.Contracts.Packet.OptPrivKey
+
 	contractCfgGroup.AckPacket.Addr = cfg.Eth.Contracts.AckPacket.Addr
 	contractCfgGroup.AckPacket.Topic = cfg.Eth.Contracts.AckPacket.Topic
 	contractCfgGroup.CleanPacket.Addr = cfg.Eth.Contracts.CleanPacket.Addr
 	contractCfgGroup.CleanPacket.Topic = cfg.Eth.Contracts.CleanPacket.Topic
+
 	contractCfgGroup.Client.Addr = cfg.Eth.Contracts.Client.Addr
 	contractCfgGroup.Client.Topic = cfg.Eth.Contracts.Client.Topic
+	contractCfgGroup.Client.OptPrivKey = cfg.Eth.Contracts.Client.OptPrivKey
 
 	ethRepo, err := repoeth.NewEth(constant.ETH,
 		cfg.Eth.ChainName,
