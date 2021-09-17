@@ -152,6 +152,9 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 		case "acknowledge_packet":
 			msg := d.(*packet.MsgAcknowledgement)
 			msg.Signer = c.address
+		case "clean_packet":
+			msg := d.(*packet.MsgCleanPacket)
+			msg.Signer = c.address
 		}
 	}
 
