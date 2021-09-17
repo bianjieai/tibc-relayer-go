@@ -93,20 +93,23 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 			if err != nil {
 				return nil, err
 			}
-			bizPackets = append(bizPackets, *tmpPacket)
+			bizPackets = append(bizPackets, tmpPacket...)
 		}
 
 		if c.isExistPacket(repotypes.EventTypeWriteAck, resultTx) {
 			// get ack packet
-			tmpAckPack, ack, err := c.getAckPackets(resultTx)
+			tmpAckPacks, acks, err := c.getAckPackets(resultTx)
 			if err != nil {
 				return nil, err
 			}
-			tmpAckPacket := repotypes.AckPacket{
-				Packet:          tmpAckPack,
-				Acknowledgement: ack,
+			for i := 0; i < len(tmpAckPacks); i++ {
+				tmpAckPacket := repotypes.AckPacket{
+					Packet:          tmpAckPacks[i],
+					Acknowledgement: acks[i],
+				}
+				ackPackets = append(ackPackets, tmpAckPacket)
 			}
-			ackPackets = append(ackPackets, tmpAckPacket)
+
 		}
 
 		if c.isExistPacket(repotypes.EventTypeSendCleanPacket, resultTx) {
@@ -114,7 +117,7 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 			if err != nil {
 				return nil, err
 			}
-			cleanPackets = append(cleanPackets, tmpCleanPacket)
+			cleanPackets = append(cleanPackets, tmpCleanPacket...)
 		}
 
 	}
@@ -306,122 +309,90 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 	return validatorSet, nil
 }
 
-func (c *Tendermint) getPacket(tx types.ResultQueryTx) (*packet.Packet, error) {
-	sequenceStr, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_sequence")
-	if err != nil {
-		return nil, err
+func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) {
+	sequences := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_sequence")
+	srcChains := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_src_chain")
+	dstPorts := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_dst_port")
+	ports := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_port")
+	rlyChains := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_relay_channel")
+	datas := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_data")
+
+	var packets []packet.Packet
+	for i := 0; i < len(sequences); i++ {
+		sequenceStr := sequences[i]
+		sequence, err := strconv.Atoi(sequenceStr)
+		if err != nil {
+			return nil, err
+		}
+
+		tmpPack := packet.Packet{
+			Sequence:         uint64(sequence),
+			SourceChain:      srcChains[i],
+			DestinationChain: dstPorts[i],
+			Port:             ports[i],
+			RelayChain:       rlyChains[i],
+			Data:             []byte(datas[i]),
+		}
+		packets = append(packets, tmpPack)
 	}
 
-	srcChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_src_chain")
-	if err != nil {
-		return nil, err
-	}
-
-	dstPort, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_dst_port")
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_port")
-	if err != nil {
-		return nil, err
-	}
-
-	rlyChan, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_relay_channel")
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := tx.Result.Events.GetValue(repotypes.EventTypeSendPacket, "packet_data")
-	if err != nil {
-		return nil, err
-	}
-
-	sequence, err := strconv.Atoi(sequenceStr)
-	if err != nil {
-		return nil, err
-	}
-	return &packet.Packet{
-		Sequence:         uint64(sequence),
-		SourceChain:      srcChain,
-		DestinationChain: dstPort,
-		Port:             port,
-		RelayChain:       rlyChan,
-		Data:             []byte(data),
-	}, nil
+	return packets, nil
 }
 
-func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) (packet.Packet, []byte, error) {
-	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_sequence")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_src_chain")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_dst_port")
-	if err != nil {
+func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) ([]packet.Packet, [][]byte, error) {
 
-		return packet.Packet{}, nil, err
+	sequences := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_sequence")
+	srcChains := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_src_chain")
+	dstPorts := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_dst_port")
+	ports := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_port")
+	rlyChains := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_relay_channel")
+	datas := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_data")
+	acks := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_ack")
+	var ackByteList [][]byte
+	var packets []packet.Packet
+	for i := 0; i < len(sequences); i++ {
+		sequenceStr := sequences[i]
+		sequence, err := strconv.Atoi(sequenceStr)
+		if err != nil {
+			return nil, nil, err
+		}
+		tmpAckPack := packet.Packet{
+			Sequence:         uint64(sequence),
+			SourceChain:      srcChains[i],
+			DestinationChain: dstPorts[i],
+			Port:             ports[i],
+			RelayChain:       rlyChains[i],
+			Data:             []byte(datas[i]),
+		}
+		ackByteList = append(ackByteList, []byte(acks[i]))
+		packets = append(packets, tmpAckPack)
 	}
-	port, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_port")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_relay_channel")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	data, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_data")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	ack, err := tx.Result.Events.GetValue(repotypes.EventTypeWriteAck, "packet_ack")
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	num, err := strconv.Atoi(sequence)
-	if err != nil {
-		return packet.Packet{}, nil, err
-	}
-	return packet.Packet{
-		Sequence:         uint64(num),
-		SourceChain:      sourceChain,
-		DestinationChain: destinationChain,
-		Port:             port,
-		RelayChain:       relayChain,
-		Data:             []byte(data),
-	}, []byte(ack), nil
+
+	return packets, ackByteList, nil
 }
 
-func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx) (packet.CleanPacket, error) {
-	sequence, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_sequence")
-	if err != nil {
-		return packet.CleanPacket{}, nil
+func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx) ([]packet.CleanPacket, error) {
+	sequences := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_sequence")
+	sourceChains := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_src_chain")
+	dstPorts := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_dst_port")
+	rlyChains := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_relay_channel")
+	var packets []packet.CleanPacket
+	for i := 0; i < len(sequences); i++ {
+		sequenceStr := sequences[i]
+		sequence, err := strconv.Atoi(sequenceStr)
+		if err != nil {
+			return nil, err
+		}
+		tmpCleanPack := packet.CleanPacket{
+			Sequence:         uint64(sequence),
+			SourceChain:      sourceChains[i],
+			DestinationChain: dstPorts[i],
+			RelayChain:       rlyChains[i],
+		}
+		packets = append(packets, tmpCleanPack)
 	}
-	sourceChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_src_chain")
-	if err != nil {
-		return packet.CleanPacket{}, nil
-	}
-	destinationChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_dst_port")
-	if err != nil {
-		return packet.CleanPacket{}, nil
-	}
-	relayChain, err := tx.Result.Events.GetValue(repotypes.EventTypeSendCleanPacket, "packet_relay_channel")
-	if err != nil {
-		return packet.CleanPacket{}, nil
-	}
-	num, err := strconv.Atoi(sequence)
-	if err != nil {
-		return packet.CleanPacket{}, nil
-	}
-	return packet.CleanPacket{
-		Sequence:         uint64(num),
-		SourceChain:      sourceChain,
-		DestinationChain: destinationChain,
-		RelayChain:       relayChain,
-	}, nil
+
+	return packets, nil
 
 }
 
