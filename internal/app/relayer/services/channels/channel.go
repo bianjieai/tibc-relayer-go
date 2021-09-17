@@ -248,7 +248,6 @@ func (channel *Channel) relay() error {
 	// 3.  Process biz packets
 	var recvPackets types.Msgs
 	for _, pack := range packets.BizPackets {
-
 		// If packet.sourceChain == channel.dest.ChainName(),
 		// Indicates that the current packet is sent by dest.
 		// So data packets should not be relayed back
@@ -299,7 +298,8 @@ func (channel *Channel) relay() error {
 			channel.context.Height(), repotypes.CommitmentPoof)
 		if err != nil {
 			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
+				"err_msg":     err.Error(),
+				"packet_type": "packet",
 			}).Error("failed to get proof")
 			return typeserr.ErrGetProof
 		}
@@ -316,8 +316,6 @@ func (channel *Channel) relay() error {
 	}
 	//4. Process ack packets
 	for _, pack := range packets.AckPackets {
-		// query proof
-
 		// If packet.DestinationChain == channel.source.ChainName(),
 		// Indicates that the current packet is sent by dest.
 		// So data packets should not be relayed back
@@ -329,10 +327,10 @@ func (channel *Channel) relay() error {
 			continue
 		}
 		// determine whether source_chain  is the target chain
-		if pack.Packet.SourceChain != channel.dest.ChainName() {
+		if pack.Packet.SourceChain != channel.dest.ChainName() && pack.Packet.RelayChain != channel.dest.ChainName() {
 			continue
 		}
-
+		// query proof
 		proof, err := channel.source.GetProof(
 			pack.Packet.SourceChain,
 			pack.Packet.DestinationChain,
@@ -340,7 +338,8 @@ func (channel *Channel) relay() error {
 			channel.context.Height(), repotypes.AckProof)
 		if err != nil {
 			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
+				"err_msg":     err.Error(),
+				"packet_type": "ack",
 			}).Error("failed to get proof")
 			return typeserr.ErrGetProof
 		}
