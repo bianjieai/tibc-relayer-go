@@ -293,7 +293,9 @@ func (channel *Channel) relay() error {
 			pack.Sequence,
 			channel.context.Height(), repotypes.CommitmentPoof)
 		if err != nil {
-			logger.Error("failed to get proof")
+			logger.WithFields(log.Fields{
+				"err_msg": err.Error(),
+			}).Error("failed to get proof")
 			return typeserr.ErrGetProof
 		}
 		//pack.SourceChain = "irishub-testnet10"
@@ -347,8 +349,24 @@ func (channel *Channel) relay() error {
 	}
 
 	for _, pack := range packets.CleanPackets {
-		recvPacket := &packet.MsgCleanPacket{
-			CleanPacket: pack,
+		proof, err := channel.source.GetProof(
+			pack.SourceChain,
+			pack.DestinationChain,
+			pack.Sequence,
+			channel.context.Height(), repotypes.CleanProof)
+		if err != nil {
+			logger.WithFields(log.Fields{
+				"err_msg": err.Error(),
+			}).Error("failed to get proof")
+			return typeserr.ErrGetProof
+		}
+		recvPacket := &packet.MsgRecvCleanPacket{
+			CleanPacket:     pack,
+			ProofCommitment: proof,
+			ProofHeight: client.Height{
+				RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+				RevisionHeight: channel.context.Height(),
+			},
 		}
 		recvPackets = append(recvPackets, recvPacket)
 	}

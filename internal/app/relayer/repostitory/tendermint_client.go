@@ -132,6 +132,8 @@ func (c *Tendermint) GetProof(sourChainName, destChainName string, sequence uint
 		key = packet.PacketCommitmentKey(sourChainName, destChainName, sequence)
 	case repotypes.AckProof:
 		key = packet.PacketAcknowledgementKey(sourChainName, destChainName, sequence)
+	case repotypes.CleanProof:
+		key = packet.CleanPacketCommitmentKey(sourChainName, destChainName)
 	default:
 		return nil, errors.ErrGetProof
 	}
@@ -152,8 +154,8 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 		case "acknowledge_packet":
 			msg := d.(*packet.MsgAcknowledgement)
 			msg.Signer = c.address
-		case "clean_packet":
-			msg := d.(*packet.MsgCleanPacket)
+		case "recv_clean_packet":
+			msg := d.(*packet.MsgRecvCleanPacket)
 			msg.Signer = c.address
 		}
 	}
