@@ -5,9 +5,8 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/eth/contracts"
@@ -16,6 +15,8 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/tools"
 
 	geth "github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	gethcmn "github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
 	gethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -36,6 +37,11 @@ var _ repostitory.IChain = new(Eth)
 
 const CtxTimeout = 10 * time.Second
 
+var (
+	Uint64, _  = abi.NewType("uint64", "", nil)
+	Bytes32, _ = abi.NewType("bytes32", "", nil)
+)
+
 type Eth struct {
 	uri                   string
 	chainName             string
@@ -52,7 +58,13 @@ type Eth struct {
 	amino *codec.LegacyAmino
 }
 
-func NewEth(chainType, chainName string, updateClientFrequency uint64, uri string, cfgGroup *ContractCfgGroup) (repostitory.IChain, error) {
+func NewEth(
+	chainType,
+	chainName string,
+	updateClientFrequency uint64,
+	uri string,
+	chainID uint64,
+	cfgGroup *ContractCfgGroup) (repostitory.IChain, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
 	defer cancel()
 	rpcClient, err := gethrpc.DialContext(ctx, uri)
@@ -67,7 +79,11 @@ func NewEth(chainType, chainName string, updateClientFrequency uint64, uri strin
 		return nil, err
 	}
 
-	tmpBindOpts, err := newBindOpts(cfgGroup.Packet.OptPrivKey, cfgGroup.Client.OptPrivKey)
+	tmpBindOpts, err := newBindOpts(
+		cfgGroup.Packet.OptPrivKey,
+		cfgGroup.Client.OptPrivKey,
+		chainID,
+	)
 
 	if err != nil {
 		return nil, err
@@ -139,15 +155,39 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 
 	}
 
+	resultTx.Hash = strings.Trim(resultTx.Hash, ",")
+
 	return resultTx, nil
 }
 
 func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string, error) {
 	h := header.(*tibctendermint.Header)
-	headerBytes, err := h.Marshal()
-	if err != nil {
-		return "", err
+	args := abi.Arguments{
+		abi.Argument{Type: Uint64},
+		abi.Argument{Type: Uint64},
+		abi.Argument{Type: Uint64},
+		abi.Argument{Type: Bytes32},
+		abi.Argument{Type: Bytes32},
 	}
+	timestamp := uint64(h.GetTime().Unix())
+	revisionNumber := h.GetHeight().GetRevisionNumber()
+	revisionHeight := h.GetHeight().GetRevisionHeight()
+
+	var appHash [32]byte
+	copy(appHash[:], h.GetHeader().AppHash[:32])
+
+	var nextValidatorsHash [32]byte
+	copy(nextValidatorsHash[:], h.GetHeader().NextValidatorsHash[:32])
+
+	headerBytes, err := args.Pack(
+		&revisionNumber,
+		&revisionHeight,
+		&timestamp,
+		appHash,
+		nextValidatorsHash,
+	)
+
+	fmt.Println(eth.bindOpts.client.From.String())
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
@@ -255,7 +295,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		Difficulty:  blockRes.Difficulty().Uint64(),
 		Height: tibcclient.Height{
 			RevisionNumber: 0,
-			RevisionHeight: req.TrustedHeight,
+			RevisionHeight: req.LatestHeight,
 		},
 		GasLimit:  blockRes.GasLimit(),
 		GasUsed:   blockRes.GasUsed(),
@@ -297,6 +337,18 @@ func (eth *Eth) GetLightClientDelayHeight(chainName string) (uint64, error) {
 
 func (eth *Eth) GetLightClientDelayTime(chainName string) (uint64, error) {
 	return 0, nil
+}
+
+func (eth *Eth) GetResult(hash string) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+
+	cmnHash := gethcmn.HexToHash(hash)
+	result, err := eth.ethClient.TransactionReceipt(ctx, cmnHash)
+	if err != nil {
+		return 0, err
+	}
+	return result.Status, nil
 }
 
 func (eth *Eth) ChainName() string {
@@ -342,7 +394,7 @@ func (eth *Eth) getPackets(height uint64) ([]packet.Packet, error) {
 // get ack packets from block
 func (eth *Eth) getAckPackets(height uint64) ([]repotypes.AckPacket, error) {
 	address := gethcmn.HexToAddress(eth.contractCfgGroup.AckPacket.Addr)
-	topic := eth.contractCfgGroup.Packet.Topic
+	topic := eth.contractCfgGroup.AckPacket.Topic
 	logs, err := eth.getLogs(address, topic, height, height)
 	if err != nil {
 		return nil, err
@@ -409,14 +461,13 @@ type bindOpts struct {
 	packet *bind.TransactOpts
 }
 
-func newBindOpts(clientPrivKey, packetPrivKey string) (*bindOpts, error) {
+func newBindOpts(clientPrivKey, packetPrivKey string, chainID uint64) (*bindOpts, error) {
 
 	cliPriv, err := gethcrypto.HexToECDSA(clientPrivKey)
 	if err != nil {
 		return nil, err
 	}
-	chainID := new(big.Int).SetUint64(4)
-	clientOpts, err := bind.NewKeyedTransactorWithChainID(cliPriv, chainID)
+	clientOpts, err := bind.NewKeyedTransactorWithChainID(cliPriv, new(big.Int).SetUint64(chainID))
 	if err != nil {
 		return nil, err
 	}
@@ -426,14 +477,14 @@ func newBindOpts(clientPrivKey, packetPrivKey string) (*bindOpts, error) {
 	} else {
 		tmpPacketPrivKey = packetPrivKey
 	}
-	clientOpts.GasLimit = 20000000
+	clientOpts.GasLimit = 2000000
 	clientOpts.GasPrice = new(big.Int).SetUint64(1500000000)
 	packPriv, err := gethcrypto.HexToECDSA(tmpPacketPrivKey)
 	if err != nil {
 		return nil, err
 	}
 	packOpts := bind.NewKeyedTransactor(packPriv)
-	packOpts.GasLimit = 20000000
+	packOpts.GasLimit = 2000000
 	packOpts.GasPrice = new(big.Int).SetUint64(1500000000)
 	return &bindOpts{
 		client: clientOpts,

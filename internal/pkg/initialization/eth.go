@@ -33,6 +33,7 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 		cfg.Eth.ChainName,
 		cfg.Eth.UpdateClientFrequency,
 		cfg.Eth.URI,
+		cfg.Eth.ChainID,
 		contractCfgGroup)
 	if err != nil {
 		loggerEntry.Fatal(err)

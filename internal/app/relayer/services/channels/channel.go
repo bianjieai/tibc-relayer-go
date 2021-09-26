@@ -1,6 +1,9 @@
 package channels
 
 import (
+	"errors"
+	"time"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
@@ -33,13 +36,17 @@ type Channel struct {
 }
 
 func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64) IChannel {
+	var startHeight uint64 = 0
+	if source.ChainType() == constant.Tendermint {
+		startHeight = height
+	} else {
+		clientStatus, err := dest.GetLightClientState(source.ChainName())
+		if err != nil {
+			return nil
+		}
 
-	clientStatus, err := source.GetLightClientState(dest.ChainName())
-	if err != nil {
-		return nil
+		startHeight = clientStatus.GetLatestHeight().GetRevisionHeight() + 1
 	}
-
-	startHeight := clientStatus.GetLatestHeight().GetRevisionHeight()
 
 	return &Channel{
 		logger:  log.New(),
@@ -133,6 +140,13 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
+	if channel.dest.ChainType() == constant.ETH {
+		if err := channel.reTryEthResult(hash, 0); err != nil {
+			logger.Error("failed to update client")
+			return typeserr.ErrUpdateClient
+		}
+	}
+
 	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 
 	return nil
@@ -401,7 +415,7 @@ func (channel *Channel) relay() error {
 			//update client
 			err = channel.updateClient(
 				clientState.GetLatestHeight().GetRevisionHeight(),
-				latestHeight,
+				channel.Context().Height(),
 			)
 			if err != nil {
 				// After the update client fails, the height is reduced by 1
@@ -413,21 +427,6 @@ func (channel *Channel) relay() error {
 			}
 		}
 	} else {
-		if channel.source.ChainType() == constant.Tendermint {
-			// Tendermint does not need to update every height
-			// Delay one block to fetch data
-			// When data exists, update client
-			err = channel.updateClient(
-				clientState.GetLatestHeight().GetRevisionHeight(),
-				previousHeight,
-			)
-			if err != nil {
-				logger.WithFields(log.Fields{
-					"err_msg": err.Error(),
-				}).Error("failed to update client")
-				return typeserr.ErrGetLightClientState
-			}
-		}
 
 		//Follow the client where the new proof is located
 		err = channel.updateClient(
@@ -454,5 +453,22 @@ func (channel *Channel) relay() error {
 	}
 
 	channel.Context().IncrHeight()
+	return nil
+}
+
+func (channel *Channel) reTryEthResult(hash string, n uint64) error {
+	if n == 3 {
+		return errors.New("get result error")
+	}
+	txStatus, err := channel.dest.GetResult(hash)
+	if err != nil {
+		channel.logger.Error("failed to update client: ", err)
+		return typeserr.ErrUpdateClient
+	}
+	if txStatus == 0 {
+		channel.logger.Info("re-request result ")
+		time.Sleep(5 * time.Second)
+		return channel.reTryEthResult(hash, n+1)
+	}
 	return nil
 }

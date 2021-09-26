@@ -73,11 +73,12 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 	destChannel = channels.NewMetricMW(destChannel, metricsModel)
 	channelMap := map[string]channels.IChannel{}
 	channelMap[sourceChain.ChainName()] = sourceChannel
-	if cfg.Chain.Dest.Eth.ChainName == "" {
-		// todo
-		// The process of eth -> tendermint has not been implemented yet
-		channelMap[destChain.ChainName()] = destChannel
-	}
+	//if cfg.Chain.Dest.Eth.ChainName == "" {
+	//	// todo
+	//	// The process of eth -> tendermint has not been implemented yet
+	//	channelMap[destChain.ChainName()] = destChannel
+	//}
+	channelMap[destChain.ChainName()] = destChannel
 
 	return channelMap
 }

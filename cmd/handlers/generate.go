@@ -110,6 +110,7 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 	}
 
 	blockHeader := blockRes.Header()
+
 	header := &tibceth.EthHeader{
 		ParentHash:  blockHeader.ParentHash,
 		UncleHash:   blockHeader.UncleHash,
@@ -285,12 +286,12 @@ func getTendermintJson(client coresdk.Client, height int64, chainName string) {
 		fmt.Println("QueryBlock fail:  ", err)
 	}
 	tmHeader := res.Block.Header
-	lastHeight := tibcclient.NewHeight(0, 4)
+	lastHeight := tibcclient.NewHeight(0, uint64(height))
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,
-		TrustingPeriod:  time.Hour * 24 * 7 * 2,
-		UnbondingPeriod: time.Hour * 24 * 7 * 3,
+		TrustingPeriod:  time.Hour * 24 * 70 * 2,
+		UnbondingPeriod: time.Hour * 24 * 70 * 3,
 		MaxClockDrift:   time.Second * 10,
 		LatestHeight:    lastHeight,
 		ProofSpecs:      commitment.GetSDKSpecs(),
