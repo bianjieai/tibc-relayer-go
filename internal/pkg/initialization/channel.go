@@ -98,9 +98,9 @@ func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ
 		// If the file does not exist, the initial height is the startHeight in the configuration
 		switch typ {
 		case TypSource:
-			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight)
+			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight, logger)
 		case TypDest:
-			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Dest.Cache.StartHeight)
+			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Dest.Cache.StartHeight, logger)
 		}
 
 	} else {
@@ -121,7 +121,7 @@ func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ
 		if err != nil {
 			logger.Fatal("read cache file unmarshal err: ", err)
 		}
-		channel = channels.NewChannel(sourceChain, destChain, cacheData.LatestHeight)
+		channel = channels.NewChannel(sourceChain, destChain, cacheData.LatestHeight, logger)
 	}
 
 	return channel

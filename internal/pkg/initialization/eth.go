@@ -13,9 +13,9 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 		"chain_name": cfg.Tendermint.ChainName,
 	})
 
-	loggerEntry.Info(" init chain start")
+	loggerEntry.Info(" init eth chain start")
 
-	contractCfgGroup := repoeth.NewContracts()
+	contractCfgGroup := repoeth.NewContractCfgGroup()
 	contractCfgGroup.Packet.Addr = cfg.Eth.Contracts.Packet.Addr
 	contractCfgGroup.Packet.Topic = cfg.Eth.Contracts.Packet.Topic
 	contractCfgGroup.Packet.OptPrivKey = cfg.Eth.Contracts.Packet.OptPrivKey
@@ -29,12 +29,24 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 	contractCfgGroup.Client.Topic = cfg.Eth.Contracts.Client.Topic
 	contractCfgGroup.Client.OptPrivKey = cfg.Eth.Contracts.Client.OptPrivKey
 
-	ethRepo, err := repoeth.NewEth(constant.ETH,
-		cfg.Eth.ChainName,
-		cfg.Eth.UpdateClientFrequency,
-		cfg.Eth.URI,
-		cfg.Eth.ChainID,
-		contractCfgGroup)
+	contractBindOptsCfg := repoeth.NewContractBindOptsCfg()
+	contractBindOptsCfg.ChainID = cfg.Eth.ChainID
+	contractBindOptsCfg.ClientPrivKey = cfg.Eth.Contracts.Client.OptPrivKey
+	contractBindOptsCfg.PacketPrivKey = cfg.Eth.Contracts.Packet.OptPrivKey
+	contractBindOptsCfg.GasLimit = cfg.Eth.GasLimit
+	contractBindOptsCfg.GasPrice = cfg.Eth.GasPrice
+
+	ethChainCfg := repoeth.NewChainConfig()
+	ethChainCfg.ContractCfgGroup = contractCfgGroup
+	ethChainCfg.ContractBindOptsCfg = contractBindOptsCfg
+
+	ethChainCfg.ChainType = constant.ETH
+	ethChainCfg.ChainName = cfg.Eth.ChainName
+	ethChainCfg.ChainID = cfg.Eth.ChainID
+	ethChainCfg.ChainURI = cfg.Eth.URI
+	ethChainCfg.UpdateClientFrequency = cfg.Eth.UpdateClientFrequency
+
+	ethRepo, err := repoeth.NewEth(ethChainCfg)
 	if err != nil {
 		loggerEntry.Fatal(err)
 	}

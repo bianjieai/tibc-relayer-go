@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
@@ -13,30 +15,43 @@ import (
 func TestNewEth(t *testing.T) {
 	//ropsten := "https://rinkeby.infura.io/v3/023f2af0f670457d9c4ea9cb524f0810"
 	ropsten := "https://ropsten.infura.io/v3/023f2af0f670457d9c4ea9cb524f0810"
-	contractCfgGroup := NewContracts()
-	contractCfgGroup.Packet.Addr = "0x4ecD91c7e4481c8a00254356600962F880c62152"
-	contractCfgGroup.Packet.Topic = "PacketSent((uint64,string,string,string,string,bytes) packet)"
-	contractCfgGroup.Packet.OptPrivKey = "c59f553aa4d23dad1db5b42aa8d72ce98223e29e4e6f873d95b1ced451edad39"
+	optPrivKey := "c59f553aa4d23dad1db5b42aa8d72ce98223e29e4e6f873d95b1ced451edad39"
+	var chainID uint64 = 3
 
-	contractCfgGroup.AckPacket.Addr = "0x4ecD91c7e4481c8a00254356600962F880c62152"
-	contractCfgGroup.AckPacket.Topic = "AckWritten((uint64,string,string,string,string,bytes) packet, bytes ack)"
-	contractCfgGroup.AckPacket.OptPrivKey = "c59f553aa4d23dad1db5b42aa8d72ce98223e29e4e6f873d95b1ced451edad39"
+	contractCfgGroup := NewContractCfgGroup()
+	contractCfgGroup.Packet.Addr = "0xF06Ba39bce333442Dfa477e313D6439Ac7dc89c4"
+	contractCfgGroup.Packet.Topic = "PacketSent((uint64,string,string,string,string,bytes))"
+	contractCfgGroup.Packet.OptPrivKey = optPrivKey
 
-	contractCfgGroup.CleanPacket.Addr = "0x4ecD91c7e4481c8a00254356600962F880c62152"
-	contractCfgGroup.CleanPacket.Topic = "CleanPacketSent((uint64,string,string,string) packet)"
-	contractCfgGroup.CleanPacket.OptPrivKey = "c59f553aa4d23dad1db5b42aa8d72ce98223e29e4e6f873d95b1ced451edad39"
+	contractCfgGroup.AckPacket.Addr = "0xF06Ba39bce333442Dfa477e313D6439Ac7dc89c4"
+	contractCfgGroup.AckPacket.Topic = "AckWritten((uint64,string,string,string,string,bytes),bytes)"
+	contractCfgGroup.AckPacket.OptPrivKey = optPrivKey
+
+	contractCfgGroup.CleanPacket.Addr = "0xF06Ba39bce333442Dfa477e313D6439Ac7dc89c4"
+	contractCfgGroup.CleanPacket.Topic = "CleanPacketSent((uint64,string,string,string))"
+	contractCfgGroup.CleanPacket.OptPrivKey = optPrivKey
 
 	contractCfgGroup.Client.Addr = "0x776763E02f04445fC3346E99c4dA8588AcA2FD8C"
 	contractCfgGroup.Client.Topic = ""
-	contractCfgGroup.Client.OptPrivKey = "c59f553aa4d23dad1db5b42aa8d72ce98223e29e4e6f873d95b1ced451edad39"
+	contractCfgGroup.Client.OptPrivKey = optPrivKey
 
-	ethClient, err := NewEth(
-		constant.ETH,
-		"ETH",
-		10,
-		ropsten,
-		3,
-		contractCfgGroup)
+	contractBindOptsCfg := NewContractBindOptsCfg()
+	contractBindOptsCfg.ChainID = chainID
+	contractBindOptsCfg.ClientPrivKey = optPrivKey
+	contractBindOptsCfg.PacketPrivKey = optPrivKey
+	contractBindOptsCfg.GasLimit = 2000000
+	contractBindOptsCfg.GasPrice = 1500000000
+
+	chainCfg := NewChainConfig()
+	chainCfg.ContractCfgGroup = contractCfgGroup
+	chainCfg.ContractBindOptsCfg = contractBindOptsCfg
+	chainCfg.ChainType = constant.ETH
+	chainCfg.ChainName = "ETH"
+	chainCfg.ChainURI = ropsten
+	chainCfg.ChainID = chainID
+	chainCfg.UpdateClientFrequency = 10
+
+	ethClient, err := NewEth(chainCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +61,12 @@ func TestNewEth(t *testing.T) {
 	}
 	t.Log(latestHeight)
 
-	packets, err := ethClient.GetPackets(11107269)
+	packets, err := ethClient.GetProof(
+		"iris-testnet",
+		"eth-testnet",
+		27,
+		11122903, repotypes.AckProof)
+
 	if err != nil {
 		t.Fatal(err)
 	}

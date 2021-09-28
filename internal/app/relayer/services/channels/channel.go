@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
@@ -35,7 +35,7 @@ type Channel struct {
 	logger *log.Logger
 }
 
-func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64) IChannel {
+func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64, logger *log.Logger) IChannel {
 	var startHeight uint64 = 0
 	if source.ChainType() == constant.Tendermint {
 		startHeight = height
@@ -49,7 +49,7 @@ func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint6
 	}
 
 	return &Channel{
-		logger:  log.New(),
+		logger:  logger,
 		source:  source,
 		dest:    dest,
 		context: domain.NewContext(startHeight, source.ChainName()),
@@ -140,14 +140,13 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		logger.Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
+	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 	if channel.dest.ChainType() == constant.ETH {
 		if err := channel.reTryEthResult(hash, 0); err != nil {
-			logger.Error("failed to update client")
+			logger.Error("failed to update client: retry: ", err)
 			return typeserr.ErrUpdateClient
 		}
 	}
-
-	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 
 	return nil
 }
@@ -223,7 +222,6 @@ func (channel *Channel) relay() error {
 		logger.Error("failed to get block time")
 		return typeserr.ErrGetLatestHeight
 	}
-
 	var boastCommitPackets types.Msgs
 	popLength := 0
 	recvPacketQueue := channel.Context().Queue()
@@ -250,6 +248,15 @@ func (channel *Channel) relay() error {
 			"gas_wanted": resultTx.GasWanted,
 			"gas_used":   resultTx.GasUsed,
 		}).Info("success")
+		//eth block is probabilistic finality
+		//wait result is return & result must be success
+		if channel.dest.ChainType() == constant.ETH {
+			if err := channel.reTryEthResult(resultTx.Hash, 0); err != nil {
+				logger.Error("failed to recv packet: retry: ", err)
+				return typeserr.ErrRecvPacket
+			}
+		}
+
 		// remove the packets that have been chained
 		channel.Context().SetQueue(recvPacketQueue[popLength:])
 	}
@@ -425,6 +432,7 @@ func (channel *Channel) relay() error {
 				}).Error("failed to update client")
 				return typeserr.ErrGetLightClientState
 			}
+
 		}
 	} else {
 
@@ -457,17 +465,14 @@ func (channel *Channel) relay() error {
 }
 
 func (channel *Channel) reTryEthResult(hash string, n uint64) error {
-	if n == 3 {
-		return errors.New("get result error")
+	channel.logger.Info("retry: n===========", n)
+	if n == 10 {
+		return fmt.Errorf("retry 10 times and return error")
 	}
 	txStatus, err := channel.dest.GetResult(hash)
-	if err != nil {
-		channel.logger.Error("failed to update client: ", err)
-		return typeserr.ErrUpdateClient
-	}
-	if txStatus == 0 {
+	if err != nil || txStatus == 0 {
 		channel.logger.Info("re-request result ")
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		return channel.reTryEthResult(hash, n+1)
 	}
 	return nil

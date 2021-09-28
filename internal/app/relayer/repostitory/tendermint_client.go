@@ -3,7 +3,9 @@ package repostitory
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/irisnet/core-sdk-go/bank"
 	"github.com/irisnet/core-sdk-go/client"
@@ -263,11 +265,12 @@ func (c *Tendermint) UpdateClient(header tibctypes.Header, chainName string) (st
 		ChainName: chainName,
 		Header:    header,
 	}
+	startTime := time.Now().Unix()
 	resTx, err := c.terndermintCli.TIBC.UpdateClient(request, c.baseTx)
 	if err != nil {
 		return "", err
 	}
-
+	fmt.Println(time.Now().Unix() - startTime)
 	return resTx.Hash, nil
 }
 
