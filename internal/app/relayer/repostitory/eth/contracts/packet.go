@@ -1195,3 +1195,17 @@ func (_Packet *PacketFilterer) ParsePacketSent(log types.Log) (*PacketPacketSent
 	event.Raw = log
 	return event, nil
 }
+
+// ParsePacketSent is a log parse operation binding the contract event 0x9f4eeeeeb04711557a8bca7f4ac577fc7db19653f604920f381f7358e8a686a0.
+//
+// Solidity: event PacketSent((uint64,string,string,string,string,bytes) packet)
+func (_Packet *PacketFilterer) ParsePacketTypesPacket(log types.Log) (*PacketPacketSent, error) {
+	event := new(PacketPacketSent)
+	packTypePack := new(PacketTypesPacket)
+	if err := _Packet.contract.UnpackLog(packTypePack, "PacketSent", log); err != nil {
+		return nil, err
+	}
+	event.Packet = *packTypePack
+	event.Raw = log
+	return event, nil
+}

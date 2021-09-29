@@ -194,7 +194,7 @@ func (channel *Channel) relay() error {
 	}
 
 	// 1. update client
-	// 1.1 get eth clientState from tendermint
+	// 1.1 get eth clientState from dest
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
 		logger.WithFields(log.Fields{
@@ -208,19 +208,19 @@ func (channel *Channel) relay() error {
 	delayHeight, err := channel.dest.GetLightClientDelayHeight(channel.source.ChainName())
 	if err != nil {
 		logger.Error("failed to get delay height")
-		return typeserr.ErrGetLatestHeight
+		return typeserr.ErrDelayHeight
 	}
 
 	delayTime, err := channel.dest.GetLightClientDelayTime(channel.source.ChainName())
 	if err != nil {
 		logger.Error("failed to get delay time")
-		return typeserr.ErrGetLatestHeight
+		return typeserr.ErrDelayTime
 	}
 
 	curBlockTimestamp, err := channel.source.GetBlockTimestamp(channel.Context().Height())
 	if err != nil {
 		logger.Error("failed to get block time")
-		return typeserr.ErrGetLatestHeight
+		return typeserr.ErrCurBlockTime
 	}
 	var boastCommitPackets types.Msgs
 	popLength := 0
@@ -265,15 +265,18 @@ func (channel *Channel) relay() error {
 	* get cur block packet
 	* ========================================================
 	**/
-	// 2. get packets from eth
+	// 2. get packets from source
 	previousHeight := channel.Context().Height() - 1
 	packets, err := channel.source.GetPackets(previousHeight)
+
 	if err != nil {
 		logger.WithFields(log.Fields{
 			"err_msg": err.Error(),
 		}).Error("failed to get packets")
 		return typeserr.ErrGetPackets
 	}
+
+	//packets := &repotypes.Packets{}
 
 	// 3.  Process biz packets
 	var recvPackets types.Msgs
@@ -430,7 +433,7 @@ func (channel *Channel) relay() error {
 				logger.WithFields(log.Fields{
 					"err_msg": err.Error(),
 				}).Error("failed to update client")
-				return typeserr.ErrGetLightClientState
+				return typeserr.ErrUpdateClient
 			}
 
 		}
@@ -448,7 +451,7 @@ func (channel *Channel) relay() error {
 			logger.WithFields(log.Fields{
 				"err_msg": err.Error(),
 			}).Error("failed to update client")
-			return typeserr.ErrGetLightClientState
+			return typeserr.ErrUpdateClient
 		}
 
 		// set data to queue

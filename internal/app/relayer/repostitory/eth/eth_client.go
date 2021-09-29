@@ -42,6 +42,8 @@ const CtxTimeout = 10 * time.Second
 var (
 	Uint64, _  = abi.NewType("uint64", "", nil)
 	Bytes32, _ = abi.NewType("bytes32", "", nil)
+	Bytes, _   = abi.NewType("bytes", "", nil)
+	String, _  = abi.NewType("string", "", nil)
 )
 
 type Eth struct {
@@ -117,7 +119,11 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
 			}
-			result, err := eth.contracts.Packet.RecvPacket(eth.bindOpts.packetTransactOpts, tmpPack, msg.ProofCommitment, height)
+			result, err := eth.contracts.Packet.RecvPacket(
+				eth.bindOpts.packetTransactOpts,
+				tmpPack,
+				msg.ProofCommitment,
+				height)
 			if err != nil {
 				return nil, types.Wrap(err)
 			}
@@ -137,7 +143,10 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
 			}
-			result, err := eth.contracts.Packet.RecvPacket(nil, tmpPack, msg.ProofAcked, height)
+			result, err := eth.contracts.Packet.AcknowledgePacket(
+				eth.bindOpts.packetTransactOpts,
+				tmpPack, msg.Acknowledgement, msg.ProofAcked,
+				height)
 			if err != nil {
 				return nil, types.Wrap(err)
 			}
@@ -447,7 +456,7 @@ func (eth *Eth) getPackets(height uint64) ([]packet.Packet, error) {
 
 	var bizPackets []packet.Packet
 	for _, log := range logs {
-		packSent, err := eth.contracts.Packet.ParsePacketSent(log)
+		packSent, err := eth.contracts.Packet.ParsePacketTypesPacket(log)
 		if err != nil {
 			return nil, err
 		}
