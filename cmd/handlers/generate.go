@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	tibceth "github.com/bianjieai/tibc-sdk-go/eth"
 
 	gethethclient "github.com/ethereum/go-ethereum/ethclient"
@@ -98,7 +100,7 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	startHeight := latestHeight - 100
+	startHeight := latestHeight - 10
 	logger.Info("eth height = ", startHeight)
 
 	//gethCli := gethclient.New(rpcClient)
@@ -110,6 +112,7 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 	}
 
 	blockHeader := blockRes.Header()
+
 	header := &tibceth.EthHeader{
 		ParentHash:  blockHeader.ParentHash,
 		UncleHash:   blockHeader.UncleHash,
@@ -129,12 +132,12 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 		BaseFee:     blockHeader.BaseFee,
 	}
 	number := tibcclient.NewHeight(0, header.Number.Uint64())
-
+	hash := common.FromHex(cfg.Eth.Contracts.Packet.Addr)
 	clientState := &tibceth.ClientState{
 		Header:          header.ToHeader(),
 		ChainId:         cfg.Eth.ChainID,
-		ContractAddress: []byte(cfg.Eth.Contracts.Client.Addr),
-		TrustingPeriod:  200,
+		ContractAddress: hash,
+		TrustingPeriod:  60 * 60 * 24 * 7,
 		TimeDelay:       0,
 		BlockDelay:      7,
 	}
@@ -285,12 +288,12 @@ func getTendermintJson(client coresdk.Client, height int64, chainName string) {
 		fmt.Println("QueryBlock fail:  ", err)
 	}
 	tmHeader := res.Block.Header
-	lastHeight := tibcclient.NewHeight(0, 4)
+	lastHeight := tibcclient.NewHeight(0, uint64(height))
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,
-		TrustingPeriod:  time.Hour * 24 * 7 * 2,
-		UnbondingPeriod: time.Hour * 24 * 7 * 3,
+		TrustingPeriod:  time.Hour * 24 * 70 * 2,
+		UnbondingPeriod: time.Hour * 24 * 70 * 3,
 		MaxClockDrift:   time.Second * 10,
 		LatestHeight:    lastHeight,
 		ProofSpecs:      commitment.GetSDKSpecs(),

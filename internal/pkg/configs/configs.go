@@ -23,6 +23,8 @@ type (
 		ChainName             string       `mapstructure:"chain_name"`
 		Contracts             EthContracts `mapstructure:"eth_contracts"`
 		UpdateClientFrequency uint64       `mapstructure:"update_client_frequency"`
+		GasLimit              uint64       `mapstructure:"gas_limit"`
+		GasPrice              uint64       `mapstructure:"gas_price"`
 	}
 
 	EthContracts struct {

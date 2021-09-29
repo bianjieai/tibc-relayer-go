@@ -20,6 +20,9 @@ type IChain interface {
 	GetLightClientDelayHeight(string) (uint64, error)
 	GetLightClientDelayTime(string) (uint64, error)
 	UpdateClient(header tibctypes.Header, chainName string) (string, error)
+
+	GetResult(hash string) (uint64, error)
+
 	ChainName() string
 	UpdateClientFrequency() uint64
 	ChainType() string

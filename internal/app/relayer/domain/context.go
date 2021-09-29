@@ -28,6 +28,10 @@ func (ctx *Context) IncrHeight() {
 	ctx.height += 1
 }
 
+func (ctx *Context) DecrHeight() {
+	ctx.height -= 1
+}
+
 func (ctx *Context) SetHeight(height uint64) {
 	ctx.height = height
 }
