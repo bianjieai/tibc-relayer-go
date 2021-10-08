@@ -336,7 +336,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		TxHash:      blockRes.TxHash().Bytes(),
 		ReceiptHash: blockRes.ReceiptHash().Bytes(),
 		Bloom:       blockRes.Bloom().Bytes(),
-		Difficulty:  blockRes.Difficulty().Uint64(),
+		Difficulty:  blockRes.Difficulty().String(),
 		Height: tibcclient.Height{
 			RevisionNumber: 0,
 			RevisionHeight: req.LatestHeight,
@@ -347,7 +347,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		Extra:     blockRes.Extra(),
 		MixDigest: blockRes.MixDigest().Bytes(),
 		Nonce:     blockRes.Nonce(),
-		BaseFee:   blockRes.BaseFee().Uint64(),
+		BaseFee:   blockRes.BaseFee().String(),
 	}, nil
 
 }
