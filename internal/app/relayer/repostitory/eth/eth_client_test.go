@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+
 	gethcmn "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -30,7 +32,7 @@ func TestNewEth(t *testing.T) {
 	contractCfgGroup.CleanPacket.Topic = "CleanPacketSent((uint64,string,string,string))"
 	contractCfgGroup.CleanPacket.OptPrivKey = optPrivKey
 
-	contractCfgGroup.Client.Addr = "0x60533122827f35f55cBe3Ce978ae6FCf2a7059b3"
+	contractCfgGroup.Client.Addr = "0xB470BD3Ae2a3f1fd663cAD19113233A19Ab37842"
 	contractCfgGroup.Client.Topic = ""
 	contractCfgGroup.Client.OptPrivKey = optPrivKey
 
@@ -59,14 +61,21 @@ func TestNewEth(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(latestHeight)
+	ethClient.GetProof(
+		"irishub-testnet",
+		"eth-testnet",
+		1,
+		11128921,
+		repotypes.AckProof,
+	)
 
-	packets, err := ethClient.GetPackets(11128997)
-	//packets, err := ethClient.GetPackets(11128966)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(packets)
+	//packets, err := ethClient.GetPackets(11128997)
+	////packets, err := ethClient.GetPackets(11128966)
+	//
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//t.Log(packets)
 
 }
 

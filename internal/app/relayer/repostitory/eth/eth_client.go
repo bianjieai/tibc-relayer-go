@@ -153,9 +153,22 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 			resultTx.GasUsed += int64(result.Gas())
 			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
 		case "recv_clean_packet":
-			//msg := d.(*packet.MsgRecvCleanPacket)
-			//tmpPack := contracts.PacketCleanPacketSent{}
-
+			msg := d.(*packet.MsgRecvCleanPacket)
+			cleanPack := contracts.PacketTypesCleanPacket{
+				Sequence:    msg.CleanPacket.Sequence,
+				DestChain:   msg.CleanPacket.DestinationChain,
+				SourceChain: msg.CleanPacket.SourceChain,
+				RelayChain:  msg.CleanPacket.RelayChain,
+			}
+			result, err := eth.contracts.Packet.CleanPacket(
+				eth.bindOpts.packetTransactOpts,
+				cleanPack,
+			)
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+			resultTx.GasUsed += int64(result.Gas())
+			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
 		}
 
 	}
