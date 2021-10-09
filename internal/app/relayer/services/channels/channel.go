@@ -219,7 +219,9 @@ func (channel *Channel) relay() error {
 
 	curBlockTimestamp, err := channel.source.GetBlockTimestamp(channel.Context().Height())
 	if err != nil {
-		logger.Error("failed to get block time")
+		logger.WithFields(log.Fields{
+			"err_msg": err.Error(),
+		}).Error("failed to get block time")
 		return typeserr.ErrCurBlockTime
 	}
 	var boastCommitPackets types.Msgs

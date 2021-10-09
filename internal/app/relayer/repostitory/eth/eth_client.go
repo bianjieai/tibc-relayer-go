@@ -56,6 +56,8 @@ type Eth struct {
 	contracts        *contractGroup
 	bindOpts         *bindOpts
 
+	slot int64
+
 	ethClient  *gethethclient.Client
 	gethCli    *gethclient.Client
 	gethRpcCli *gethrpc.Client
@@ -95,6 +97,7 @@ func NewEth(config *ChainConfig) (repostitory.IChain, error) {
 		gethRpcCli:            rpcClient,
 		contracts:             contractGroup,
 		bindOpts:              tmpBindOpts,
+		slot:                  config.Slot,
 	}, nil
 }
 
@@ -191,8 +194,6 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 		appHash,
 		nextValidatorsHash,
 	)
-
-	fmt.Println(eth.bindOpts.client.From.String())
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
@@ -230,9 +231,11 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	var key []byte
 	switch typ {
 	case repotypes.CommitmentPoof:
-		key = pkConstr.GetPacketCommitmentProofKey()
+		key = pkConstr.GetPacketCommitmentProofKey(eth.slot)
 	case repotypes.AckProof:
-		key = pkConstr.GetAckProofKey()
+		key = pkConstr.GetAckProofKey(eth.slot)
+	case repotypes.CleanProof:
+		key = pkConstr.GetCleanPacketCommitmentProofKey(eth.slot)
 	default:
 		return nil, errors.ErrGetProof
 	}
@@ -271,7 +274,6 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(proofBz))
 	return proofBz, nil
 }
 
