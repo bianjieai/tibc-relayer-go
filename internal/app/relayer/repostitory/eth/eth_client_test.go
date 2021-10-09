@@ -20,19 +20,19 @@ func TestNewEth(t *testing.T) {
 	var chainID uint64 = 3
 
 	contractCfgGroup := NewContractCfgGroup()
-	contractCfgGroup.Packet.Addr = "0xc1d8C2Daa09989D98CC8Dc157a525555190bEA9D"
+	contractCfgGroup.Packet.Addr = "0x6c2d2868487665C766740ec4cAD006110CfDCff8"
 	contractCfgGroup.Packet.Topic = "PacketSent((uint64,string,string,string,string,bytes))"
 	contractCfgGroup.Packet.OptPrivKey = optPrivKey
 
-	contractCfgGroup.AckPacket.Addr = "0xc1d8C2Daa09989D98CC8Dc157a525555190bEA9D"
+	contractCfgGroup.AckPacket.Addr = "0x6c2d2868487665C766740ec4cAD006110CfDCff8"
 	contractCfgGroup.AckPacket.Topic = "AckWritten((uint64,string,string,string,string,bytes),bytes)"
 	contractCfgGroup.AckPacket.OptPrivKey = optPrivKey
 
-	contractCfgGroup.CleanPacket.Addr = "0xc1d8C2Daa09989D98CC8Dc157a525555190bEA9D"
+	contractCfgGroup.CleanPacket.Addr = "0x6c2d2868487665C766740ec4cAD006110CfDCff8"
 	contractCfgGroup.CleanPacket.Topic = "CleanPacketSent((uint64,string,string,string))"
 	contractCfgGroup.CleanPacket.OptPrivKey = optPrivKey
 
-	contractCfgGroup.Client.Addr = "0xB470BD3Ae2a3f1fd663cAD19113233A19Ab37842"
+	contractCfgGroup.Client.Addr = "0x5845092693e6708dEDAF6489719963F76d31C51C"
 	contractCfgGroup.Client.Topic = ""
 	contractCfgGroup.Client.OptPrivKey = optPrivKey
 
@@ -50,6 +50,7 @@ func TestNewEth(t *testing.T) {
 	chainCfg.ChainName = "ETH"
 	chainCfg.ChainURI = ropsten
 	chainCfg.ChainID = chainID
+	chainCfg.Slot = 4
 	chainCfg.UpdateClientFrequency = 10
 
 	ethClient, err := NewEth(chainCfg)
@@ -61,13 +62,7 @@ func TestNewEth(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(latestHeight)
-	ethClient.GetProof(
-		"irishub-testnet",
-		"eth-testnet",
-		1,
-		11128921,
-		repotypes.AckProof,
-	)
+	ethClient.GetProof("eth-testnet", "irishub-testnet", 3, latestHeight, repotypes.CommitmentPoof)
 
 	//packets, err := ethClient.GetPackets(11128997)
 	////packets, err := ethClient.GetPackets(11128966)

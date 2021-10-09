@@ -44,6 +44,7 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 	ethChainCfg.ChainName = cfg.Eth.ChainName
 	ethChainCfg.ChainID = cfg.Eth.ChainID
 	ethChainCfg.ChainURI = cfg.Eth.URI
+	ethChainCfg.Slot = cfg.Eth.CommentSlot
 	ethChainCfg.UpdateClientFrequency = cfg.Eth.UpdateClientFrequency
 
 	ethRepo, err := repoeth.NewEth(ethChainCfg)

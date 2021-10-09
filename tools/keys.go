@@ -21,26 +21,26 @@ func NewProofKeyConstructor(sourceChain string, destChain string, sequence uint6
 	}
 }
 
-func (k ProofKeyConstructor) GetPacketCommitmentProofKey() []byte {
+func (k ProofKeyConstructor) GetPacketCommitmentProofKey(slot int64) []byte {
 	hash := crypto.Keccak256Hash(
 		PacketCommitmentKey(k.sourceChain, k.destChain, k.sequence),
-		common.LeftPadBytes(big.NewInt(3).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(slot).Bytes(), 32),
 	)
 	return hash.Bytes()
 }
 
-func (k ProofKeyConstructor) GetAckProofKey() []byte {
+func (k ProofKeyConstructor) GetAckProofKey(slot int64) []byte {
 	hash := crypto.Keccak256Hash(
 		PacketAcknowledgementKey(k.sourceChain, k.destChain, k.sequence),
-		common.LeftPadBytes(big.NewInt(3).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(slot).Bytes(), 32),
 	)
 	return hash.Bytes()
 }
 
-func (k ProofKeyConstructor) GetCleanPacketCommitmentProofKey() []byte {
+func (k ProofKeyConstructor) GetCleanPacketCommitmentProofKey(slot int64) []byte {
 	hash := crypto.Keccak256Hash(
 		CleanPacketCommitmentKey(k.sourceChain, k.destChain),
-		common.LeftPadBytes(big.NewInt(3).Bytes(), 32),
+		common.LeftPadBytes(big.NewInt(slot).Bytes(), 32),
 	)
 	return hash.Bytes()
 }
