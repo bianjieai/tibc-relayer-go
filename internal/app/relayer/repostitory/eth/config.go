@@ -10,8 +10,11 @@ type ChainConfig struct {
 	UpdateClientFrequency uint64
 	ChainURI              string
 	ChainID               uint64
-	ContractCfgGroup      *ContractCfgGroup
-	ContractBindOptsCfg   *ContractBindOptsCfg
+
+	Slot int64
+
+	ContractCfgGroup    *ContractCfgGroup
+	ContractBindOptsCfg *ContractBindOptsCfg
 }
 
 func NewContractCfgGroup() *ContractCfgGroup {

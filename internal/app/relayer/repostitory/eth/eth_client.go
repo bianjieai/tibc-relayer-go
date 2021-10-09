@@ -56,6 +56,8 @@ type Eth struct {
 	contracts        *contractGroup
 	bindOpts         *bindOpts
 
+	slot int64
+
 	ethClient  *gethethclient.Client
 	gethCli    *gethclient.Client
 	gethRpcCli *gethrpc.Client
@@ -95,6 +97,7 @@ func NewEth(config *ChainConfig) (repostitory.IChain, error) {
 		gethRpcCli:            rpcClient,
 		contracts:             contractGroup,
 		bindOpts:              tmpBindOpts,
+		slot:                  config.Slot,
 	}, nil
 }
 
@@ -153,9 +156,22 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 			resultTx.GasUsed += int64(result.Gas())
 			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
 		case "recv_clean_packet":
-			//msg := d.(*packet.MsgRecvCleanPacket)
-			//tmpPack := contracts.PacketCleanPacketSent{}
-
+			msg := d.(*packet.MsgRecvCleanPacket)
+			cleanPack := contracts.PacketTypesCleanPacket{
+				Sequence:    msg.CleanPacket.Sequence,
+				DestChain:   msg.CleanPacket.DestinationChain,
+				SourceChain: msg.CleanPacket.SourceChain,
+				RelayChain:  msg.CleanPacket.RelayChain,
+			}
+			result, err := eth.contracts.Packet.CleanPacket(
+				eth.bindOpts.packetTransactOpts,
+				cleanPack,
+			)
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+			resultTx.GasUsed += int64(result.Gas())
+			resultTx.Hash = resultTx.Hash + "," + result.Hash().String()
 		}
 
 	}
@@ -191,8 +207,6 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 		appHash,
 		nextValidatorsHash,
 	)
-
-	fmt.Println(eth.bindOpts.client.From.String())
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
@@ -230,9 +244,11 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	var key []byte
 	switch typ {
 	case repotypes.CommitmentPoof:
-		key = pkConstr.GetPacketCommitmentProofKey()
+		key = pkConstr.GetPacketCommitmentProofKey(eth.slot)
 	case repotypes.AckProof:
-		key = pkConstr.GetAckProofKey()
+		key = pkConstr.GetAckProofKey(eth.slot)
+	case repotypes.CleanProof:
+		key = pkConstr.GetCleanPacketCommitmentProofKey(eth.slot)
 	default:
 		return nil, errors.ErrGetProof
 	}
@@ -271,7 +287,6 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(proofBz))
 	return proofBz, nil
 }
 
@@ -323,7 +338,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		TxHash:      blockRes.TxHash().Bytes(),
 		ReceiptHash: blockRes.ReceiptHash().Bytes(),
 		Bloom:       blockRes.Bloom().Bytes(),
-		Difficulty:  blockRes.Difficulty().Uint64(),
+		Difficulty:  blockRes.Difficulty().String(),
 		Height: tibcclient.Height{
 			RevisionNumber: 0,
 			RevisionHeight: req.LatestHeight,
@@ -334,7 +349,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		Extra:     blockRes.Extra(),
 		MixDigest: blockRes.MixDigest().Bytes(),
 		Nonce:     blockRes.Nonce(),
-		BaseFee:   blockRes.BaseFee().Uint64(),
+		BaseFee:   blockRes.BaseFee().String(),
 	}, nil
 
 }
