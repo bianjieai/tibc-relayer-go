@@ -3,6 +3,7 @@ package handlers
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"os"
@@ -77,10 +78,11 @@ func CreateClientFiles(cfg *configs.Config) {
 			})
 			logger.Info("1. init source chain")
 			sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
-			getTendermintBytes(
+			getTendermintHex(
 				sourceChain,
 				int64(cfg.Chain.Source.Cache.StartHeight),
 				cfg.Chain.Source.Tendermint.ChainName,
+				logger,
 			)
 			logger.Info("2. init dest chain")
 			getETHJson(&cfg.Chain.Dest, sourceChain, logger)
@@ -208,71 +210,95 @@ func tendermintCreateClientFiles(cfg *configs.ChainCfg, logger *log.Entry) cores
 	return coresdk.NewClient(coreSdkCfg)
 }
 
-func getTendermintBytes(client coresdk.Client, height int64, chainName string) {
+func getTendermintHex(client coresdk.Client, height int64, chainName string, logger *log.Entry) {
+	type TrustLevel struct {
+		Numerator   int `json:"numerator"`
+		Denominator int `json:"denominator"`
+	}
 
-	//ClientState
-	var fra = tendermint.Fraction{
-		Numerator:   1,
-		Denominator: 3,
+	type LatestHeight struct {
+		RevisionNumber int `json:"revisionNumber"`
+		RevisionHeight int `json:"revisionHeight"`
 	}
-	res, err := client.QueryBlock(height)
+
+	type MerklePrefix struct {
+		KeyPrefix []byte `json:"keyPrefix"`
+	}
+
+	// Tendermint Client State In  ETH
+	type TendermintClientState struct {
+		ChainID         string       `json:"chainId"`
+		TrustLevel      TrustLevel   `json:"trustLevel"`
+		TrustingPeriod  int          `json:"trustingPeriod"`
+		UnbondingPeriod int          `json:"unbondingPeriod"`
+		MaxClockDrift   int          `json:"maxClockDrift"`
+		LatestHeight    LatestHeight `json:"latestHeight"`
+		MerklePrefix    MerklePrefix `json:"merklePrefix"`
+		TimeDelay       int          `json:"timeDelay"`
+	}
+
+	type Timestamp struct {
+		Secs  int `json:"secs"`
+		Nanos int `json:"nanos"`
+	}
+
+	// Tendermint Consensus State In  ETH
+	type TendermintConsensusState struct {
+		Timestamp          Timestamp `json:"timestamp"`
+		Root               []byte    `json:"root"`
+		NextValidatorsHash []byte    `json:"nextValidatorsHash"`
+	}
+
+	blockRes, err := client.QueryBlock(height)
 	if err != nil {
-		fmt.Println("QueryBlock fail:  ", err)
+		logger.Fatal("QueryBlock fail:  ", err)
 	}
-	tmHeader := res.Block.Header
-	lastHeight := tibcclient.NewHeight(0, 4)
-	var clientState = &tendermint.ClientState{
-		ChainId:         tmHeader.ChainID,
-		TrustLevel:      fra,
-		TrustingPeriod:  time.Hour * 24 * 7 * 2,
-		UnbondingPeriod: time.Hour * 24 * 7 * 3,
-		MaxClockDrift:   time.Second * 10,
-		LatestHeight:    lastHeight,
-		ProofSpecs:      commitment.GetSDKSpecs(),
-		MerklePrefix:    commitment.MerklePrefix{KeyPrefix: []byte(tibcTendermintMerklePrefix)},
-		TimeDelay:       0,
+	tmHeader := blockRes.Block.Header
+	clientState := &TendermintClientState{
+		ChainID: tmHeader.ChainID,
+		TrustLevel: TrustLevel{
+			Numerator:   1,
+			Denominator: 3,
+		},
+		TrustingPeriod:  100 * 24 * 60 * 60,
+		UnbondingPeriod: 1814400,
+		MaxClockDrift:   10,
+		LatestHeight: LatestHeight{
+			RevisionNumber: 0,
+			RevisionHeight: int(height),
+		},
+		MerklePrefix: MerklePrefix{
+			KeyPrefix: []byte("tibc"),
+		},
+		TimeDelay: 0,
 	}
+
 	//ConsensusState
-	var consensusState = &tendermint.ConsensusState{
-		Timestamp:          tmHeader.Time,
-		Root:               commitment.NewMerkleRoot([]byte(tibcTendermintRoot)),
-		NextValidatorsHash: tendermintQueryValidatorSet(res.Block.Height, client).Hash(),
+	consensusState := TendermintConsensusState{
+		Timestamp: Timestamp{
+			Secs:  tmHeader.Time.Second(),
+			Nanos: 5829,
+		},
+		Root:               tmHeader.AppHash,
+		NextValidatorsHash: tmHeader.NextValidatorsHash,
 	}
 
-	clientStateBytes, err := clientState.Marshal()
+	clientStateBytes, err := json.Marshal(clientState)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	clientStateBytes1, err := client.AppCodec().MarshalJSON(clientState)
-	if err != nil {
-		panic(err)
+		logger.Fatal("marshal eth clientState error: ", err)
 	}
 	// write file
-	clientStateStr1 := string(clientStateBytes1)
-	clientStateStr1 = clientStatePrefix + clientStateStr1[1:]
-	clientStateFilename1 := fmt.Sprintf("%s_clientState.json", chainName)
-	writeCreateClientFiles(clientStateFilename1, clientStateStr1)
-
-	consensusStateBytes1, err := client.AppCodec().MarshalJSON(consensusState)
-	if err != nil {
-		panic(err)
-	}
-	consensusStateStr1 := string(consensusStateBytes1)
-	consensusStateStr1 = consensusStatePrefix + consensusStateStr1[1:]
-	consensusStateFilename1 := fmt.Sprintf("%s_consensusState.json", chainName)
-	writeCreateClientFiles(consensusStateFilename1, consensusStateStr1)
-
-	// write file
+	clientStateHex := hexutil.Encode(clientStateBytes)
 	clientStateFilename := fmt.Sprintf("%s_lientState.txt", chainName)
-	writeCreateClientFiles(clientStateFilename, hexutil.Encode(clientStateBytes))
+	writeCreateClientFiles(clientStateFilename, clientStateHex)
 
-	consensusStateBytes, err := consensusState.Marshal()
+	consensusStateBytes, err := json.Marshal(consensusState)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
+	consensusStateHex := hexutil.Encode(consensusStateBytes)
 	consensusStateFilename := fmt.Sprintf("%s_consensusState.txt", chainName)
-	writeCreateClientFiles(consensusStateFilename, hexutil.Encode(consensusStateBytes))
+	writeCreateClientFiles(consensusStateFilename, consensusStateHex)
 }
 
 func getTendermintJson(client coresdk.Client, height int64, chainName string) {
