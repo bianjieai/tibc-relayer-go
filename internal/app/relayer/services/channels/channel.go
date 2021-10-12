@@ -18,6 +18,8 @@ import (
 
 var _ IChannel = new(Channel)
 
+const RetryTimeout = 30 * time.Second
+
 type IChannel interface {
 	UpdateClient() error
 	Relay() error
@@ -470,14 +472,14 @@ func (channel *Channel) relay() error {
 }
 
 func (channel *Channel) reTryEthResult(hash string, n uint64) error {
-	channel.logger.Info("retry: n===========", n)
+	channel.logger.Infof("retry %d time", n)
 	if n == 10 {
 		return fmt.Errorf("retry 10 times and return error")
 	}
 	txStatus, err := channel.dest.GetResult(hash)
 	if err != nil || txStatus == 0 {
 		channel.logger.Info("re-request result ")
-		time.Sleep(10 * time.Second)
+		time.Sleep(RetryTimeout)
 		return channel.reTryEthResult(hash, n+1)
 	}
 	return nil
