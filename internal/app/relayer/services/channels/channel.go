@@ -71,9 +71,7 @@ func (channel *Channel) UpdateClient() error {
 	})
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get light client state")
+		logger.WithField("err_msg", err).Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
 	// 2. get source chain updated latest height from dest chain
@@ -82,9 +80,7 @@ func (channel *Channel) UpdateClient() error {
 
 	nextHeight, err := channel.source.GetLatestHeight()
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get block header")
+		logger.WithField("err_msg", err).Error("failed to get block header")
 		return typeserr.ErrGetBlockHeader
 	}
 	return channel.updateClient(height, nextHeight)
@@ -101,9 +97,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	})
 	clientState, err1 := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err1 != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err1.Error(),
-		}).Error("failed to get light client state")
+		logger.WithField("err_msg", err1).Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
 	if clientState.GetLatestHeight().GetRevisionHeight() >= latestHeight {
@@ -120,7 +114,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		}
 		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {
-			logger.Error("failed to get block header")
+			logger.WithField("err_msg", err).Error("failed to get block header")
 			return typeserr.ErrGetBlockHeader
 		}
 	case constant.ETH:
@@ -130,7 +124,7 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		}
 		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {
-			logger.Error("failed to get block header")
+			logger.WithField("err_msg", err).Error("failed to get block header")
 			return typeserr.ErrGetBlockHeader
 		}
 
@@ -139,13 +133,13 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	// 4. update client to dest chain
 	hash, err := channel.dest.UpdateClient(header, channel.source.ChainName())
 	if err != nil {
-		logger.Error("failed to update client")
+		logger.WithField("err_msg", err).Error("failed to update client")
 		return typeserr.ErrUpdateClient
 	}
 	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 	if channel.dest.ChainType() == constant.ETH {
 		if err := channel.reTryEthResult(hash, 0); err != nil {
-			logger.Error("failed to update client: retry: ", err)
+			logger.WithField("err_msg", err).Error("failed to update client: retry: ", err)
 			return typeserr.ErrUpdateClient
 		}
 	}
@@ -199,9 +193,7 @@ func (channel *Channel) relay() error {
 	// 1.1 get eth clientState from dest
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get light client state")
+		logger.WithField("err_msg", err).Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
 
@@ -209,21 +201,19 @@ func (channel *Channel) relay() error {
 
 	delayHeight, err := channel.dest.GetLightClientDelayHeight(channel.source.ChainName())
 	if err != nil {
-		logger.Error("failed to get delay height")
+		logger.WithField("err_msg", err).Error("failed to get delay height")
 		return typeserr.ErrDelayHeight
 	}
 
 	delayTime, err := channel.dest.GetLightClientDelayTime(channel.source.ChainName())
 	if err != nil {
-		logger.Error("failed to get delay time")
+		logger.WithField("err_msg", err).Error("failed to get delay time")
 		return typeserr.ErrDelayTime
 	}
 
 	curBlockTimestamp, err := channel.source.GetBlockTimestamp(channel.Context().Height())
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get block time")
+		logger.WithField("err_msg", err).Error("failed to get block time")
 		return typeserr.ErrCurBlockTime
 	}
 	var boastCommitPackets types.Msgs
@@ -241,9 +231,7 @@ func (channel *Channel) relay() error {
 		// if it is eth, how to submit it?
 		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
 		if err != nil {
-			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
-			}).Error("failed to recv packet")
+			logger.WithField("err_msg", err).Error("failed to recv packet")
 			return typeserr.ErrRecvPacket
 		}
 		logger.WithFields(log.Fields{
@@ -256,7 +244,7 @@ func (channel *Channel) relay() error {
 		//wait result is return & result must be success
 		if channel.dest.ChainType() == constant.ETH {
 			if err := channel.reTryEthResult(resultTx.Hash, 0); err != nil {
-				logger.Error("failed to recv packet: retry: ", err)
+				logger.WithField("err_msg", err).Error("failed to recv packet: retry: ", err)
 				return typeserr.ErrRecvPacket
 			}
 		}
@@ -274,9 +262,7 @@ func (channel *Channel) relay() error {
 	packets, err := channel.source.GetPackets(previousHeight)
 
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"err_msg": err.Error(),
-		}).Error("failed to get packets")
+		logger.WithField("err_msg", err).Error("failed to get packets")
 		return typeserr.ErrGetPackets
 	}
 
@@ -317,9 +303,7 @@ func (channel *Channel) relay() error {
 		// commitment path is determined
 		isNotReceipt, err := channel.dest.GetReceiptPacket(pack.SourceChain, pack.DestinationChain, pack.Sequence)
 		if err != nil {
-			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
-			}).Error("failed to get receipt packet")
+			logger.WithField("err_msg", err).Error("failed to get receipt packet")
 			return typeserr.ErrGetReceiptPacket
 		}
 		// if receipt exist, skip
@@ -405,9 +389,7 @@ func (channel *Channel) relay() error {
 			pack.Sequence,
 			channel.Context().Height(), repotypes.CleanProof)
 		if err != nil {
-			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
-			}).Error("failed to get proof")
+			logger.WithField("err_msg", err).Error("failed to get proof")
 			return typeserr.ErrGetProof
 		}
 		recvPacket := &packet.MsgRecvCleanPacket{
@@ -434,9 +416,7 @@ func (channel *Channel) relay() error {
 			if err != nil {
 				// After the update client fails, the height is reduced by 1
 				channel.Context().DecrHeight()
-				logger.WithFields(log.Fields{
-					"err_msg": err.Error(),
-				}).Error("failed to update client")
+				logger.WithField("err_msg", err).Error("failed to update client")
 				return typeserr.ErrUpdateClient
 			}
 
@@ -452,9 +432,7 @@ func (channel *Channel) relay() error {
 				// After the update client fails, the height is reduced by 1
 				channel.Context().DecrHeight()
 			}
-			logger.WithFields(log.Fields{
-				"err_msg": err.Error(),
-			}).Error("failed to update client")
+			logger.WithField("err_msg", err).Error("failed to update client")
 			return typeserr.ErrUpdateClient
 		}
 
