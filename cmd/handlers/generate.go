@@ -9,14 +9,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/hexutil"
+
 	"github.com/ethereum/go-ethereum/common"
 
 	tibceth "github.com/bianjieai/tibc-sdk-go/eth"
 
 	gethethclient "github.com/ethereum/go-ethereum/ethclient"
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
-
-	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/commitment"
@@ -217,8 +217,8 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 	}
 
 	type LatestHeight struct {
-		RevisionNumber int `json:"revisionNumber"`
-		RevisionHeight int `json:"revisionHeight"`
+		RevisionNumber int   `json:"revisionNumber"`
+		RevisionHeight int64 `json:"revisionHeight"`
 	}
 
 	type MerklePrefix struct {
@@ -238,15 +238,15 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 	}
 
 	type Timestamp struct {
-		Secs  int `json:"secs"`
-		Nanos int `json:"nanos"`
+		Secs  int64 `json:"secs"`
+		Nanos int64 `json:"nanos"`
 	}
 
 	// Tendermint Consensus State In  ETH
 	type TendermintConsensusState struct {
 		Timestamp          Timestamp `json:"timestamp"`
-		Root               []byte    `json:"root"`
-		NextValidatorsHash []byte    `json:"nextValidatorsHash"`
+		Root               string    `json:"root"`
+		NextValidatorsHash string    `json:"nextValidatorsHash"`
 	}
 
 	blockRes, err := client.QueryBlock(height)
@@ -265,7 +265,7 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 		MaxClockDrift:   10,
 		LatestHeight: LatestHeight{
 			RevisionNumber: 0,
-			RevisionHeight: int(height),
+			RevisionHeight: height,
 		},
 		MerklePrefix: MerklePrefix{
 			KeyPrefix: []byte("tibc"),
@@ -276,11 +276,11 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 	//ConsensusState
 	consensusState := TendermintConsensusState{
 		Timestamp: Timestamp{
-			Secs:  tmHeader.Time.Second(),
-			Nanos: 5829,
+			Secs:  tmHeader.Time.Unix(),
+			Nanos: 0,
 		},
-		Root:               tmHeader.AppHash,
-		NextValidatorsHash: tmHeader.NextValidatorsHash,
+		Root:               tmHeader.AppHash.String(),
+		NextValidatorsHash: tmHeader.NextValidatorsHash.String(),
 	}
 
 	clientStateBytes, err := json.Marshal(clientState)
@@ -288,17 +288,25 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 		logger.Fatal("marshal eth clientState error: ", err)
 	}
 	// write file
-	clientStateHex := hexutil.Encode(clientStateBytes)
-	clientStateFilename := fmt.Sprintf("%s_lientState.txt", chainName)
-	writeCreateClientFiles(clientStateFilename, clientStateHex)
+
+	clientStateFilename := fmt.Sprintf("%s_clientState.json", chainName)
+	writeCreateClientFiles(clientStateFilename, string(clientStateBytes))
+
+	clientStateFilename2 := fmt.Sprintf("%s_clientState.txt", chainName)
+	writeCreateClientFiles(clientStateFilename2, hexutil.Encode(clientStateBytes))
+	fmt.Println("clientState: ", hexutil.Encode(clientStateBytes)[2:])
 
 	consensusStateBytes, err := json.Marshal(consensusState)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	consensusStateHex := hexutil.Encode(consensusStateBytes)
-	consensusStateFilename := fmt.Sprintf("%s_consensusState.txt", chainName)
-	writeCreateClientFiles(consensusStateFilename, consensusStateHex)
+
+	consensusStateFilename := fmt.Sprintf("%s_consensusState.json", chainName)
+	writeCreateClientFiles(consensusStateFilename, string(consensusStateBytes))
+	consensusStateFilename2 := fmt.Sprintf("%s_consensusState.txt", chainName)
+	writeCreateClientFiles(consensusStateFilename2, hexutil.Encode(consensusStateBytes))
+
+	fmt.Println("consensusState: ", hexutil.Encode(consensusStateBytes)[2:])
 }
 
 func getTendermintJson(client coresdk.Client, height int64, chainName string) {
