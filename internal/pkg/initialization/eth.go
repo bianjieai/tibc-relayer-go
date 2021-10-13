@@ -49,7 +49,10 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 
 	ethRepo, err := repoeth.NewEth(ethChainCfg)
 	if err != nil {
-		loggerEntry.Fatal(err)
+		logger.WithFields(log.Fields{
+			"chain_name": cfg.Tendermint.ChainName,
+			"err_msg":    err,
+		}).Fatal("failed to init chain")
 	}
 
 	return ethRepo

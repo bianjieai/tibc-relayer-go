@@ -52,6 +52,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 	if err != nil {
 		logger.WithFields(log.Fields{
 			"chain_name": cfg.Tendermint.ChainName,
+			"err_msg":    err,
 		}).Fatal("failed to init chain")
 	}
 
