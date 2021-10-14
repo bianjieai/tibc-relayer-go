@@ -471,7 +471,8 @@ func (eth *Eth) getPackets(height uint64) ([]packet.Packet, error) {
 
 	var bizPackets []packet.Packet
 	for _, log := range logs {
-		packSent, err := eth.contracts.Packet.ParsePacketTypesPacket(log)
+
+		packSent, err := eth.contracts.Packet.ParsePacketSent(log)
 		if err != nil {
 			return nil, err
 		}
