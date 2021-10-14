@@ -415,8 +415,13 @@ func (channel *Channel) relay() error {
 			)
 			if err != nil {
 				// After the update client fails, the height is reduced by 1
+				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
-				logger.WithField("err_msg", err).Error("failed to update client")
+				logger.WithFields(log.Fields{
+					"err_msg":       err,
+					"update_height": updateHeight,
+					"final_height":  channel.Context().Height(),
+				}).Warning("failed to update client, height = curHeight - 1  ")
 				return typeserr.ErrUpdateClient
 			}
 
@@ -430,9 +435,17 @@ func (channel *Channel) relay() error {
 		if err != nil {
 			if channel.source.ChainType() != constant.Tendermint {
 				// After the update client fails, the height is reduced by 1
+				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
+				logger.WithFields(log.Fields{
+					"err_msg":       err,
+					"update_height": updateHeight,
+					"final_height":  channel.Context().Height(),
+				}).Warning("failed to update client, height = curHeight - 1  ")
+			} else {
+				logger.WithField("err_msg", err).Error("failed to update client")
 			}
-			logger.WithField("err_msg", err).Error("failed to update client")
+
 			return typeserr.ErrUpdateClient
 		}
 
