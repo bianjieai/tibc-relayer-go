@@ -142,7 +142,6 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 		Timestamp: header.Time,
 		Number:    number,
 		Root:      header.Root[:],
-		Header:    header.ToHeader(),
 	}
 
 	clientStateBytes, err := client.AppCodec().MarshalJSON(clientState)
