@@ -100,8 +100,11 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		logger.WithField("err_msg", err1).Error("failed to get light client state")
 		return typeserr.ErrGetLightClientState
 	}
-	if clientState.GetLatestHeight().GetRevisionHeight() >= latestHeight {
-		return nil
+
+	if channel.source.ChainType() == constant.Tendermint {
+		if clientState.GetLatestHeight().GetRevisionHeight() >= latestHeight {
+			return nil
+		}
 	}
 
 	var header tibctypes.Header
