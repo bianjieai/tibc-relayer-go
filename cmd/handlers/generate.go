@@ -293,7 +293,7 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 	writeCreateClientFiles(clientStateFilename, string(clientStateBytes))
 
 	clientStateFilename2 := fmt.Sprintf("%s_clientState.txt", chainName)
-	writeCreateClientFiles(clientStateFilename2, hexutil.Encode(clientStateBytes))
+	writeCreateClientFiles(clientStateFilename2, hexutil.Encode(clientStateBytes)[2:])
 	fmt.Println("clientState: ", hexutil.Encode(clientStateBytes)[2:])
 
 	consensusStateBytes, err := json.Marshal(consensusState)
@@ -304,7 +304,7 @@ func getTendermintHex(client coresdk.Client, height int64, chainName string, log
 	consensusStateFilename := fmt.Sprintf("%s_consensusState.json", chainName)
 	writeCreateClientFiles(consensusStateFilename, string(consensusStateBytes))
 	consensusStateFilename2 := fmt.Sprintf("%s_consensusState.txt", chainName)
-	writeCreateClientFiles(consensusStateFilename2, hexutil.Encode(consensusStateBytes))
+	writeCreateClientFiles(consensusStateFilename2, hexutil.Encode(consensusStateBytes)[2:])
 
 	fmt.Println("consensusState: ", hexutil.Encode(consensusStateBytes)[2:])
 }
