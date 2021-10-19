@@ -2,6 +2,7 @@ package channels
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
@@ -19,6 +20,7 @@ import (
 var _ IChannel = new(Channel)
 
 const RetryTimeout = 30 * time.Second
+const RetryTimes = 20
 
 type IChannel interface {
 	UpdateClient() error
@@ -292,13 +294,13 @@ func (channel *Channel) relay() error {
 		err := channel.source.GetCommitmentsPacket(
 			pack.SourceChain, pack.DestinationChain, pack.Sequence)
 		if err != nil {
-			// todo
-			// Can be optimized
+			if strings.Contains(err.Error(), "connection") {
+				logger.WithFields(log.Fields{
+					"err_msg": err.Error(),
+				}).Error("failed to get commitment packet")
+				return typeserr.ErrGetCommitmentPacket
+			}
 			continue
-			//logger.WithFields(log.Fields{
-			//	"err_msg": err.Error(),
-			//}).Error("failed to get commitment packet")
-			//return typeserr.ErrGetCommitmentPacket
 		}
 
 		// 3.2 get receipt packet from dest chain
@@ -347,6 +349,12 @@ func (channel *Channel) relay() error {
 		err := channel.dest.GetCommitmentsPacket(
 			pack.Packet.SourceChain, pack.Packet.DestinationChain, pack.Packet.Sequence)
 		if err != nil {
+			if strings.Contains(err.Error(), "connection") {
+				logger.WithFields(log.Fields{
+					"err_msg": err.Error(),
+				}).Error("failed to get commitment packet")
+				return typeserr.ErrGetCommitmentPacket
+			}
 			logger.Info("the current packet has been confirmed")
 			continue
 		}
@@ -467,8 +475,8 @@ func (channel *Channel) relay() error {
 
 func (channel *Channel) reTryEthResult(hash string, n uint64) error {
 	channel.logger.Infof("retry %d time", n)
-	if n == 10 {
-		return fmt.Errorf("retry 10 times and return error")
+	if n == RetryTimes {
+		return fmt.Errorf("retry %d times and return error", RetryTimes)
 	}
 	txStatus, err := channel.dest.GetResult(hash)
 	if err != nil {

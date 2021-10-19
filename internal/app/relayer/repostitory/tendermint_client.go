@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"strconv"
+	"strings"
 
 	"github.com/irisnet/core-sdk-go/bank"
 	"github.com/irisnet/core-sdk-go/client"
@@ -165,7 +166,11 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 
 	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
 	if err != nil {
-		return nil, err
+		// retry is required for connection errors
+		if strings.Contains(err.Error(), "connection") {
+			return nil, err
+		}
+		return &repotypes.ResultTx{}, nil
 	}
 	return &repotypes.ResultTx{
 		GasWanted: resultTx.GasWanted,
