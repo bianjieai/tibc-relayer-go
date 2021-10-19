@@ -50,6 +50,7 @@ type (
 		Gas       uint64   `mapstructure:"gas"`
 		Key       ChainKey `mapstructure:"key"`
 		Fee       Fee      `mapstructure:"fee"`
+		Algo      string   `mapstructure:"algo"`
 
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
 	}

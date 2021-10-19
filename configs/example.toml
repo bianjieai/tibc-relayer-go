@@ -17,6 +17,7 @@ chain_name = "testCreateClientB"
 gas = 0
 grpc_addr = "127.0.0.1:9091"
 rpc_addr = "tcp://127.0.0.1:36657"
+algo = "sm2"
 update_client_frequency = 10 # update client frequency, unit hour
 
 [chain.dest.tendermint.fee]
@@ -42,6 +43,7 @@ chain_name = "testCreateClientA"
 gas = 0
 grpc_addr = "127.0.0.1:9090"
 rpc_addr = "tcp://127.0.0.1:26657"
+algo = "sm2"
 update_client_frequency = 10
 
 [chain.source.tendermint.fee]
