@@ -44,6 +44,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 		coretypes.ModeOption(coretypes.Commit),
 		coretypes.GasOption(cfg.Tendermint.Gas),
 		coretypes.CachedOption(true),
+		coretypes.AlgoOption("sm2"),
 	}
 	chainRepo, err := repostitory.NewTendermintClient(
 		constant.Tendermint,
