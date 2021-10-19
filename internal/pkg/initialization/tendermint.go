@@ -46,8 +46,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 		coretypes.CachedOption(true),
 	}
 	if cfg.Tendermint.Algo != "" {
-		tmpOpt := coretypes.AlgoOption("sm2")
-		options = append(options, tmpOpt)
+		options = append(options, coretypes.AlgoOption(cfg.Tendermint.Algo))
 	}
 	chainCfg.Options = options
 	chainRepo, err := repostitory.NewTendermintClient(
