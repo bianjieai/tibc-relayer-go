@@ -45,7 +45,8 @@ type Tendermint struct {
 }
 
 func NewTendermintClient(chainType, chainName string, updateClientFrequency uint64, config *TerndermintConfig) (*Tendermint, error) {
-	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID, config.Options...)
+	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
+		config.Options...)
 	if err != nil {
 		return nil, err
 	}

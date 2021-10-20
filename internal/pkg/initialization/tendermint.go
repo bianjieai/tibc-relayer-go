@@ -38,13 +38,17 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 	chainCfg.Name = cfg.Tendermint.Key.Name
 	chainCfg.Password = cfg.Tendermint.Key.Password
 	chainCfg.PrivKeyArmor = cfg.Tendermint.Key.PrivKeyArmor
-	chainCfg.Options = []coretypes.Option{
+	options := []coretypes.Option{
 		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
 		coretypes.TimeoutOption(10),
 		coretypes.ModeOption(coretypes.Commit),
 		coretypes.GasOption(cfg.Tendermint.Gas),
 		coretypes.CachedOption(true),
 	}
+	if cfg.Tendermint.Algo != "" {
+		options = append(options, coretypes.AlgoOption(cfg.Tendermint.Algo))
+	}
+	chainCfg.Options = options
 	chainRepo, err := repostitory.NewTendermintClient(
 		constant.Tendermint,
 		cfg.Tendermint.ChainName,

@@ -3,10 +3,10 @@ module github.com/bianjieai/tibc-relayer-go
 go 1.15
 
 require (
-	github.com/bianjieai/tibc-sdk-go v0.0.0-20211015081820-3c27c6735182
+	github.com/bianjieai/tibc-sdk-go v0.0.0-20211019082524-278d2931b09c
 	github.com/ethereum/go-ethereum v1.10.8
 	github.com/go-kit/kit v0.11.0
-	github.com/irisnet/core-sdk-go v0.0.0-20210917071031-be43063a1899
+	github.com/irisnet/core-sdk-go v0.0.0-20211019075829-8bb6cca8d315
 	github.com/irisnet/irismod-sdk-go/nft v0.0.0-20210810032454-3ae775c15f1e
 	github.com/jasonlvhit/gocron v0.0.1
 	github.com/pelletier/go-toml v1.9.3
@@ -19,6 +19,6 @@ require (
 
 replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
-	github.com/irisnet/core-sdk-go => github.com/irisnet/core-sdk-go v0.0.0-20210817104504-bd2c112847e9
+	github.com/irisnet/core-sdk-go => github.com/irisnet/core-sdk-go v0.0.0-20211019075829-8bb6cca8d315
 	github.com/tendermint/tendermint => github.com/bianjieai/tendermint v0.34.1-irita-210113
 )
