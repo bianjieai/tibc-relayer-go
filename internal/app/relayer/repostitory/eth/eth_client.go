@@ -304,10 +304,11 @@ func (eth *Eth) GetCommitmentsPacket(sourChainName, destChainName string, sequen
 	return nil
 }
 
-func (eth *Eth) GetReceiptPacket(sourChainName, destChianName string, sequence uint64) (bool, error) {
-	result, err := eth.contracts.Packet.Receipts(nil, []byte(""))
+func (eth *Eth) GetReceiptPacket(sourChainName, destChainName string, sequence uint64) (bool, error) {
+	result, err := eth.contracts.Packet.Receipts(nil,
+		packet.PacketReceiptKey(sourChainName, destChainName, sequence))
 	if err != nil {
-		return false, err
+		return result, err
 	}
 	return result, nil
 }
