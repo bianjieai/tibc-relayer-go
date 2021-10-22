@@ -1479,9 +1479,11 @@ func (_Packet *PacketFilterer) WatchPacketSent(opts *bind.WatchOpts, sink chan<-
 // Solidity: event PacketSent((uint64,string,string,string,string,bytes) packet)
 func (_Packet *PacketFilterer) ParsePacketSent(log types.Log) (*PacketPacketSent, error) {
 	event := new(PacketPacketSent)
-	if err := _Packet.contract.UnpackLog(event, "PacketSent", log); err != nil {
+	packTypePack := new(PacketTypesPacket)
+	if err := _Packet.contract.UnpackLog(packTypePack, "PacketSent", log); err != nil {
 		return nil, err
 	}
+	event.Packet = *packTypePack
 	event.Raw = log
 	return event, nil
 }
