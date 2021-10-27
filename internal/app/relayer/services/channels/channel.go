@@ -85,7 +85,12 @@ func (channel *Channel) UpdateClient() error {
 		logger.WithField("err_msg", err).Error("failed to get block header")
 		return typeserr.ErrGetBlockHeader
 	}
-	return channel.updateClient(height, nextHeight)
+
+	if err := channel.updateClient(height, nextHeight); err != nil {
+		return typeserr.ErrUpdateClient
+	}
+
+	return nil
 }
 
 func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
@@ -139,13 +144,13 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	hash, err := channel.dest.UpdateClient(header, channel.source.ChainName())
 	if err != nil {
 		logger.WithField("err_msg", err).Error("failed to update client")
-		return typeserr.ErrUpdateClient
+		return err
 	}
 	logger.WithFields(log.Fields{"dest_hash": hash}).Info()
 	if channel.dest.ChainType() == constant.ETH {
 		if err := channel.reTryEthResult(hash, 0); err != nil {
 			logger.WithField("err_msg", err).Error("failed to update client: retry: ", err)
-			return typeserr.ErrUpdateClient
+			return err
 		}
 	}
 
@@ -478,6 +483,7 @@ func (channel *Channel) relay() error {
 					}).Error("failed to network ")
 					return typeserr.ErrUpdateClient
 				}
+
 				// After the update client fails, the height is reduced by 1
 				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
@@ -518,6 +524,27 @@ func (channel *Channel) reTryEthResult(hash string, n uint64) error {
 		return channel.reTryEthResult(hash, n+1)
 	}
 	if txStatus == 0 {
+		channel.logger.WithFields(log.Fields{
+			"hash": hash,
+			"flag": "result_error",
+		}).Warning("re-request result is false")
+		return nil
+	}
+	return nil
+}
+
+func (channel *Channel) reTryTendermintResult(hash string, n uint64) error {
+	channel.logger.Infof("retry %d time", n)
+	if n == RetryTimes {
+		return fmt.Errorf("retry %d times and return error", RetryTimes)
+	}
+	txStatus, err := channel.dest.GetResult(hash)
+	if err != nil {
+		channel.logger.Info("re-request result ")
+		time.Sleep(RetryTimeout)
+		return channel.reTryEthResult(hash, n+1)
+	}
+	if txStatus != 0 {
 		channel.logger.WithFields(log.Fields{
 			"hash": hash,
 			"flag": "result_error",

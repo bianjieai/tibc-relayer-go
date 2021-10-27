@@ -244,7 +244,12 @@ func (c *Tendermint) GetLatestHeight() (uint64, error) {
 }
 
 func (c *Tendermint) GetResult(hash string) (uint64, error) {
-	return 1, nil
+	res, err := c.terndermintCli.QueryTx(hash)
+	if err != nil {
+		return 0, err
+	}
+	code := uint64(res.Result.Code)
+	return code, nil
 }
 
 func (c *Tendermint) GetLightClientDelayHeight(chainName string) (uint64, error) {
