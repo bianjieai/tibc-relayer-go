@@ -17,6 +17,9 @@ channel_types = ["tendermint_and_tendermint"]
 #==========================#
 
 [chain]
+
+chain_type = "eth"
+
 [chain.dest]
 [chain.dest.cache]
 filename = "dest.json"
@@ -34,6 +37,7 @@ grpc_addr = "127.0.0.1:9091"
 rpc_addr = "tcp://127.0.0.1:36657"
 algo = "sm2"
 update_client_frequency = 10 # update client frequency, unit hour
+revision_number = 0
 
 [chain.dest.tendermint.fee]
 denom = "stake"
@@ -82,6 +86,9 @@ opt_priv_key = "your_eth_priv_key"
 #==========================#
 
 [chain.source]
+
+chain_type = "tendermint"
+
 [chain.source.cache]
 filename = "source.json"
 start_height = 4
@@ -98,7 +105,8 @@ gas = 0
 grpc_addr = "127.0.0.1:9090"
 rpc_addr = "tcp://127.0.0.1:26657"
 algo = "sm2" # if your chain is IRITA
-update_client_frequency = 10
+update_client_frequency = 2
+revision_number = 0
 
 [chain.source.tendermint.fee]
 denom = "stake"
