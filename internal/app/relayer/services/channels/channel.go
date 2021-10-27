@@ -39,14 +39,14 @@ type Channel struct {
 	logger *log.Logger
 }
 
-func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64, logger *log.Logger) IChannel {
+func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64, logger *log.Logger) (IChannel, error) {
 	var startHeight uint64 = 0
 	if source.ChainType() == constant.Tendermint {
 		startHeight = height
 	} else {
 		clientStatus, err := dest.GetLightClientState(source.ChainName())
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
 		startHeight = clientStatus.GetLatestHeight().GetRevisionHeight() + 1
@@ -57,7 +57,7 @@ func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint6
 		source:  source,
 		dest:    dest,
 		context: domain.NewContext(startHeight, source.ChainName()),
-	}
+	}, nil
 }
 
 func (channel *Channel) UpdateClientFrequency() uint64 {
