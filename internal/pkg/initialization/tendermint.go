@@ -52,7 +52,10 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 	chainRepo, err := repostitory.NewTendermintClient(
 		constant.Tendermint,
 		cfg.Tendermint.ChainName,
-		cfg.Tendermint.UpdateClientFrequency, chainCfg)
+		uint64(cfg.Tendermint.RevisionNumber),
+		cfg.Tendermint.UpdateClientFrequency,
+		chainCfg,
+	)
 	if err != nil {
 		logger.WithFields(log.Fields{
 			"chain_name": cfg.Tendermint.ChainName,

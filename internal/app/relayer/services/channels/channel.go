@@ -39,7 +39,9 @@ type Channel struct {
 	logger *log.Logger
 }
 
-func NewChannel(source repostitory.IChain, dest repostitory.IChain, height uint64, logger *log.Logger) (IChannel, error) {
+func NewChannel(
+	source repostitory.IChain,
+	dest repostitory.IChain, height uint64, logger *log.Logger) (IChannel, error) {
 	var startHeight uint64 = 0
 	if source.ChainType() == constant.Tendermint {
 		startHeight = height

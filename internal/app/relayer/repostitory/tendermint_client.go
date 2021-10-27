@@ -40,10 +40,16 @@ type Tendermint struct {
 
 	chainName             string
 	chainType             string
+	revisionNumber        uint64
 	updateClientFrequency uint64
 }
 
-func NewTendermintClient(chainType, chainName string, updateClientFrequency uint64, config *TerndermintConfig) (*Tendermint, error) {
+func NewTendermintClient(
+	chainType string,
+	chainName string,
+	revisionNumber uint64,
+	updateClientFrequency uint64,
+	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
 		config.Options...)
 	if err != nil {
@@ -61,6 +67,7 @@ func NewTendermintClient(chainType, chainName string, updateClientFrequency uint
 		chainType:             chainType,
 		chainName:             chainName,
 		terndermintCli:        tc,
+		revisionNumber:        revisionNumber,
 		updateClientFrequency: updateClientFrequency,
 		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
@@ -213,6 +220,7 @@ func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes
 		SignedHeader: signedHeader,
 		ValidatorSet: validatorSet,
 		TrustedHeight: tibcclient.Height{
+			RevisionNumber: c.revisionNumber,
 			RevisionHeight: req.TrustedHeight,
 		},
 		TrustedValidators: trustedValidators,
