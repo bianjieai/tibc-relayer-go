@@ -65,6 +65,7 @@ func CreateClientFiles(cfg *configs.Config) {
 				sourceChain,
 				int64(cfg.Chain.Source.Cache.StartHeight),
 				cfg.Chain.Source.Tendermint.ChainName,
+				uint64(cfg.Chain.Source.Tendermint.RevisionNumber),
 			)
 
 			logger.Info("2. init dest chain")
@@ -73,6 +74,7 @@ func CreateClientFiles(cfg *configs.Config) {
 				destChain,
 				int64(cfg.Chain.Dest.Cache.StartHeight),
 				cfg.Chain.Dest.Tendermint.ChainName,
+				uint64(cfg.Chain.Source.Tendermint.RevisionNumber),
 			)
 		case TendermintAndETH:
 			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == ETH {
@@ -339,7 +341,12 @@ func getTendermintHex(
 	fmt.Println("consensusState: ", hexutil.Encode(consensusStateBytes)[2:])
 }
 
-func getTendermintJson(client coresdk.Client, height int64, chainName string) {
+func getTendermintJson(
+	client coresdk.Client,
+	height int64,
+	chainName string,
+	revisionNumber uint64,
+) {
 
 	//ClientState
 	var fra = tendermint.Fraction{
@@ -351,7 +358,9 @@ func getTendermintJson(client coresdk.Client, height int64, chainName string) {
 		fmt.Println("QueryBlock fail:  ", err)
 	}
 	tmHeader := res.Block.Header
-	lastHeight := tibcclient.NewHeight(0, uint64(height))
+	lastHeight := tibcclient.NewHeight(
+		revisionNumber,
+		uint64(height))
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,
