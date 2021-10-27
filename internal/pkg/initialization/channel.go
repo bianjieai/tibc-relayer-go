@@ -73,11 +73,6 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 	destChannel = channels.NewMetricMW(destChannel, metricsModel)
 	channelMap := map[string]channels.IChannel{}
 	channelMap[sourceChain.ChainName()] = sourceChannel
-	//if cfg.Chain.Dest.Eth.ChainName == "" {
-	//	// todo
-	//	// The process of eth -> tendermint has not been implemented yet
-	//	channelMap[destChain.ChainName()] = destChannel
-	//}
 	channelMap[destChain.ChainName()] = destChannel
 
 	return channelMap
@@ -86,6 +81,7 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ string, logger *log.Logger) channels.IChannel {
 
 	var channel channels.IChannel
+	var channelErr error
 	var filename string
 	switch typ {
 	case TypSource:
@@ -98,9 +94,9 @@ func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ
 		// If the file does not exist, the initial height is the startHeight in the configuration
 		switch typ {
 		case TypSource:
-			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight, logger)
+			channel, channelErr = channels.NewChannel(sourceChain, destChain, cfg.Chain.Source.Cache.StartHeight, logger)
 		case TypDest:
-			channel = channels.NewChannel(sourceChain, destChain, cfg.Chain.Dest.Cache.StartHeight, logger)
+			channel, channelErr = channels.NewChannel(sourceChain, destChain, cfg.Chain.Dest.Cache.StartHeight, logger)
 		}
 
 	} else {
@@ -121,7 +117,10 @@ func channel(cfg *configs.Config, sourceChain, destChain repostitory.IChain, typ
 		if err != nil {
 			logger.Fatal("read cache file unmarshal err: ", err)
 		}
-		channel = channels.NewChannel(sourceChain, destChain, cacheData.LatestHeight, logger)
+		channel, channelErr = channels.NewChannel(sourceChain, destChain, cacheData.LatestHeight, logger)
+	}
+	if channelErr != nil {
+		logger.Fatal("failed to init channel err: ", channelErr)
 	}
 
 	return channel

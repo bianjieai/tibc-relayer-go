@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"strconv"
-	"strings"
 
 	"github.com/irisnet/core-sdk-go/bank"
 	"github.com/irisnet/core-sdk-go/client"
@@ -41,10 +40,16 @@ type Tendermint struct {
 
 	chainName             string
 	chainType             string
+	revisionNumber        uint64
 	updateClientFrequency uint64
 }
 
-func NewTendermintClient(chainType, chainName string, updateClientFrequency uint64, config *TerndermintConfig) (*Tendermint, error) {
+func NewTendermintClient(
+	chainType string,
+	chainName string,
+	revisionNumber uint64,
+	updateClientFrequency uint64,
+	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
 		config.Options...)
 	if err != nil {
@@ -62,6 +67,7 @@ func NewTendermintClient(chainType, chainName string, updateClientFrequency uint
 		chainType:             chainType,
 		chainName:             chainName,
 		terndermintCli:        tc,
+		revisionNumber:        revisionNumber,
 		updateClientFrequency: updateClientFrequency,
 		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
@@ -167,11 +173,7 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 
 	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
 	if err != nil {
-		// retry is required for connection errors
-		if strings.Contains(err.Error(), "connection") {
-			return nil, err
-		}
-		return &repotypes.ResultTx{}, nil
+		return nil, err
 	}
 	return &repotypes.ResultTx{
 		GasWanted: resultTx.GasWanted,
@@ -218,6 +220,7 @@ func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes
 		SignedHeader: signedHeader,
 		ValidatorSet: validatorSet,
 		TrustedHeight: tibcclient.Height{
+			RevisionNumber: c.revisionNumber,
 			RevisionHeight: req.TrustedHeight,
 		},
 		TrustedValidators: trustedValidators,
@@ -244,7 +247,12 @@ func (c *Tendermint) GetLatestHeight() (uint64, error) {
 }
 
 func (c *Tendermint) GetResult(hash string) (uint64, error) {
-	return 1, nil
+	res, err := c.terndermintCli.QueryTx(hash)
+	if err != nil {
+		return 0, err
+	}
+	code := uint64(res.Result.Code)
+	return code, nil
 }
 
 func (c *Tendermint) GetLightClientDelayHeight(chainName string) (uint64, error) {

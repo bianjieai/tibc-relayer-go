@@ -3,13 +3,31 @@
 env = "dev"
 log_level = "debug"
 metric_addr = "0.0.0.0:8083"
+
+# currently only supports:
+# 1. tendermint <---> eth: tendermint_and_eth
+# 2. tendermint <---> tendermint: tendermint_and_tendermint
+# Currently only supports a pair of child chain interactions:
+# len(channel_types) == 1
+
 channel_types = ["tendermint_and_tendermint"]
 
+#==========================#
+#       Dest Config        #
+#==========================#
+
 [chain]
+
+chain_type = "eth"
+
 [chain.dest]
 [chain.dest.cache]
-filename = "/Users/user/.tibc-relayer/cache/dest.json"
+filename = "dest.json"
 start_height = 4
+
+#==========================#
+#  Dest Tendermint Config  #
+#==========================#
 
 [chain.dest.tendermint]
 chain_id = "test"
@@ -19,6 +37,7 @@ grpc_addr = "127.0.0.1:9091"
 rpc_addr = "tcp://127.0.0.1:36657"
 algo = "sm2"
 update_client_frequency = 10 # update client frequency, unit hour
+revision_number = 0
 
 [chain.dest.tendermint.fee]
 denom = "stake"
@@ -29,12 +48,54 @@ name = "your_dest_chain_relayer_name"
 password = "your_dest_chain_relayer_password"
 priv_key_armor = "your_dest_chain_relayer_priv_key_armor"
 
+#==========================#
+#     Dest ETH Config      #
+#==========================#
+[chain.dest.eth]
+chain_id = 3
+chain_name = "eth"
+update_client_frequency = 2 #
+uri = "youre_request_eth_uri" # example: http://xxxxxx
+gas_limit = 2000000
+gas_price = 1500000000
+comment_slot = 104
+
+[chain.dest.eth.eth_contracts]
+[chain.dest.eth.eth_contracts.packet]
+addr = "your_packet_contract_addr"
+topic = "PacketSent((uint64,string,string,string,string,bytes))"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.dest.eth.eth_contracts.ack_packet]
+addr = "your_packet_contract_addr"
+topic = "AckWritten((uint64,string,string,string,string,bytes),bytes)"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.dest.eth.eth_contracts.clean_packet]
+addr = "your_packet_contract_addr"
+topic = "CleanPacketSent((uint64,string,string,string))"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.dest.eth.eth_contracts.client]
+addr = "your_client_manager_contract_addr"
+topic = ""
+opt_priv_key = "your_eth_priv_key"
+
+#==========================#
+#      Source Config       #
+#==========================#
+
 [chain.source]
 
-[chain.source.cache]
+chain_type = "tendermint"
 
-filename = "/Users/user/.tibc-relayer/cache/source.json"
+[chain.source.cache]
+filename = "source.json"
 start_height = 4
+
+#==========================#
+# Source Tendermint Config #
+#==========================#
 
 [chain.source.tendermint]
 
@@ -43,8 +104,9 @@ chain_name = "testCreateClientA"
 gas = 0
 grpc_addr = "127.0.0.1:9090"
 rpc_addr = "tcp://127.0.0.1:26657"
-algo = "sm2"
-update_client_frequency = 10
+algo = "sm2" # if your chain is IRITA
+update_client_frequency = 2
+revision_number = 0
 
 [chain.source.tendermint.fee]
 denom = "stake"
@@ -55,3 +117,37 @@ amount = 100
 name = "your_source_chain_relayer_name"
 password = "your_source_chain_relayer_password"
 priv_key_armor = "your_source_chain_relayer_priv_key_armor"
+
+
+#==========================#
+#    Source ETH Config     #
+#==========================#
+[chain.source.eth]
+chain_id = 3
+chain_name = "eth"
+update_client_frequency = 2 #
+uri = "youre_request_eth_uri" # example: http://xxxxxx
+gas_limit = 2000000
+gas_price = 1500000000
+comment_slot = 104
+
+[chain.source.eth.eth_contracts]
+[chain.source.eth.eth_contracts.packet]
+addr = "your_packet_contract_addr"
+topic = "PacketSent((uint64,string,string,string,string,bytes))"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.source.eth.eth_contracts.ack_packet]
+addr = "your_packet_contract_addr"
+topic = "AckWritten((uint64,string,string,string,string,bytes),bytes)"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.source.eth.eth_contracts.clean_packet]
+addr = "your_packet_contract_addr"
+topic = "CleanPacketSent((uint64,string,string,string))"
+opt_priv_key = "your_eth_priv_key"
+
+[chain.source.eth.eth_contracts.client]
+addr = "your_client_manager_contract_addr"
+topic = ""
+opt_priv_key = "your_eth_priv_key"
