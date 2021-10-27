@@ -425,7 +425,16 @@ func (channel *Channel) relay() error {
 				channel.Context().Height(),
 			)
 			if err != nil {
-				if ok := strings.Contains(err.Error(), "post failed: Post"); ok {
+				errMsg := err.Error()
+				if ok := strings.Contains(errMsg, "post failed"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Error("failed to network ")
+					return typeserr.ErrUpdateClient
+				}
+
+				if ok := strings.Contains(errMsg, "Internal error: timed out"); ok {
 					logger.WithFields(log.Fields{
 						"err_msg":      err,
 						"final_height": channel.Context().Height(),
@@ -453,7 +462,16 @@ func (channel *Channel) relay() error {
 		if err != nil {
 			logger.Warning("update client err: ", channel.source.ChainType())
 			if channel.source.ChainType() != constant.Tendermint {
-				if ok := strings.Contains(err.Error(), "post failed"); ok {
+				errMsg := err.Error()
+				if ok := strings.Contains(errMsg, "post failed"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Error("failed to network ")
+					return typeserr.ErrUpdateClient
+				}
+
+				if ok := strings.Contains(errMsg, "Internal error: timed out"); ok {
 					logger.WithFields(log.Fields{
 						"err_msg":      err,
 						"final_height": channel.Context().Height(),
