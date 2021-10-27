@@ -451,8 +451,9 @@ func (channel *Channel) relay() error {
 			clientState.GetLatestHeight().GetRevisionHeight(),
 			channel.Context().Height())
 		if err != nil {
+			logger.Warning("update client err: ", channel.source.ChainType())
 			if channel.source.ChainType() != constant.Tendermint {
-				if ok := strings.Contains(err.Error(), "post failed: Post"); ok {
+				if ok := strings.Contains(err.Error(), "post failed"); ok {
 					logger.WithFields(log.Fields{
 						"err_msg":      err,
 						"final_height": channel.Context().Height(),

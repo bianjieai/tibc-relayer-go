@@ -54,6 +54,7 @@ type (
 		Algo           string   `mapstructure:"algo"`
 		RevisionNumber int      `mapstructure:"revision_number"`
 
+		RequestTimeout        uint   `mapstructure:"request_timeout"`
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
 	}
 

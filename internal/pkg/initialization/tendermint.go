@@ -40,7 +40,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 	chainCfg.PrivKeyArmor = cfg.Tendermint.Key.PrivKeyArmor
 	options := []coretypes.Option{
 		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
-		coretypes.TimeoutOption(10),
+		coretypes.TimeoutOption(cfg.Tendermint.RequestTimeout),
 		coretypes.ModeOption(coretypes.Commit),
 		coretypes.GasOption(cfg.Tendermint.Gas),
 		coretypes.CachedOption(true),
