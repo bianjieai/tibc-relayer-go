@@ -446,6 +446,17 @@ func (channel *Channel) relay() error {
 					}).Error("failed to network ")
 					return typeserr.ErrUpdateClient
 				}
+
+				if ok := strings.Contains(errMsg, "header already exist for hash"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Warning("header already exist for hash ")
+
+					channel.Context().IncrHeight()
+					return nil
+				}
+
 				// After the update client fails, the height is reduced by 1
 				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
@@ -482,6 +493,16 @@ func (channel *Channel) relay() error {
 						"final_height": channel.Context().Height(),
 					}).Error("failed to network ")
 					return typeserr.ErrUpdateClient
+				}
+
+				if ok := strings.Contains(errMsg, "header already exist for hash"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Warning("header already exist for hash ")
+
+					channel.Context().IncrHeight()
+					return nil
 				}
 
 				// After the update client fails, the height is reduced by 1
