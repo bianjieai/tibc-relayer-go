@@ -425,6 +425,13 @@ func (channel *Channel) relay() error {
 				channel.Context().Height(),
 			)
 			if err != nil {
+				if ok := strings.Contains(err.Error(), "post failed: Post"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Error("failed to network ")
+					return typeserr.ErrUpdateClient
+				}
 				// After the update client fails, the height is reduced by 1
 				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
@@ -445,6 +452,13 @@ func (channel *Channel) relay() error {
 			channel.Context().Height())
 		if err != nil {
 			if channel.source.ChainType() != constant.Tendermint {
+				if ok := strings.Contains(err.Error(), "post failed: Post"); ok {
+					logger.WithFields(log.Fields{
+						"err_msg":      err,
+						"final_height": channel.Context().Height(),
+					}).Error("failed to network ")
+					return typeserr.ErrUpdateClient
+				}
 				// After the update client fails, the height is reduced by 1
 				updateHeight := channel.Context().Height()
 				channel.Context().DecrHeight()
