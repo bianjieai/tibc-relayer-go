@@ -78,7 +78,6 @@ func CreateClientFiles(cfg *configs.Config) {
 		case TendermintAndETH:
 
 			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == ETH {
-				fmt.Println(channelType, "sdddddd")
 				logger := log.WithFields(log.Fields{
 					"source_chain": &cfg.Chain.Source.Tendermint.ChainName,
 					"dest_chain":   &cfg.Chain.Dest.Eth.ChainName,
@@ -96,7 +95,6 @@ func CreateClientFiles(cfg *configs.Config) {
 			}
 
 			if cfg.Chain.Source.ChainType == ETH && cfg.Chain.Dest.ChainType == Tendermint {
-				fmt.Println(channelType, "111111")
 				logger := log.WithFields(log.Fields{
 					"source_chain": &cfg.Chain.Source.Eth.ChainName,
 					"dest_chain":   &cfg.Chain.Dest.Tendermint.ChainName,
