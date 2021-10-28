@@ -169,25 +169,14 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 		}
 	}
 
-	txHash, err := c.terndermintCli.BaseClient.BuildTxHash(msgs, c.baseTx)
-	if err != nil {
-		return nil, err
-	}
-
 	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
 	if err != nil {
-		_, errQ := c.terndermintCli.QueryTx(txHash)
-		if errQ != nil {
-			return nil, types.Wrap(errQ)
-		}
-		return &repotypes.ResultTx{
-			Hash: txHash,
-		}, nil
+		return nil, err
 	}
 	return &repotypes.ResultTx{
 		GasWanted: resultTx.GasWanted,
 		GasUsed:   resultTx.GasUsed,
-		Hash:      txHash,
+		Hash:      resultTx.Hash,
 		Height:    resultTx.Height,
 	}, nil
 }
