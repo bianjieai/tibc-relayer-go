@@ -47,7 +47,6 @@ type Tendermint struct {
 func NewTendermintClient(
 	chainType string,
 	chainName string,
-	revisionNumber uint64,
 	updateClientFrequency uint64,
 	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
@@ -67,7 +66,6 @@ func NewTendermintClient(
 		chainType:             chainType,
 		chainName:             chainName,
 		terndermintCli:        tc,
-		revisionNumber:        revisionNumber,
 		updateClientFrequency: updateClientFrequency,
 		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
@@ -205,6 +203,7 @@ func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes
 		Header: block.Block.Header.ToProto(),
 		Commit: commit.ToProto(),
 	}
+
 	validatorSet, err := c.getValidator(int64(req.LatestHeight))
 	if err != nil {
 		return nil, err
@@ -220,7 +219,7 @@ func (c *Tendermint) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes
 		SignedHeader: signedHeader,
 		ValidatorSet: validatorSet,
 		TrustedHeight: tibcclient.Height{
-			RevisionNumber: c.revisionNumber,
+			RevisionNumber: req.RevisionNumber,
 			RevisionHeight: req.TrustedHeight,
 		},
 		TrustedValidators: trustedValidators,
@@ -314,7 +313,12 @@ func (c *Tendermint) UpdateClientFrequency() uint64 {
 }
 
 func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, error) {
-	validators, err := c.terndermintCli.TIBC.Validators(context.Background(), &height, nil, nil)
+	page := 1
+	prePage := 200
+	validators, err := c.terndermintCli.TIBC.Validators(
+		context.Background(),
+		&height,
+		&page, &prePage)
 	if err != nil {
 		return nil, err
 	}

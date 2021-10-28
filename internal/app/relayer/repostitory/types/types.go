@@ -3,8 +3,9 @@ package types
 import "github.com/bianjieai/tibc-sdk-go/packet"
 
 type GetBlockHeaderReq struct {
-	LatestHeight  uint64
-	TrustedHeight uint64
+	LatestHeight   uint64
+	TrustedHeight  uint64
+	RevisionNumber uint64
 }
 
 type Packets struct {

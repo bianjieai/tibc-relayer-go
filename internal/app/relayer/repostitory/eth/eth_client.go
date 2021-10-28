@@ -255,7 +255,6 @@ func (eth *Eth) GetProof(sourChainName, destChainName string, sequence uint64, h
 	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
 	defer cancel()
 	address := gethcmn.HexToAddress(eth.contractCfgGroup.Packet.Addr)
-	//fmt.Println(hex.DecodeString(string(key)))
 	result, err := eth.getProof(ctx, address, []string{hexutil.Encode(key)}, new(big.Int).SetUint64(height))
 	if err != nil {
 		return nil, err
@@ -341,7 +340,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		Bloom:       blockRes.Bloom().Bytes(),
 		Difficulty:  blockRes.Difficulty().String(),
 		Height: tibcclient.Height{
-			RevisionNumber: 0,
+			RevisionNumber: req.RevisionNumber,
 			RevisionHeight: req.LatestHeight,
 		},
 		GasLimit:  blockRes.GasLimit(),
