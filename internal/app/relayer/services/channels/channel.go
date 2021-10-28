@@ -246,10 +246,17 @@ func (channel *Channel) relay() error {
 		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
 		if err != nil {
 			errMsg := err.Error()
+			logger.Warning(errMsg)
 			if ok := strings.Contains(errMsg, "already has been received"); !ok {
 				logger.WithField("err_msg", err).Error("failed to recv packet")
 				return typeserr.ErrRecvPacket
 			}
+			if ok := strings.Contains(errMsg,
+				"expected ([]): invalid packet"); !ok {
+				logger.WithField("err_msg", err).Error("failed to recv packet")
+				return typeserr.ErrRecvPacket
+			}
+
 		} else {
 			logger.WithFields(log.Fields{
 				"tx_height":  resultTx.Height,
