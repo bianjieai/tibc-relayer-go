@@ -243,24 +243,27 @@ func (channel *Channel) relay() error {
 		// if it is eth, how to submit it?
 		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
 		if err != nil {
-			logger.WithField("err_msg", err).Error("failed to recv packet")
-			return typeserr.ErrRecvPacket
-		}
-		logger.WithFields(log.Fields{
-			"tx_height":  resultTx.Height,
-			"tx_hash":    resultTx.Hash,
-			"gas_wanted": resultTx.GasWanted,
-			"gas_used":   resultTx.GasUsed,
-		}).Info("success")
-		//eth block is probabilistic finality
-		//wait result is return & result must be success
-		if channel.dest.ChainType() == constant.ETH {
-			if err := channel.reTryEthResult(resultTx.Hash, 0); err != nil {
-				logger.WithField("err_msg", err).Error("failed to recv packet: retry: ", err)
+			errMsg := err.Error()
+			if ok := strings.Contains(errMsg, "already has been received"); !ok {
+				logger.WithField("err_msg", err).Error("failed to recv packet")
 				return typeserr.ErrRecvPacket
 			}
+		} else {
+			logger.WithFields(log.Fields{
+				"tx_height":  resultTx.Height,
+				"tx_hash":    resultTx.Hash,
+				"gas_wanted": resultTx.GasWanted,
+				"gas_used":   resultTx.GasUsed,
+			}).Info("success")
+			//eth block is probabilistic finality
+			//wait result is return & result must be success
+			if channel.dest.ChainType() == constant.ETH {
+				if err := channel.reTryEthResult(resultTx.Hash, 0); err != nil {
+					logger.WithField("err_msg", err).Error("failed to recv packet: retry: ", err)
+					return typeserr.ErrRecvPacket
+				}
+			}
 		}
-
 		// remove the packets that have been chained
 		channel.Context().SetQueue(recvPacketQueue[popLength:])
 	}
