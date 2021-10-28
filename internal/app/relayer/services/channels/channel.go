@@ -252,8 +252,16 @@ func (channel *Channel) relay() error {
 				return typeserr.ErrRecvPacket
 			}
 			if ok := strings.Contains(errMsg,
-				"expected ([]): invalid packet"); !ok {
+				"acknowledge packet verification failed: commitment bytes are not equal:"); !ok {
 				logger.WithField("err_msg", err).Error("failed to recv packet")
+				return typeserr.ErrRecvPacket
+			}
+
+			if ok := strings.Contains(errMsg, "Internal error: timed out"); !ok {
+				logger.WithFields(log.Fields{
+					"err_msg":      err,
+					"final_height": channel.Context().Height(),
+				}).Error("failed to network ")
 				return typeserr.ErrRecvPacket
 			}
 
