@@ -44,15 +44,14 @@ type (
 	// =====================================================================
 	// Tendermit config=====================================================
 	Tendermint struct {
-		ChainName      string   `mapstructure:"chain_name"`
-		ChainID        string   `mapstructure:"chain_id"`
-		RPCAddr        string   `mapstructure:"rpc_addr"`
-		GrpcAddr       string   `mapstructure:"grpc_addr"`
-		Gas            uint64   `mapstructure:"gas"`
-		Key            ChainKey `mapstructure:"key"`
-		Fee            Fee      `mapstructure:"fee"`
-		Algo           string   `mapstructure:"algo"`
-		RevisionNumber int      `mapstructure:"revision_number"`
+		ChainName string   `mapstructure:"chain_name"`
+		ChainID   string   `mapstructure:"chain_id"`
+		RPCAddr   string   `mapstructure:"rpc_addr"`
+		GrpcAddr  string   `mapstructure:"grpc_addr"`
+		Gas       uint64   `mapstructure:"gas"`
+		Key       ChainKey `mapstructure:"key"`
+		Fee       Fee      `mapstructure:"fee"`
+		Algo      string   `mapstructure:"algo"`
 
 		RequestTimeout        uint   `mapstructure:"request_timeout"`
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`

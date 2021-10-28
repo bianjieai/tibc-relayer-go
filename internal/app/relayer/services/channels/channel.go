@@ -121,8 +121,9 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 	switch channel.source.ChainType() {
 	case constant.Tendermint:
 		req := &repotypes.GetBlockHeaderReq{
-			LatestHeight:  latestHeight,
-			TrustedHeight: clientState.GetLatestHeight().GetRevisionHeight(),
+			LatestHeight:   latestHeight,
+			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
+			RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
 		}
 		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {
@@ -131,8 +132,9 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		}
 	case constant.ETH:
 		req := &repotypes.GetBlockHeaderReq{
-			LatestHeight:  latestHeight,
-			TrustedHeight: clientState.GetLatestHeight().GetRevisionHeight(),
+			LatestHeight:   latestHeight,
+			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
+			RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
 		}
 		header, err = channel.source.GetBlockHeader(req)
 		if err != nil {

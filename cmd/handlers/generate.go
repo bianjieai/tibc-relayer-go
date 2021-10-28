@@ -52,6 +52,7 @@ const (
 func CreateClientFiles(cfg *configs.Config) {
 
 	for _, channelType := range cfg.App.ChannelTypes {
+
 		switch channelType {
 		case TendermintAndTendermint:
 			logger := log.WithFields(log.Fields{
@@ -65,7 +66,6 @@ func CreateClientFiles(cfg *configs.Config) {
 				sourceChain,
 				int64(cfg.Chain.Source.Cache.StartHeight),
 				cfg.Chain.Source.Tendermint.ChainName,
-				uint64(cfg.Chain.Source.Tendermint.RevisionNumber),
 			)
 
 			logger.Info("2. init dest chain")
@@ -74,10 +74,11 @@ func CreateClientFiles(cfg *configs.Config) {
 				destChain,
 				int64(cfg.Chain.Dest.Cache.StartHeight),
 				cfg.Chain.Dest.Tendermint.ChainName,
-				uint64(cfg.Chain.Source.Tendermint.RevisionNumber),
 			)
 		case TendermintAndETH:
+
 			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == ETH {
+				fmt.Println(channelType, "sdddddd")
 				logger := log.WithFields(log.Fields{
 					"source_chain": &cfg.Chain.Source.Tendermint.ChainName,
 					"dest_chain":   &cfg.Chain.Dest.Eth.ChainName,
@@ -88,7 +89,6 @@ func CreateClientFiles(cfg *configs.Config) {
 					sourceChain,
 					int64(cfg.Chain.Source.Cache.StartHeight),
 					cfg.Chain.Source.Tendermint.ChainName,
-					cfg.Chain.Source.Tendermint.RevisionNumber,
 					logger,
 				)
 				logger.Info("2. init dest chain")
@@ -96,6 +96,7 @@ func CreateClientFiles(cfg *configs.Config) {
 			}
 
 			if cfg.Chain.Source.ChainType == ETH && cfg.Chain.Dest.ChainType == Tendermint {
+				fmt.Println(channelType, "111111")
 				logger := log.WithFields(log.Fields{
 					"source_chain": &cfg.Chain.Source.Eth.ChainName,
 					"dest_chain":   &cfg.Chain.Dest.Tendermint.ChainName,
@@ -106,7 +107,6 @@ func CreateClientFiles(cfg *configs.Config) {
 					destChain,
 					int64(cfg.Chain.Dest.Cache.StartHeight),
 					cfg.Chain.Dest.Tendermint.ChainName,
-					cfg.Chain.Dest.Tendermint.RevisionNumber,
 					logger,
 				)
 				logger.Info("2. init source chain")
@@ -241,7 +241,6 @@ func getTendermintHex(
 	client coresdk.Client,
 	height int64,
 	chainName string,
-	revisionNumber int,
 	logger *log.Entry) {
 	type TrustLevel struct {
 		Numerator   int `json:"numerator"`
@@ -286,6 +285,11 @@ func getTendermintHex(
 		logger.Fatal("QueryBlock fail:  ", err)
 	}
 	tmHeader := blockRes.Block.Header
+	prHeader := tendermint.TmHeaderToPrHeader(tmHeader)
+
+	revisionNumber := int(prHeader.GetHeight().GetRevisionNumber())
+	revisionHeight := prHeader.GetHeight().GetRevisionHeight()
+
 	clientState := &TendermintClientState{
 		ChainID: tmHeader.ChainID,
 		TrustLevel: TrustLevel{
@@ -297,7 +301,7 @@ func getTendermintHex(
 		MaxClockDrift:   10,
 		LatestHeight: LatestHeight{
 			RevisionNumber: revisionNumber,
-			RevisionHeight: height,
+			RevisionHeight: int64(revisionHeight),
 		},
 		MerklePrefix: MerklePrefix{
 			KeyPrefix: []byte("tibc"),
@@ -345,7 +349,6 @@ func getTendermintJson(
 	client coresdk.Client,
 	height int64,
 	chainName string,
-	revisionNumber uint64,
 ) {
 
 	//ClientState
@@ -358,9 +361,12 @@ func getTendermintJson(
 		fmt.Println("QueryBlock fail:  ", err)
 	}
 	tmHeader := res.Block.Header
+
+	prHeader := tendermint.TmHeaderToPrHeader(tmHeader)
+
 	lastHeight := tibcclient.NewHeight(
-		revisionNumber,
-		uint64(height))
+		prHeader.GetHeight().GetRevisionNumber(),
+		prHeader.GetHeight().GetRevisionHeight())
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,

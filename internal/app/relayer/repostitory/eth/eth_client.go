@@ -341,7 +341,7 @@ func (eth *Eth) GetBlockHeader(req *repotypes.GetBlockHeaderReq) (tibctypes.Head
 		Bloom:       blockRes.Bloom().Bytes(),
 		Difficulty:  blockRes.Difficulty().String(),
 		Height: tibcclient.Height{
-			RevisionNumber: 0,
+			RevisionNumber: req.RevisionNumber,
 			RevisionHeight: req.LatestHeight,
 		},
 		GasLimit:  blockRes.GasLimit(),
