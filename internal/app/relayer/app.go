@@ -30,7 +30,6 @@ func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
 	s := gocron.NewScheduler()
 	for channelName := range channelMap {
 		// execute every x hours
-		//err := gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func()
 		channel := channelMap[channelName]
 		doFunc := func(channel channels.IChannel) {
 			err := channel.UpdateClient()
@@ -39,7 +38,7 @@ func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
 			}
 		}
 		updateClientFrequency := channel.UpdateClientFrequency()
-		s.Every(updateClientFrequency).Seconds().Do(doFunc, channel)
+		s.Every(updateClientFrequency).Hours().Do(doFunc, channel)
 	}
 
 	_, nextTime := s.NextRun()
