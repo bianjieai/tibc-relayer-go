@@ -1,8 +1,6 @@
 package channels
 
 import (
-	"fmt"
-
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
 	internelerrors "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	merticsmodel "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/mertics"
@@ -48,7 +46,6 @@ func (m *Metric) Relay() error {
 
 		sysErr, ok := err.(internelerrors.IError)
 		if !ok && sysErr != nil {
-			fmt.Println("sysErr:", sysErr)
 			m.metricsModel.Sys.With(labels...).Set(-1)
 			return
 		}
