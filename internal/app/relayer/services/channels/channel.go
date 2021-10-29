@@ -69,10 +69,15 @@ func (channel *Channel) UpdateClientFrequency() uint64 {
 func (channel *Channel) UpdateClient() error {
 	// 1. get light client state from dest chain
 	logger := channel.logger.WithFields(log.Fields{
-		"source_chain": channel.source.ChainName(),
-		"dest_chain":   channel.dest.ChainName(),
-		"option":       "cron_update_client",
+		"source_chain":      channel.source.ChainName(),
+		"dest_chain":        channel.dest.ChainName(),
+		"option":            "cron_update_client",
+		"source_chain_type": channel.source.ChainType(),
 	})
+	if channel.source.ChainType() != constant.Tendermint {
+		logger.Info("no need to update")
+		return nil
+	}
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
 		logger.WithField("err_msg", err).Error("failed to get light client state")
@@ -82,13 +87,7 @@ func (channel *Channel) UpdateClient() error {
 	heightObj := clientState.GetLatestHeight()
 	height := heightObj.GetRevisionHeight()
 
-	nextHeight, err := channel.source.GetLatestHeight()
-	if err != nil {
-		logger.WithField("err_msg", err).Error("failed to get block header")
-		return typeserr.ErrGetBlockHeader
-	}
-
-	if err := channel.updateClient(height, nextHeight); err != nil {
+	if err := channel.updateClient(height, height+1); err != nil {
 		return typeserr.ErrUpdateClient
 	}
 
