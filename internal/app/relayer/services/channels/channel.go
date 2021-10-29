@@ -88,7 +88,15 @@ func (channel *Channel) UpdateClient() error {
 	heightObj := clientState.GetLatestHeight()
 	height := heightObj.GetRevisionHeight()
 
-	if err := channel.updateClient(height, height+1); err != nil {
+	// 3. Get the latest block currently scanned, and then update
+	curHeight := channel.Context().Height()
+
+	if curHeight <= height {
+		logger.Info("curHeight <= clientStatus.height, no need to update")
+		return nil
+	}
+
+	if err := channel.updateClient(height, curHeight); err != nil {
 		return typeserr.ErrUpdateClient
 	}
 

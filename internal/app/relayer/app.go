@@ -1,7 +1,10 @@
 package relayer
 
 import (
+	"net/http"
+
 	"github.com/jasonlvhit/gocron"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services"
@@ -19,6 +22,7 @@ func Serve(cfg *configs.Config) {
 	listener := services.NewListener(channelMap, logger)
 	logger.Info("3. service start & crontab start")
 	go runTask(channelMap, logger)
+	go runMetricHandler(cfg, logger)
 	logger.Fatal(listener.Listen())
 }
 
@@ -34,4 +38,11 @@ func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
 	_, nextTime := gocron.NextRun()
 	logger.WithFields(log.Fields{"next_time": nextTime}).Info()
 	<-gocron.Start()
+}
+
+func runMetricHandler(cfg *configs.Config, logger *log.Logger) {
+	logger.Info("scanner metric start: addr ", cfg.App.MetricAddr)
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+	logger.Fatal(http.ListenAndServe(cfg.App.MetricAddr, metricMux))
 }
