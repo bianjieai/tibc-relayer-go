@@ -95,9 +95,20 @@ func (channel *Channel) UpdateClient() error {
 		logger.Info("curHeight <= clientStatus.height, no need to update")
 		return nil
 	}
-
-	if err := channel.updateClient(height, curHeight); err != nil {
-		return typeserr.ErrUpdateClient
+	lastHeight, err := channel.dest.GetLatestHeight()
+	if err != nil {
+		logger.WithField("err_msg", err).Error("failed to get lastHeight")
+		return typeserr.ErrGetLightClientState
+	}
+	// 4. if curHeight > lastHeight
+	if curHeight > lastHeight {
+		if err := channel.updateClient(height, lastHeight); err != nil {
+			return typeserr.ErrUpdateClient
+		}
+	} else {
+		if err := channel.updateClient(height, curHeight); err != nil {
+			return typeserr.ErrUpdateClient
+		}
 	}
 
 	return nil
