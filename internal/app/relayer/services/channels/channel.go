@@ -74,6 +74,7 @@ func (channel *Channel) UpdateClient() error {
 		"option":            "cron_update_client",
 		"source_chain_type": channel.source.ChainType(),
 	})
+	logger.Info("cron update client start ")
 	if channel.source.ChainType() != constant.Tendermint {
 		logger.Info("no need to update")
 		return nil
