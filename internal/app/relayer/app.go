@@ -27,17 +27,24 @@ func Serve(cfg *configs.Config) {
 }
 
 func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
+	s := gocron.NewScheduler()
 	for channelName := range channelMap {
 		// execute every x hours
-		err := gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func() {
-			err := channelMap[channelName].UpdateClient()
-			logger.Error(err)
-		})
-		logger.Error(err)
+		//err := gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func()
+		channel := channelMap[channelName]
+		doFunc := func(channel channels.IChannel) {
+			err := channel.UpdateClient()
+			if err != nil {
+				logger.Error(err)
+			}
+		}
+		updateClientFrequency := channel.UpdateClientFrequency()
+		s.Every(updateClientFrequency).Seconds().Do(doFunc, channel)
 	}
-	_, nextTime := gocron.NextRun()
+
+	_, nextTime := s.NextRun()
 	logger.WithFields(log.Fields{"next_time": nextTime}).Info()
-	<-gocron.Start()
+	<-s.Start()
 }
 
 func runMetricHandler(cfg *configs.Config, logger *log.Logger) {
