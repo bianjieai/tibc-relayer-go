@@ -21,9 +21,9 @@ func NewMetric(chaiName string) *Model {
 
 	chainMetric := metricsprometheus.NewGaugeFrom(prometheus.GaugeOpts{
 		Subsystem: "relayer",
-		Name:      "oss",
-		Help:      "oss service status",
-	}, []string{"chain_name"})
+		Name:      "chain",
+		Help:      "chain status",
+	}, []string{"chain_name", "option"})
 
 	model := &Model{
 		Sys:      sysMetric,
@@ -36,7 +36,24 @@ func NewMetric(chaiName string) *Model {
 }
 
 func (m *Model) initMetric() {
-	labels := []string{"chain_name", m.chaiName}
-	m.Sys.With(labels...).Set(1)
-	m.Chain.With(labels...).Set(1)
+	sysLabels := []string{"chain_name", m.chaiName}
+	m.Sys.With(sysLabels...).Set(1)
+
+	connChainLabels := []string{"chain_name", m.chaiName, "option", "connection"}
+	getClientStatusLabels := []string{"chain_name", m.chaiName, "option", "client_get_client_status"}
+	updateClientLabels := []string{"chain_name", m.chaiName, "option", "client_update_client_status"}
+	recvPacketLabels := []string{"chain_name", m.chaiName, "option", "packet_recv_packet"}
+	getPacketLabels := []string{"chain_name", m.chaiName, "option", "packet_get_packet"}
+	getCommitmentLabels := []string{"chain_name", m.chaiName, "option", "packet_get_commitment"}
+	getProofLabels := []string{"chain_name", m.chaiName, "option", "packet_get_proof"}
+	getReceiptLabels := []string{"chain_name", m.chaiName, "option", "packet_get_receipt"}
+
+	m.Chain.With(connChainLabels...).Set(1)
+	m.Chain.With(getClientStatusLabels...).Set(1)
+	m.Chain.With(updateClientLabels...).Set(1)
+	m.Chain.With(recvPacketLabels...).Set(1)
+	m.Chain.With(getPacketLabels...).Set(1)
+	m.Chain.With(getCommitmentLabels...).Set(1)
+	m.Chain.With(getProofLabels...).Set(1)
+	m.Chain.With(getReceiptLabels...).Set(1)
 }

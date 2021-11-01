@@ -1,7 +1,10 @@
 package relayer
 
 import (
+	"net/http"
+
 	"github.com/jasonlvhit/gocron"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/services"
@@ -19,17 +22,33 @@ func Serve(cfg *configs.Config) {
 	listener := services.NewListener(channelMap, logger)
 	logger.Info("3. service start & crontab start")
 	go runTask(channelMap, logger)
+	go runMetricHandler(cfg, logger)
 	logger.Fatal(listener.Listen())
 }
 
 func runTask(channelMap map[string]channels.IChannel, logger *log.Logger) {
+	s := gocron.NewScheduler()
 	for channelName := range channelMap {
 		// execute every x hours
-		gocron.Every(channelMap[channelName].UpdateClientFrequency()).Hours().Do(func() {
-			channelMap[channelName].UpdateClient()
-		})
+		channel := channelMap[channelName]
+		doFunc := func(channel channels.IChannel) {
+			err := channel.UpdateClient()
+			if err != nil {
+				logger.Error(err)
+			}
+		}
+		updateClientFrequency := channel.UpdateClientFrequency()
+		s.Every(updateClientFrequency).Hours().Do(doFunc, channel)
 	}
-	_, nextTime := gocron.NextRun()
+
+	_, nextTime := s.NextRun()
 	logger.WithFields(log.Fields{"next_time": nextTime}).Info()
-	<-gocron.Start()
+	<-s.Start()
+}
+
+func runMetricHandler(cfg *configs.Config, logger *log.Logger) {
+	logger.Info("scanner metric start: addr ", cfg.App.MetricAddr)
+	metricMux := http.NewServeMux()
+	metricMux.Handle("/metrics", promhttp.Handler())
+	logger.Fatal(http.ListenAndServe(cfg.App.MetricAddr, metricMux))
 }

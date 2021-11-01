@@ -69,10 +69,16 @@ func (channel *Channel) UpdateClientFrequency() uint64 {
 func (channel *Channel) UpdateClient() error {
 	// 1. get light client state from dest chain
 	logger := channel.logger.WithFields(log.Fields{
-		"source_chain": channel.source.ChainName(),
-		"dest_chain":   channel.dest.ChainName(),
-		"option":       "cron_update_client",
+		"source_chain":      channel.source.ChainName(),
+		"dest_chain":        channel.dest.ChainName(),
+		"option":            "cron_update_client",
+		"source_chain_type": channel.source.ChainType(),
 	})
+	logger.Info("cron update client start ")
+	if channel.source.ChainType() != constant.Tendermint {
+		logger.Info("no need to update")
+		return nil
+	}
 	clientState, err := channel.dest.GetLightClientState(channel.source.ChainName())
 	if err != nil {
 		logger.WithField("err_msg", err).Error("failed to get light client state")
@@ -82,14 +88,27 @@ func (channel *Channel) UpdateClient() error {
 	heightObj := clientState.GetLatestHeight()
 	height := heightObj.GetRevisionHeight()
 
-	nextHeight, err := channel.source.GetLatestHeight()
-	if err != nil {
-		logger.WithField("err_msg", err).Error("failed to get block header")
-		return typeserr.ErrGetBlockHeader
-	}
+	// 3. Get the latest block currently scanned, and then update
+	curHeight := channel.Context().Height()
 
-	if err := channel.updateClient(height, nextHeight); err != nil {
-		return typeserr.ErrUpdateClient
+	if curHeight <= height {
+		logger.Info("curHeight <= clientStatus.height, no need to update")
+		return nil
+	}
+	lastHeight, err := channel.dest.GetLatestHeight()
+	if err != nil {
+		logger.WithField("err_msg", err).Error("failed to get lastHeight")
+		return typeserr.ErrGetLightClientState
+	}
+	// 4. if curHeight > lastHeight
+	if curHeight > lastHeight {
+		if err := channel.updateClient(height, lastHeight); err != nil {
+			return typeserr.ErrUpdateClient
+		}
+	} else {
+		if err := channel.updateClient(height, curHeight); err != nil {
+			return typeserr.ErrUpdateClient
+		}
 	}
 
 	return nil
@@ -246,10 +265,25 @@ func (channel *Channel) relay() error {
 		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
 		if err != nil {
 			errMsg := err.Error()
+			logger.Warning(errMsg)
 			if ok := strings.Contains(errMsg, "already has been received"); !ok {
 				logger.WithField("err_msg", err).Error("failed to recv packet")
 				return typeserr.ErrRecvPacket
 			}
+			if ok := strings.Contains(errMsg,
+				"acknowledge packet verification failed: commitment bytes are not equal:"); !ok {
+				logger.WithField("err_msg", err).Error("failed to recv packet")
+				return typeserr.ErrRecvPacket
+			}
+
+			if ok := strings.Contains(errMsg, "Internal error: timed out"); !ok {
+				logger.WithFields(log.Fields{
+					"err_msg":      err,
+					"final_height": channel.Context().Height(),
+				}).Error("failed to network ")
+				return typeserr.ErrRecvPacket
+			}
+
 		} else {
 			logger.WithFields(log.Fields{
 				"tx_height":  resultTx.Height,
