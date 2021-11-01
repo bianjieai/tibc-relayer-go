@@ -53,6 +53,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 		constant.Tendermint,
 		cfg.Tendermint.ChainName,
 		cfg.Tendermint.UpdateClientFrequency,
+		cfg.Tendermint.WhitelistSender,
 		chainCfg,
 	)
 	if err != nil {

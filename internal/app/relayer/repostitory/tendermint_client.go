@@ -42,12 +42,15 @@ type Tendermint struct {
 	chainType             string
 	revisionNumber        uint64
 	updateClientFrequency uint64
+
+	whiterListSender []string
 }
 
 func NewTendermintClient(
 	chainType string,
 	chainName string,
 	updateClientFrequency uint64,
+	whiterListSender []string,
 	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
 		config.Options...)
@@ -70,6 +73,7 @@ func NewTendermintClient(
 		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
 		address:               address,
+		whiterListSender:      whiterListSender,
 	}, err
 }
 
@@ -354,6 +358,17 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 			RelayChain:       rlyChains[i],
 			Data:             []byte(datas[i]),
 		}
+
+		msgNftTransfer := &tibctypes.MsgNftTransfer{}
+		if err := msgNftTransfer.Unmarshal(tmpPack.Data); err != nil {
+			continue
+		}
+		// whitelist set
+		// when msg.sender not in whitelist, skip
+		if len(c.whiterListSender) > 0 && !c.isExitsFromStringList(c.whiterListSender, msgNftTransfer.Sender) {
+			continue
+		}
+
 		packets = append(packets, tmpPack)
 	}
 
@@ -423,6 +438,15 @@ func (c *Tendermint) isExistPacket(typ string, tx types.ResultQueryTx) bool {
 		return false
 	}
 	return true
+}
+
+func (c *Tendermint) isExitsFromStringList(sources []string, target string) bool {
+	for _, source := range sources {
+		if source == target {
+			return true
+		}
+	}
+	return false
 }
 
 //======================================

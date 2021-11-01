@@ -53,8 +53,9 @@ type (
 		Fee       Fee      `mapstructure:"fee"`
 		Algo      string   `mapstructure:"algo"`
 
-		RequestTimeout        uint   `mapstructure:"request_timeout"`
-		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
+		RequestTimeout        uint     `mapstructure:"request_timeout"`
+		UpdateClientFrequency uint64   `mapstructure:"update_client_frequency"`
+		WhitelistSender       []string `mapstructure:"whiter_list_sender"`
 	}
 
 	Fee struct {
