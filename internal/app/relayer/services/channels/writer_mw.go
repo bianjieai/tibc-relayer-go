@@ -45,11 +45,12 @@ func (w *Writer) Relay() error {
 	if err != nil {
 		return err
 	}
+	w.Context().Height()
 	ctx := w.next.Context()
-	if ctx.Height()%100 == 0 {
-		w.cacheWriter.Write(ctx.Height())
-	}
-
+	//if ctx.Height()%100 == 0 {
+	//	w.cacheWriter.Write(ctx.Height())
+	//}
+	w.cacheWriter.Write(ctx.Height())
 	return nil
 }
 
