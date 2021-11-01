@@ -49,11 +49,17 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 		options = append(options, coretypes.AlgoOption(cfg.Tendermint.Algo))
 	}
 	chainCfg.Options = options
+
+	allowMapSender := map[string][]string{}
+	for _, allow := range cfg.Tendermint.Allows {
+		allowMapSender[allow.Erc1155Addr] = allow.Senders
+	}
+
 	chainRepo, err := repostitory.NewTendermintClient(
 		constant.Tendermint,
 		cfg.Tendermint.ChainName,
 		cfg.Tendermint.UpdateClientFrequency,
-		cfg.Tendermint.WhitelistSender,
+		allowMapSender,
 		chainCfg,
 	)
 	if err != nil {

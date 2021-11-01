@@ -43,14 +43,14 @@ type Tendermint struct {
 	revisionNumber        uint64
 	updateClientFrequency uint64
 
-	whiterListSender []string
+	allowMapSender map[string][]string
 }
 
 func NewTendermintClient(
 	chainType string,
 	chainName string,
 	updateClientFrequency uint64,
-	whiterListSender []string,
+	allowMapSender map[string][]string,
 	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
 		config.Options...)
@@ -73,7 +73,7 @@ func NewTendermintClient(
 		logger:                tc.BaseClient.Logger(),
 		baseTx:                config.BaseTx,
 		address:               address,
-		whiterListSender:      whiterListSender,
+		allowMapSender:        allowMapSender,
 	}, err
 }
 
@@ -363,9 +363,12 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 		if err := msgNftTransfer.Unmarshal(tmpPack.Data); err != nil {
 			continue
 		}
-		// whitelist set
-		// when msg.sender not in whitelist, skip
-		if len(c.whiterListSender) > 0 && !c.isExitsFromStringList(c.whiterListSender, msgNftTransfer.Sender) {
+		//msgNftTransfer.DestContract
+
+		//allowList set
+		//msg.sender not in allowList, skip
+		senders, ok := c.allowMapSender[msgNftTransfer.DestContract]
+		if ok && !c.isExitsFromStringList(senders, msgNftTransfer.Sender) {
 			continue
 		}
 
