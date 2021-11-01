@@ -37,6 +37,7 @@ grpc_addr = "127.0.0.1:9091"
 rpc_addr = "tcp://127.0.0.1:36657"
 algo = "sm2"
 update_client_frequency = 10 # update client frequency, unit hour
+request_timeout = 60
 
 [chain.dest.tendermint.fee]
 denom = "stake"
@@ -46,6 +47,14 @@ amount = 100
 name = "your_dest_chain_relayer_name"
 password = "your_dest_chain_relayer_password"
 priv_key_armor = "your_dest_chain_relayer_priv_key_armor"
+
+[[chain.dest.tendermint.allows]]
+erc115_addr = "addr_00"
+senders = ["xxxxxxx000"]
+
+[[chain.dest.tendermint.allows]]
+erc115_addr = "addr_01"
+senders = ["xxxxxxx001"]
 
 #==========================#
 #     Dest ETH Config      #
@@ -105,6 +114,8 @@ grpc_addr = "127.0.0.1:9090"
 rpc_addr = "tcp://127.0.0.1:26657"
 algo = "sm2" # if your chain is IRITA
 update_client_frequency = 2
+request_timeout = 60
+
 
 [chain.source.tendermint.fee]
 denom = "stake"
@@ -115,6 +126,14 @@ amount = 100
 name = "your_source_chain_relayer_name"
 password = "your_source_chain_relayer_password"
 priv_key_armor = "your_source_chain_relayer_priv_key_armor"
+
+[[chain.source.tendermint.allows]]
+erc115_addr = "addr_00"
+senders = ["xxxxxxx000"]
+
+[[chain.source.tendermint.allows]]
+erc115_addr = "addr_01"
+senders = ["xxxxxxx001"]
 
 
 #==========================#

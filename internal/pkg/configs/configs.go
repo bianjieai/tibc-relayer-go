@@ -55,6 +55,8 @@ type (
 
 		RequestTimeout        uint   `mapstructure:"request_timeout"`
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
+
+		Allows []Allow `mapstructure:"allows"`
 	}
 
 	Fee struct {
@@ -67,6 +69,12 @@ type (
 		Password     string `mapstructure:"password"`
 		PrivKeyArmor string `mapstructure:"priv_key_armor"`
 	}
+
+	Allow struct {
+		Erc1155Addr string   `mapstructure:"erc115_addr"`
+		Senders     []string `mapstructure:"senders"`
+	}
+
 	// =====================================================================
 
 	App struct {

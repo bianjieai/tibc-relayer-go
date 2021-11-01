@@ -594,24 +594,3 @@ func (channel *Channel) reTryEthResult(hash string, n uint64) error {
 	}
 	return nil
 }
-
-func (channel *Channel) reTryTendermintResult(hash string, n uint64) error {
-	channel.logger.Infof("retry %d time", n)
-	if n == RetryTimes {
-		return fmt.Errorf("retry %d times and return error", RetryTimes)
-	}
-	txStatus, err := channel.dest.GetResult(hash)
-	if err != nil {
-		channel.logger.Info("re-request result ")
-		time.Sleep(RetryTimeout)
-		return channel.reTryEthResult(hash, n+1)
-	}
-	if txStatus != 0 {
-		channel.logger.WithFields(log.Fields{
-			"hash": hash,
-			"flag": "result_error",
-		}).Warning("re-request result is false")
-		return nil
-	}
-	return nil
-}
