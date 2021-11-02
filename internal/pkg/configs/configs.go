@@ -56,7 +56,8 @@ type (
 		RequestTimeout        uint   `mapstructure:"request_timeout"`
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
 
-		Allows []Allow `mapstructure:"allows"`
+		Allows       []Allow `mapstructure:"allows"`
+		IsRelayClean bool    `mapstructure:"is_relay_clean"`
 	}
 
 	Fee struct {

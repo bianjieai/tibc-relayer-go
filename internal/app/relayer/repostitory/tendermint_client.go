@@ -45,6 +45,7 @@ type Tendermint struct {
 	updateClientFrequency uint64
 
 	allowMapSender map[string][]string
+	isRelayClean   bool
 }
 
 func NewTendermintClient(
@@ -52,6 +53,7 @@ func NewTendermintClient(
 	chainName string,
 	updateClientFrequency uint64,
 	allowMapSender map[string][]string,
+	isRelayClean bool,
 	config *TerndermintConfig) (*Tendermint, error) {
 	cfg, err := coretypes.NewClientConfig(config.RPCAddr, config.GrpcAddr, config.ChainID,
 		config.Options...)
@@ -75,6 +77,7 @@ func NewTendermintClient(
 		baseTx:                config.BaseTx,
 		address:               address,
 		allowMapSender:        allowMapSender,
+		isRelayClean:          isRelayClean,
 	}, err
 }
 
@@ -123,12 +126,14 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 
 		}
 
-		if c.isExistPacket(repotypes.EventTypeSendCleanPacket, resultTx) {
-			tmpCleanPacket, err := c.getCleanPacket(resultTx)
-			if err != nil {
-				return nil, err
+		if c.isRelayClean {
+			if c.isExistPacket(repotypes.EventTypeSendCleanPacket, resultTx) {
+				tmpCleanPacket, err := c.getCleanPacket(resultTx)
+				if err != nil {
+					return nil, err
+				}
+				cleanPackets = append(cleanPackets, tmpCleanPacket...)
 			}
-			cleanPackets = append(cleanPackets, tmpCleanPacket...)
 		}
 
 	}
