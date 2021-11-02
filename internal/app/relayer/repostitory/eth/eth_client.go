@@ -215,7 +215,7 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 	return result.Hash().String(), nil
 }
 
-func (eth *Eth) GetPackets(height uint64) (*repotypes.Packets, error) {
+func (eth *Eth) GetPackets(height uint64, destChainType string) (*repotypes.Packets, error) {
 
 	bizPackets, err := eth.getPackets(height)
 	if err != nil {

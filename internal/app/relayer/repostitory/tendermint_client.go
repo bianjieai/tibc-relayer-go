@@ -12,6 +12,7 @@ import (
 	"github.com/irisnet/irismod-sdk-go/nft"
 
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
@@ -81,7 +82,7 @@ func NewTendermintClient(
 	}, err
 }
 
-func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
+func (c *Tendermint) GetPackets(height uint64, destChainType string) (*repotypes.Packets, error) {
 	var bizPackets []packet.Packet
 	var ackPackets []repotypes.AckPacket
 	var cleanPackets []packet.CleanPacket
@@ -103,7 +104,7 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 			continue
 		}
 		if c.isExistPacket(repotypes.EventTypeSendPacket, resultTx) {
-			tmpPacket, err := c.getPacket(resultTx)
+			tmpPacket, err := c.getPacket(resultTx, destChainType)
 			if err != nil {
 				return nil, err
 			}
@@ -112,7 +113,7 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 
 		if c.isExistPacket(repotypes.EventTypeWriteAck, resultTx) {
 			// get ack packet
-			tmpAckPacks, acks, err := c.getAckPackets(resultTx)
+			tmpAckPacks, acks, err := c.getAckPackets(resultTx, destChainType)
 			if err != nil {
 				return nil, err
 			}
@@ -128,7 +129,7 @@ func (c *Tendermint) GetPackets(height uint64) (*repotypes.Packets, error) {
 
 		if c.isRelayClean {
 			if c.isExistPacket(repotypes.EventTypeSendCleanPacket, resultTx) {
-				tmpCleanPacket, err := c.getCleanPacket(resultTx)
+				tmpCleanPacket, err := c.getCleanPacket(resultTx, destChainType)
 				if err != nil {
 					return nil, err
 				}
@@ -340,7 +341,7 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 	return validatorSet, nil
 }
 
-func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) {
+func (c *Tendermint) getPacket(tx types.ResultQueryTx, destChainType string) ([]packet.Packet, error) {
 	sequences := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_sequence")
 	srcChains := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_src_chain")
 	dstPorts := tx.Result.Events.GetValues(repotypes.EventTypeSendPacket, "packet_dst_port")
@@ -377,8 +378,12 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 		if ok && !c.isExitsFromStringList(senders, nonFungibleTokenPacketData.Sender) {
 			continue
 		}
-		// if nonFungibleTokenPacketData.DestContract not in allowList, skip
-		if !ok {
+
+		// 1. iris to iris?
+		// 2. iris to eth?
+
+		if destChainType == constant.ETH && !ok {
+			// if nonFungibleTokenPacketData.DestContract not in allowList, skip
 			continue
 		}
 
@@ -388,7 +393,7 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 	return packets, nil
 }
 
-func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) ([]packet.Packet, [][]byte, error) {
+func (c *Tendermint) getAckPackets(tx types.ResultQueryTx, destChainType string) ([]packet.Packet, [][]byte, error) {
 
 	sequences := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_sequence")
 	srcChains := tx.Result.Events.GetValues(repotypes.EventTypeWriteAck, "packet_src_chain")
@@ -420,7 +425,7 @@ func (c *Tendermint) getAckPackets(tx types.ResultQueryTx) ([]packet.Packet, [][
 	return packets, ackByteList, nil
 }
 
-func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx) ([]packet.CleanPacket, error) {
+func (c *Tendermint) getCleanPacket(tx types.ResultQueryTx, destChainType string) ([]packet.CleanPacket, error) {
 	sequences := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_sequence")
 	sourceChains := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_src_chain")
 	dstPorts := tx.Result.Events.GetValues(repotypes.EventTypeSendCleanPacket, "packet_dst_port")

@@ -7,7 +7,7 @@ import (
 )
 
 type IChain interface {
-	GetPackets(height uint64) (*repotypes.Packets, error)
+	GetPackets(height uint64, destChainType string) (*repotypes.Packets, error)
 	GetProof(sourChainName, destChainName string, sequence uint64, height uint64, typ string) ([]byte, error)
 	RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error)
 	GetCommitmentsPacket(sourChainName, destChainName string, sequence uint64) error

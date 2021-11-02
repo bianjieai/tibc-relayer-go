@@ -310,7 +310,7 @@ func (channel *Channel) relay() error {
 	**/
 	// 2. get packets from source
 	previousHeight := channel.Context().Height() - 1
-	packets, err := channel.source.GetPackets(previousHeight)
+	packets, err := channel.source.GetPackets(previousHeight, channel.dest.ChainType())
 
 	if err != nil {
 		logger.WithField("err_msg", err).Error("failed to get packets")
