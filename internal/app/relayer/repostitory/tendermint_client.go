@@ -372,6 +372,10 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 		if ok && !c.isExitsFromStringList(senders, nonFungibleTokenPacketData.Sender) {
 			continue
 		}
+		// if nonFungibleTokenPacketData.DestContract not in allowList, skip
+		if !ok {
+			continue
+		}
 
 		packets = append(packets, tmpPack)
 	}
