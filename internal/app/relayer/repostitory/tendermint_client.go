@@ -15,6 +15,7 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
+	tibcnfttypes "github.com/bianjieai/tibc-sdk-go/nft_transfer"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
@@ -359,16 +360,16 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx) ([]packet.Packet, error) 
 			Data:             []byte(datas[i]),
 		}
 
-		msgNftTransfer := &tibctypes.MsgNftTransfer{}
-		if err := msgNftTransfer.Unmarshal(tmpPack.Data); err != nil {
+		nonFungibleTokenPacketData := &tibcnfttypes.NonFungibleTokenPacketData{}
+		if err := nonFungibleTokenPacketData.Unmarshal(tmpPack.Data); err != nil {
 			continue
 		}
 		//msgNftTransfer.DestContract
 
 		//allowList set
 		//msg.sender not in allowList, skip
-		senders, ok := c.allowMapSender[msgNftTransfer.DestContract]
-		if ok && !c.isExitsFromStringList(senders, msgNftTransfer.Sender) {
+		senders, ok := c.allowMapSender[nonFungibleTokenPacketData.DestContract]
+		if ok && !c.isExitsFromStringList(senders, nonFungibleTokenPacketData.Sender) {
 			continue
 		}
 
