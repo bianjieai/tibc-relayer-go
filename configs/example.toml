@@ -38,7 +38,7 @@ rpc_addr = "tcp://127.0.0.1:36657"
 algo = "sm2"
 update_client_frequency = 10 # update client frequency, unit hour
 request_timeout = 60
-is_relay_clean = false
+clean_packet_enabled = false
 
 [chain.dest.tendermint.fee]
 denom = "stake"
@@ -116,7 +116,7 @@ rpc_addr = "tcp://127.0.0.1:26657"
 algo = "sm2" # if your chain is IRITA
 update_client_frequency = 2
 request_timeout = 60
-is_relay_clean = false
+clean_packet_enabled = false
 
 [chain.source.tendermint.fee]
 denom = "stake"

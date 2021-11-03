@@ -60,7 +60,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 		cfg.Tendermint.ChainName,
 		cfg.Tendermint.UpdateClientFrequency,
 		allowMapSender,
-		cfg.Tendermint.IsRelayClean,
+		cfg.Tendermint.CleanPacketEnabled,
 		chainCfg,
 	)
 	if err != nil {
