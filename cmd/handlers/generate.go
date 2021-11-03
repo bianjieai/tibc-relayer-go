@@ -164,7 +164,7 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 		Header:          header.ToHeader(),
 		ChainId:         cfg.Eth.ChainID,
 		ContractAddress: hash,
-		TrustingPeriod:  60 * 60 * 24 * 7,
+		TrustingPeriod:  60 * 60 * 24 * 100,
 		TimeDelay:       0,
 		BlockDelay:      7,
 	}
@@ -368,8 +368,8 @@ func getTendermintJson(
 	var clientState = &tendermint.ClientState{
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,
-		TrustingPeriod:  time.Hour * 24 * 70 * 2,
-		UnbondingPeriod: time.Hour * 24 * 70 * 3,
+		TrustingPeriod:  time.Hour * 24 * 100,
+		UnbondingPeriod: time.Hour * 24 * 100,
 		MaxClockDrift:   time.Second * 10,
 		LatestHeight:    lastHeight,
 		ProofSpecs:      commitment.GetSDKSpecs(),
