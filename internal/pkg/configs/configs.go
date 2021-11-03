@@ -56,7 +56,8 @@ type (
 		RequestTimeout        uint   `mapstructure:"request_timeout"`
 		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
 
-		Allows []Allow `mapstructure:"allows"`
+		Allows             []Allow `mapstructure:"allows"`
+		CleanPacketEnabled bool    `mapstructure:"clean_packet_enabled"`
 	}
 
 	Fee struct {

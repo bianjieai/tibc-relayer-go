@@ -265,22 +265,17 @@ func (channel *Channel) relay() error {
 		resultTx, err := channel.dest.RecvPackets(boastCommitPackets)
 		if err != nil {
 			errMsg := err.Error()
-			logger.Warning(errMsg)
-			if ok := strings.Contains(errMsg, "already has been received"); !ok {
-				logger.WithField("err_msg", err).Error("failed to recv packet")
-				return typeserr.ErrRecvPacket
-			}
-			if ok := strings.Contains(errMsg,
-				"acknowledge packet verification failed: commitment bytes are not equal:"); !ok {
-				logger.WithField("err_msg", err).Error("failed to recv packet")
-				return typeserr.ErrRecvPacket
-			}
+			if ok := strings.Contains(errMsg, "already has been received"); ok {
+				logger.Warning("sequence error")
+			} else if ok := strings.Contains(errMsg,
+				"acknowledge packet verification failed: commitment bytes are not equal:"); ok {
+				logger.Warning("commitment error")
+			} else {
 
-			if ok := strings.Contains(errMsg, "Internal error: timed out"); !ok {
 				logger.WithFields(log.Fields{
 					"err_msg":      err,
 					"final_height": channel.Context().Height(),
-				}).Error("failed to network ")
+				}).Error("recv packets ")
 				return typeserr.ErrRecvPacket
 			}
 
@@ -310,7 +305,7 @@ func (channel *Channel) relay() error {
 	**/
 	// 2. get packets from source
 	previousHeight := channel.Context().Height() - 1
-	packets, err := channel.source.GetPackets(previousHeight)
+	packets, err := channel.source.GetPackets(previousHeight, channel.dest.ChainType())
 
 	if err != nil {
 		logger.WithField("err_msg", err).Error("failed to get packets")
