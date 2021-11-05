@@ -29,6 +29,7 @@ import (
 )
 
 const CtxTimeout = 10 * time.Second
+const SendMsgDelayTime = 7 * time.Second
 
 func BatchUpdateETHClient(cfg *configs.Config, endHeight uint64) {
 	logger := log.WithFields(log.Fields{
@@ -157,7 +158,7 @@ func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Ent
 			"gas_used":   resultTx.GasUsed,
 		}).Info("success")
 		msgs = msgs[len(relayMsg):]
-		time.Sleep(time.Second * 5)
+		time.Sleep(SendMsgDelayTime)
 	}
 
 }
