@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	Version = "v0.1.0"
-	Date    = "2021-07-26"
+	Version = "v0.2.0"
+	Date    = "2021-11-01"
 )
 
 var rootCmd = &cobra.Command{
