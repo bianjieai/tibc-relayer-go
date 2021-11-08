@@ -38,6 +38,7 @@ import (
 var _ repostitory.IChain = new(Eth)
 
 const CtxTimeout = 10 * time.Second
+const TryGetGasPriceTimeInterval = 10 * time.Second
 
 var (
 	Uint64, _  = abi.NewType("uint64", "", nil)
@@ -597,6 +598,7 @@ func (eth *Eth) setPacketOpts() error {
 		}
 		cmpRes := eth.maxGasPrice.Cmp(gasPrice)
 		if cmpRes == -1 {
+			time.Sleep(TryGetGasPriceTimeInterval)
 			continue
 		} else {
 			curGasPrice = gasPrice
