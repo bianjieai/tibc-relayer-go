@@ -122,6 +122,11 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
 			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
 			result, err := eth.contracts.Packet.RecvPacket(
 				eth.bindOpts.packetTransactOpts,
 				tmpPack,
@@ -146,6 +151,12 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
 			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+
 			result, err := eth.contracts.Packet.AcknowledgePacket(
 				eth.bindOpts.packetTransactOpts,
 				tmpPack, msg.Acknowledgement, msg.ProofAcked,
@@ -163,6 +174,12 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				SourceChain: msg.CleanPacket.SourceChain,
 				RelayChain:  msg.CleanPacket.RelayChain,
 			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+
 			result, err := eth.contracts.Packet.CleanPacket(
 				eth.bindOpts.packetTransactOpts,
 				cleanPack,
@@ -207,6 +224,12 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 		appHash,
 		nextValidatorsHash,
 	)
+
+	err = eth.setClientOpts()
+	if err != nil {
+		return "", err
+	}
+
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
@@ -554,6 +577,29 @@ func (eth *Eth) getLogs(address gethcmn.Address, topic string, fromBlock, toBloc
 		Topics:    [][]gethcmn.Hash{{gethcrypto.Keccak256Hash([]byte(topic))}},
 	}
 	return eth.ethClient.FilterLogs(context.Background(), filter)
+}
+
+func (eth *Eth) setPacketOpts() error {
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+	gasPrice, err := eth.ethClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return err
+	}
+
+	eth.bindOpts.packetTransactOpts.GasPrice = gasPrice
+	return nil
+}
+
+func (eth *Eth) setClientOpts() error {
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+	gasPrice, err := eth.ethClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return err
+	}
+	eth.bindOpts.client.GasPrice = gasPrice
+	return nil
 }
 
 // ==================================================================================================================
