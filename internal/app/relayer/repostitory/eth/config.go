@@ -42,6 +42,6 @@ type ContractBindOptsCfg struct {
 	ClientPrivKey string
 	PacketPrivKey string
 	GasLimit      uint64
-	GasPrice      uint64
+	MaxGasPrice   uint64
 	ChainID       uint64
 }

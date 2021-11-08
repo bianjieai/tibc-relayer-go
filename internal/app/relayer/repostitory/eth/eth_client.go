@@ -56,7 +56,8 @@ type Eth struct {
 	contracts        *contractGroup
 	bindOpts         *bindOpts
 
-	slot int64
+	slot        int64
+	maxGasPrice *big.Int
 
 	ethClient  *gethethclient.Client
 	gethCli    *gethclient.Client
@@ -98,6 +99,7 @@ func NewEth(config *ChainConfig) (repostitory.IChain, error) {
 		contracts:             contractGroup,
 		bindOpts:              tmpBindOpts,
 		slot:                  config.Slot,
+		maxGasPrice:           new(big.Int).SetUint64(config.ContractBindOptsCfg.MaxGasPrice),
 	}, nil
 }
 
@@ -579,26 +581,50 @@ func (eth *Eth) getLogs(address gethcmn.Address, topic string, fromBlock, toBloc
 	return eth.ethClient.FilterLogs(context.Background(), filter)
 }
 
-func (eth *Eth) setPacketOpts() error {
+func (eth *Eth) getGasPrice() (*big.Int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
 	defer cancel()
-	gasPrice, err := eth.ethClient.SuggestGasPrice(ctx)
-	if err != nil {
-		return err
+	return eth.ethClient.SuggestGasPrice(ctx)
+
+}
+
+func (eth *Eth) setPacketOpts() error {
+	var curGasPrice *big.Int
+	for {
+		gasPrice, err := eth.getGasPrice()
+		if err != nil {
+			return err
+		}
+		cmpRes := eth.maxGasPrice.Cmp(gasPrice)
+		if cmpRes == -1 {
+			continue
+		} else {
+			curGasPrice = gasPrice
+			break
+		}
 	}
 
-	eth.bindOpts.packetTransactOpts.GasPrice = gasPrice
+	eth.bindOpts.packetTransactOpts.GasPrice = curGasPrice
 	return nil
 }
 
 func (eth *Eth) setClientOpts() error {
-	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
-	defer cancel()
-	gasPrice, err := eth.ethClient.SuggestGasPrice(ctx)
-	if err != nil {
-		return err
+	var curGasPrice *big.Int
+	for {
+		gasPrice, err := eth.getGasPrice()
+		if err != nil {
+			return err
+		}
+		cmpRes := eth.maxGasPrice.Cmp(gasPrice)
+		if cmpRes == -1 {
+			continue
+		} else {
+			curGasPrice = gasPrice
+			break
+		}
 	}
-	eth.bindOpts.client.GasPrice = gasPrice
+
+	eth.bindOpts.client.GasPrice = curGasPrice
 	return nil
 }
 
@@ -620,7 +646,6 @@ func newBindOpts(cfg *ContractBindOptsCfg) (*bindOpts, error) {
 		return nil, err
 	}
 	clientOpts.GasLimit = cfg.GasLimit
-	clientOpts.GasPrice = new(big.Int).SetUint64(cfg.GasPrice)
 
 	//================================================================================
 	// packet transfer opts
@@ -633,7 +658,6 @@ func newBindOpts(cfg *ContractBindOptsCfg) (*bindOpts, error) {
 		return nil, err
 	}
 	packOpts.GasLimit = cfg.GasLimit
-	packOpts.GasPrice = new(big.Int).SetUint64(cfg.GasPrice)
 
 	return &bindOpts{
 		client:             clientOpts,

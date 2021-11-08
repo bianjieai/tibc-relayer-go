@@ -34,7 +34,7 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 	contractBindOptsCfg.ClientPrivKey = cfg.Eth.Contracts.Client.OptPrivKey
 	contractBindOptsCfg.PacketPrivKey = cfg.Eth.Contracts.Packet.OptPrivKey
 	contractBindOptsCfg.GasLimit = cfg.Eth.GasLimit
-	contractBindOptsCfg.GasPrice = cfg.Eth.GasPrice
+	contractBindOptsCfg.MaxGasPrice = cfg.Eth.MaxGasPrice
 
 	ethChainCfg := repoeth.NewChainConfig()
 	ethChainCfg.ContractCfgGroup = contractCfgGroup
