@@ -40,6 +40,8 @@ var _ repostitory.IChain = new(Eth)
 const CtxTimeout = 10 * time.Second
 const TryGetGasPriceTimeInterval = 10 * time.Second
 
+const tipCoefficient = 0.2
+
 var (
 	Uint64, _  = abi.NewType("uint64", "", nil)
 	Bytes32, _ = abi.NewType("bytes32", "", nil)
@@ -601,7 +603,9 @@ func (eth *Eth) setPacketOpts() error {
 			time.Sleep(TryGetGasPriceTimeInterval)
 			continue
 		} else {
-			curGasPrice = gasPrice
+			gasPriceUint := gasPrice.Int64()
+			gasPriceUint += int64(float64(gasPriceUint) * tipCoefficient)
+			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
 			break
 		}
 	}
@@ -621,7 +625,9 @@ func (eth *Eth) setClientOpts() error {
 		if cmpRes == -1 {
 			continue
 		} else {
-			curGasPrice = gasPrice
+			gasPriceUint := gasPrice.Int64()
+			gasPriceUint += int64(float64(gasPriceUint) * tipCoefficient)
+			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
 			break
 		}
 	}
