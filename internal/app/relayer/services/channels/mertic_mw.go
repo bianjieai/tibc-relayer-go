@@ -33,16 +33,16 @@ func (m *Metric) UpdateClient() error {
 func (m *Metric) Relay() error {
 	err := m.next.Relay()
 	defer func(err error) {
-		labels := []string{"chain_name", m.next.Context().ChainName()}
+		labels := []string{"chain_name", m.Context().ChainName()}
 
-		connChainLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "connection"}
-		getClientStatusLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "client_get_client_status"}
-		updateClientLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "client_update_client_status"}
-		recvPacketLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "packet_recv_packet"}
-		getPacketLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "packet_get_packet"}
-		getCommitmentLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "packet_get_commitment"}
-		getProofLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "packet_get_proof"}
-		getReceiptLabels := []string{"chain_name", m.next.Context().ChainName(), "option", "packet_get_receipt"}
+		connChainLabels := []string{"chain_name", m.Context().ChainName(), "option", "connection"}
+		getClientStatusLabels := []string{"chain_name", m.Context().ChainName(), "option", "client_get_client_status"}
+		updateClientLabels := []string{"chain_name", m.Context().ChainName(), "option", "client_update_client_status"}
+		recvPacketLabels := []string{"chain_name", m.Context().ChainName(), "option", "packet_recv_packet"}
+		getPacketLabels := []string{"chain_name", m.Context().ChainName(), "option", "packet_get_packet"}
+		getCommitmentLabels := []string{"chain_name", m.Context().ChainName(), "option", "packet_get_commitment"}
+		getProofLabels := []string{"chain_name", m.Context().ChainName(), "option", "packet_get_proof"}
+		getReceiptLabels := []string{"chain_name", m.Context().ChainName(), "option", "packet_get_receipt"}
 
 		sysErr, ok := err.(internelerrors.IError)
 		if !ok && sysErr != nil {

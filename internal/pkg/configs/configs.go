@@ -25,8 +25,9 @@ type (
 		Contracts             EthContracts `mapstructure:"eth_contracts"`
 		UpdateClientFrequency uint64       `mapstructure:"update_client_frequency"`
 		GasLimit              uint64       `mapstructure:"gas_limit"`
-		GasPrice              uint64       `mapstructure:"gas_price"`
+		MaxGasPrice           uint64       `mapstructure:"max_gas_price"`
 		CommentSlot           int64        `mapstructure:"comment_slot"`
+		TipCoefficient        float64      `mapstructure:"tip_coefficient"`
 	}
 
 	EthContracts struct {

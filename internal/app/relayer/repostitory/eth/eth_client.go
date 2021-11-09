@@ -38,6 +38,7 @@ import (
 var _ repostitory.IChain = new(Eth)
 
 const CtxTimeout = 10 * time.Second
+const TryGetGasPriceTimeInterval = 10 * time.Second
 
 var (
 	Uint64, _  = abi.NewType("uint64", "", nil)
@@ -56,7 +57,9 @@ type Eth struct {
 	contracts        *contractGroup
 	bindOpts         *bindOpts
 
-	slot int64
+	slot           int64
+	maxGasPrice    *big.Int
+	tipCoefficient float64
 
 	ethClient  *gethethclient.Client
 	gethCli    *gethclient.Client
@@ -98,6 +101,8 @@ func NewEth(config *ChainConfig) (repostitory.IChain, error) {
 		contracts:             contractGroup,
 		bindOpts:              tmpBindOpts,
 		slot:                  config.Slot,
+		tipCoefficient:        config.TipCoefficient,
+		maxGasPrice:           new(big.Int).SetUint64(config.ContractBindOptsCfg.MaxGasPrice),
 	}, nil
 }
 
@@ -121,6 +126,11 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 			height := contracts.HeightData{
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
+			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
 			}
 			result, err := eth.contracts.Packet.RecvPacket(
 				eth.bindOpts.packetTransactOpts,
@@ -146,6 +156,12 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				RevisionNumber: msg.ProofHeight.RevisionNumber,
 				RevisionHeight: msg.ProofHeight.RevisionHeight,
 			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+
 			result, err := eth.contracts.Packet.AcknowledgePacket(
 				eth.bindOpts.packetTransactOpts,
 				tmpPack, msg.Acknowledgement, msg.ProofAcked,
@@ -163,6 +179,12 @@ func (eth *Eth) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Error) 
 				SourceChain: msg.CleanPacket.SourceChain,
 				RelayChain:  msg.CleanPacket.RelayChain,
 			}
+
+			err := eth.setPacketOpts()
+			if err != nil {
+				return nil, types.Wrap(err)
+			}
+
 			result, err := eth.contracts.Packet.CleanPacket(
 				eth.bindOpts.packetTransactOpts,
 				cleanPack,
@@ -207,6 +229,12 @@ func (eth *Eth) UpdateClient(header tibctypes.Header, chainName string) (string,
 		appHash,
 		nextValidatorsHash,
 	)
+
+	err = eth.setClientOpts()
+	if err != nil {
+		return "", err
+	}
+
 	result, err := eth.contracts.Client.UpdateClient(eth.bindOpts.client, chainName, headerBytes)
 	if err != nil {
 		return "", err
@@ -556,6 +584,58 @@ func (eth *Eth) getLogs(address gethcmn.Address, topic string, fromBlock, toBloc
 	return eth.ethClient.FilterLogs(context.Background(), filter)
 }
 
+func (eth *Eth) getGasPrice() (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+	return eth.ethClient.SuggestGasPrice(ctx)
+
+}
+
+func (eth *Eth) setPacketOpts() error {
+	var curGasPrice *big.Int
+	for {
+		gasPrice, err := eth.getGasPrice()
+		if err != nil {
+			return err
+		}
+		cmpRes := eth.maxGasPrice.Cmp(gasPrice)
+		if cmpRes == -1 {
+			time.Sleep(TryGetGasPriceTimeInterval)
+			continue
+		} else {
+			gasPriceUint := gasPrice.Int64()
+			gasPriceUint += int64(float64(gasPriceUint) * eth.tipCoefficient)
+			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
+			break
+		}
+	}
+
+	eth.bindOpts.packetTransactOpts.GasPrice = curGasPrice
+	return nil
+}
+
+func (eth *Eth) setClientOpts() error {
+	var curGasPrice *big.Int
+	for {
+		gasPrice, err := eth.getGasPrice()
+		if err != nil {
+			return err
+		}
+		cmpRes := eth.maxGasPrice.Cmp(gasPrice)
+		if cmpRes == -1 {
+			continue
+		} else {
+			gasPriceUint := gasPrice.Int64()
+			gasPriceUint += int64(float64(gasPriceUint) * eth.tipCoefficient)
+			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
+			break
+		}
+	}
+
+	eth.bindOpts.client.GasPrice = curGasPrice
+	return nil
+}
+
 // ==================================================================================================================
 // contract bind opts
 type bindOpts struct {
@@ -574,7 +654,6 @@ func newBindOpts(cfg *ContractBindOptsCfg) (*bindOpts, error) {
 		return nil, err
 	}
 	clientOpts.GasLimit = cfg.GasLimit
-	clientOpts.GasPrice = new(big.Int).SetUint64(cfg.GasPrice)
 
 	//================================================================================
 	// packet transfer opts
@@ -587,7 +666,6 @@ func newBindOpts(cfg *ContractBindOptsCfg) (*bindOpts, error) {
 		return nil, err
 	}
 	packOpts.GasLimit = cfg.GasLimit
-	packOpts.GasPrice = new(big.Int).SetUint64(cfg.GasPrice)
 
 	return &bindOpts{
 		client:             clientOpts,
