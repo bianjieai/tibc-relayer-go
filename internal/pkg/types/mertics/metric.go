@@ -9,10 +9,11 @@ type Model struct {
 	Sys   *metricsprometheus.Gauge
 	Chain *metricsprometheus.Gauge
 
-	chaiName string
+	sourceChainName string
+	destChainName   string
 }
 
-func NewMetric(chaiName string) *Model {
+func NewMetric(sourceChainName, destChainName string) *Model {
 	sysMetric := metricsprometheus.NewGaugeFrom(prometheus.GaugeOpts{
 		Subsystem: "relayer",
 		Name:      "system",
@@ -26,9 +27,10 @@ func NewMetric(chaiName string) *Model {
 	}, []string{"chain_name", "option"})
 
 	model := &Model{
-		Sys:      sysMetric,
-		Chain:    chainMetric,
-		chaiName: chaiName,
+		Sys:             sysMetric,
+		Chain:           chainMetric,
+		sourceChainName: sourceChainName,
+		destChainName:   destChainName,
 	}
 	model.initMetric()
 
@@ -36,24 +38,44 @@ func NewMetric(chaiName string) *Model {
 }
 
 func (m *Model) initMetric() {
-	sysLabels := []string{"chain_name", m.chaiName}
-	m.Sys.With(sysLabels...).Set(1)
+	sourceSysLabels := []string{"chain_name", m.sourceChainName}
+	m.Sys.With(sourceSysLabels...).Set(1)
+	destSysLabels := []string{"chain_name", m.destChainName}
+	m.Sys.With(destSysLabels...).Set(1)
 
-	connChainLabels := []string{"chain_name", m.chaiName, "option", "connection"}
-	getClientStatusLabels := []string{"chain_name", m.chaiName, "option", "client_get_client_status"}
-	updateClientLabels := []string{"chain_name", m.chaiName, "option", "client_update_client_status"}
-	recvPacketLabels := []string{"chain_name", m.chaiName, "option", "packet_recv_packet"}
-	getPacketLabels := []string{"chain_name", m.chaiName, "option", "packet_get_packet"}
-	getCommitmentLabels := []string{"chain_name", m.chaiName, "option", "packet_get_commitment"}
-	getProofLabels := []string{"chain_name", m.chaiName, "option", "packet_get_proof"}
-	getReceiptLabels := []string{"chain_name", m.chaiName, "option", "packet_get_receipt"}
+	sourceConnChainLabels := []string{"chain_name", m.sourceChainName, "option", "connection"}
+	sourceGetClientStatusLabels := []string{"chain_name", m.sourceChainName, "option", "client_get_client_status"}
+	sourceUpdateClientLabels := []string{"chain_name", m.sourceChainName, "option", "client_update_client_status"}
+	sourceRecvPacketLabels := []string{"chain_name", m.sourceChainName, "option", "packet_recv_packet"}
+	sourceGetPacketLabels := []string{"chain_name", m.sourceChainName, "option", "packet_get_packet"}
+	sourceGetCommitmentLabels := []string{"chain_name", m.sourceChainName, "option", "packet_get_commitment"}
+	sourceGetProofLabels := []string{"chain_name", m.sourceChainName, "option", "packet_get_proof"}
+	sourceGetReceiptLabels := []string{"chain_name", m.sourceChainName, "option", "packet_get_receipt"}
 
-	m.Chain.With(connChainLabels...).Set(1)
-	m.Chain.With(getClientStatusLabels...).Set(1)
-	m.Chain.With(updateClientLabels...).Set(1)
-	m.Chain.With(recvPacketLabels...).Set(1)
-	m.Chain.With(getPacketLabels...).Set(1)
-	m.Chain.With(getCommitmentLabels...).Set(1)
-	m.Chain.With(getProofLabels...).Set(1)
-	m.Chain.With(getReceiptLabels...).Set(1)
+	destConnChainLabels := []string{"chain_name", m.destChainName, "option", "connection"}
+	destGetClientStatusLabels := []string{"chain_name", m.destChainName, "option", "client_get_client_status"}
+	destUpdateClientLabels := []string{"chain_name", m.destChainName, "option", "client_update_client_status"}
+	destRecvPacketLabels := []string{"chain_name", m.destChainName, "option", "packet_recv_packet"}
+	destGetPacketLabels := []string{"chain_name", m.destChainName, "option", "packet_get_packet"}
+	destGetCommitmentLabels := []string{"chain_name", m.destChainName, "option", "packet_get_commitment"}
+	destGetProofLabels := []string{"chain_name", m.destChainName, "option", "packet_get_proof"}
+	destGetReceiptLabels := []string{"chain_name", m.destChainName, "option", "packet_get_receipt"}
+
+	m.Chain.With(sourceConnChainLabels...).Set(1)
+	m.Chain.With(sourceGetClientStatusLabels...).Set(1)
+	m.Chain.With(sourceUpdateClientLabels...).Set(1)
+	m.Chain.With(sourceRecvPacketLabels...).Set(1)
+	m.Chain.With(sourceGetPacketLabels...).Set(1)
+	m.Chain.With(sourceGetCommitmentLabels...).Set(1)
+	m.Chain.With(sourceGetProofLabels...).Set(1)
+	m.Chain.With(sourceGetReceiptLabels...).Set(1)
+
+	m.Chain.With(destConnChainLabels...).Set(1)
+	m.Chain.With(destGetClientStatusLabels...).Set(1)
+	m.Chain.With(destUpdateClientLabels...).Set(1)
+	m.Chain.With(destRecvPacketLabels...).Set(1)
+	m.Chain.With(destGetPacketLabels...).Set(1)
+	m.Chain.With(destGetCommitmentLabels...).Set(1)
+	m.Chain.With(destGetProofLabels...).Set(1)
+	m.Chain.With(destGetReceiptLabels...).Set(1)
 }

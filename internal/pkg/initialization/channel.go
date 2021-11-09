@@ -46,6 +46,8 @@ func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.ICh
 }
 
 func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, logger *log.Logger) map[string]channels.IChannel {
+
+	metricsModel := metricsmodel.NewMetric(sourceChain.ChainName(), destChain.ChainName())
 	// init source chain channel
 	sourceChannel := channel(cfg, sourceChain, destChain, TypSource, logger)
 
@@ -56,7 +58,7 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 	)
 
 	// add metric mw
-	metricsModel := metricsmodel.NewMetric(sourceChain.ChainName())
+
 	sourceChannel = channels.NewMetricMW(sourceChannel, metricsModel)
 
 	// init dest chain channel
