@@ -27,6 +27,7 @@ type (
 		GasLimit              uint64       `mapstructure:"gas_limit"`
 		MaxGasPrice           uint64       `mapstructure:"max_gas_price"`
 		CommentSlot           int64        `mapstructure:"comment_slot"`
+		TipCoefficient        float64      `mapstructure:"tip_coefficient"`
 	}
 
 	EthContracts struct {

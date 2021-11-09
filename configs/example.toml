@@ -68,6 +68,7 @@ uri = "youre_request_eth_uri" # example: http://xxxxxx
 gas_limit = 2000000
 max_gas_price = 150000000000
 comment_slot = 104
+tip_coefficient = 0.2
 
 [chain.dest.eth.eth_contracts]
 [chain.dest.eth.eth_contracts.packet]
@@ -148,6 +149,7 @@ uri = "youre_request_eth_uri" # example: http://xxxxxx
 gas_limit = 2000000
 max_gas_price = 150000000000
 comment_slot = 104
+tip_coefficient = 0.2
 
 [chain.source.eth.eth_contracts]
 [chain.source.eth.eth_contracts.packet]

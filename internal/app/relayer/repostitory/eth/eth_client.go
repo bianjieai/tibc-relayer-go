@@ -40,8 +40,6 @@ var _ repostitory.IChain = new(Eth)
 const CtxTimeout = 10 * time.Second
 const TryGetGasPriceTimeInterval = 10 * time.Second
 
-const tipCoefficient = 0.2
-
 var (
 	Uint64, _  = abi.NewType("uint64", "", nil)
 	Bytes32, _ = abi.NewType("bytes32", "", nil)
@@ -59,8 +57,9 @@ type Eth struct {
 	contracts        *contractGroup
 	bindOpts         *bindOpts
 
-	slot        int64
-	maxGasPrice *big.Int
+	slot           int64
+	maxGasPrice    *big.Int
+	tipCoefficient float64
 
 	ethClient  *gethethclient.Client
 	gethCli    *gethclient.Client
@@ -102,6 +101,7 @@ func NewEth(config *ChainConfig) (repostitory.IChain, error) {
 		contracts:             contractGroup,
 		bindOpts:              tmpBindOpts,
 		slot:                  config.Slot,
+		tipCoefficient:        config.TipCoefficient,
 		maxGasPrice:           new(big.Int).SetUint64(config.ContractBindOptsCfg.MaxGasPrice),
 	}, nil
 }
@@ -604,7 +604,7 @@ func (eth *Eth) setPacketOpts() error {
 			continue
 		} else {
 			gasPriceUint := gasPrice.Int64()
-			gasPriceUint += int64(float64(gasPriceUint) * tipCoefficient)
+			gasPriceUint += int64(float64(gasPriceUint) * eth.tipCoefficient)
 			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
 			break
 		}
@@ -626,7 +626,7 @@ func (eth *Eth) setClientOpts() error {
 			continue
 		} else {
 			gasPriceUint := gasPrice.Int64()
-			gasPriceUint += int64(float64(gasPriceUint) * tipCoefficient)
+			gasPriceUint += int64(float64(gasPriceUint) * eth.tipCoefficient)
 			curGasPrice = new(big.Int).SetInt64(gasPriceUint)
 			break
 		}

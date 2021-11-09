@@ -11,7 +11,8 @@ type ChainConfig struct {
 	ChainURI              string
 	ChainID               uint64
 
-	Slot int64
+	Slot           int64
+	TipCoefficient float64
 
 	ContractCfgGroup    *ContractCfgGroup
 	ContractBindOptsCfg *ContractBindOptsCfg
