@@ -295,7 +295,7 @@ func getTendermintHex(
 			Denominator: 3,
 		},
 		TrustingPeriod:  100 * 24 * 60 * 60,
-		UnbondingPeriod: 1814400,
+		UnbondingPeriod: 110 * 24 * 60 * 60,
 		MaxClockDrift:   10,
 		LatestHeight: LatestHeight{
 			RevisionNumber: revisionNumber,
@@ -369,7 +369,7 @@ func getTendermintJson(
 		ChainId:         tmHeader.ChainID,
 		TrustLevel:      fra,
 		TrustingPeriod:  time.Hour * 24 * 100,
-		UnbondingPeriod: time.Hour * 24 * 100,
+		UnbondingPeriod: time.Hour * 24 * 110,
 		MaxClockDrift:   time.Second * 10,
 		LatestHeight:    lastHeight,
 		ProofSpecs:      commitment.GetSDKSpecs(),
