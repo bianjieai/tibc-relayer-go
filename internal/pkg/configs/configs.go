@@ -16,6 +16,7 @@ type (
 		Tendermint Tendermint `mapstructure:"tendermint"`
 		Eth        Eth        `mapstructure:"eth"`
 		ChainType  string     `mapstructure:"chain_type"`
+		Enabled    bool       `mapstructure:"enabled"`
 	}
 	// eth config============================================================
 	Eth struct {
