@@ -50,10 +50,23 @@ func BatchUpdateETHClient(cfg *configs.Config, endHeight uint64) {
 
 func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
 
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Println("Recovered in : ", r)
+			time.Sleep(10 * time.Second)
+			batchUpdateETHClient(cfg, endHeight, logger)
+		}
+	}()
+	batchUpdateETHClientRoutine(cfg, endHeight, logger)
+
+}
+
+func batchUpdateETHClientRoutine(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
+
 	options := []coretypes.Option{
 		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
 		coretypes.TimeoutOption(cfg.Chain.Source.Tendermint.RequestTimeout),
-		coretypes.ModeOption(coretypes.Commit),
+		coretypes.ModeOption(coretypes.Async),
 		coretypes.GasOption(cfg.Chain.Source.Tendermint.Gas),
 		coretypes.CachedOption(true),
 	}
@@ -132,33 +145,21 @@ func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Ent
 		}
 
 		msgs = append(msgs, msg)
-	}
-	for {
-		if len(msgs) == 0 {
-			logger.Info("no data need to relay")
-			break
+		if len(msgs) == 2 || (len(msgs) == 1 && i == endHeight) {
+			resultTx, err := tClient.BuildAndSend(msgs, baseTx)
+			if err != nil {
+				logger.WithField("err_msg", err).Error("failed to tx")
+				panic("failed to BuildAndSend ")
+			}
+			logger.WithFields(log.Fields{
+				"tx_height":  resultTx.Height,
+				"tx_hash":    resultTx.Hash,
+				"gas_wanted": resultTx.GasWanted,
+				"gas_used":   resultTx.GasUsed,
+			}).Info("success")
+			msgs = []types.Msg{}
+			time.Sleep(SendMsgDelayTime)
 		}
-
-		var relayMsg []types.Msg
-		msgLength := len(msgs)
-		if msgLength > 2 {
-			relayMsg = msgs[:2]
-		} else {
-			relayMsg = msgs[:msgLength]
-		}
-
-		resultTx, err := tClient.BuildAndSend(relayMsg, baseTx)
-		if err != nil {
-			logger.WithField("err_msg", err).Fatal("failed to tx")
-		}
-		logger.WithFields(log.Fields{
-			"tx_height":  resultTx.Height,
-			"tx_hash":    resultTx.Hash,
-			"gas_wanted": resultTx.GasWanted,
-			"gas_used":   resultTx.GasUsed,
-		}).Info("success")
-		msgs = msgs[len(relayMsg):]
-		time.Sleep(SendMsgDelayTime)
 	}
 
 }

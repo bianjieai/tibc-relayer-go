@@ -18,6 +18,8 @@ channel_types = ["tendermint_and_tendermint"]
 
 [chain]
 
+enabled = true
+
 chain_type = "eth"
 
 [chain.dest]
@@ -98,6 +100,7 @@ opt_priv_key = "your_eth_priv_key"
 [chain.source]
 
 chain_type = "tendermint"
+enabled = true
 
 [chain.source.cache]
 filename = "source.json"

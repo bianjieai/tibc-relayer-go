@@ -74,8 +74,17 @@ func channelMap(cfg *configs.Config, sourceChain, destChain repostitory.IChain, 
 
 	destChannel = channels.NewMetricMW(destChannel, metricsModel)
 	channelMap := map[string]channels.IChannel{}
-	channelMap[sourceChain.ChainName()] = sourceChannel
-	channelMap[destChain.ChainName()] = destChannel
+	if cfg.Chain.Source.Enabled {
+		channelMap[sourceChain.ChainName()] = sourceChannel
+	}
+
+	if cfg.Chain.Dest.Enabled {
+		channelMap[destChain.ChainName()] = destChannel
+	}
+
+	if !cfg.Chain.Source.Enabled && !cfg.Chain.Dest.Enabled {
+		logger.Fatal("cfg.Chain.Source.Enabled and cfg.Chain.Dest.Enabled Cannot be false at the same time")
+	}
 
 	return channelMap
 }
