@@ -53,7 +53,7 @@ func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Ent
 	options := []coretypes.Option{
 		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
 		coretypes.TimeoutOption(cfg.Chain.Source.Tendermint.RequestTimeout),
-		coretypes.ModeOption(coretypes.Commit),
+		coretypes.ModeOption(coretypes.Async),
 		coretypes.GasOption(cfg.Chain.Source.Tendermint.Gas),
 		coretypes.CachedOption(true),
 	}
