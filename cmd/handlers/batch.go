@@ -132,33 +132,20 @@ func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Ent
 		}
 
 		msgs = append(msgs, msg)
-	}
-	for {
-		if len(msgs) == 0 {
-			logger.Info("no data need to relay")
-			break
+		if len(msgs) == 2 || (len(msgs) == 1 && i == endHeight) {
+			resultTx, err := tClient.BuildAndSend(msgs, baseTx)
+			if err != nil {
+				logger.WithField("err_msg", err).Fatal("failed to tx")
+			}
+			logger.WithFields(log.Fields{
+				"tx_height":  resultTx.Height,
+				"tx_hash":    resultTx.Hash,
+				"gas_wanted": resultTx.GasWanted,
+				"gas_used":   resultTx.GasUsed,
+			}).Info("success")
+			msgs = []types.Msg{}
+			time.Sleep(SendMsgDelayTime)
 		}
-
-		var relayMsg []types.Msg
-		msgLength := len(msgs)
-		if msgLength > 2 {
-			relayMsg = msgs[:2]
-		} else {
-			relayMsg = msgs[:msgLength]
-		}
-
-		resultTx, err := tClient.BuildAndSend(relayMsg, baseTx)
-		if err != nil {
-			logger.WithField("err_msg", err).Fatal("failed to tx")
-		}
-		logger.WithFields(log.Fields{
-			"tx_height":  resultTx.Height,
-			"tx_hash":    resultTx.Hash,
-			"gas_wanted": resultTx.GasWanted,
-			"gas_used":   resultTx.GasUsed,
-		}).Info("success")
-		msgs = msgs[len(relayMsg):]
-		time.Sleep(SendMsgDelayTime)
 	}
 
 }
