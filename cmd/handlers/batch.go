@@ -50,6 +50,19 @@ func BatchUpdateETHClient(cfg *configs.Config, endHeight uint64) {
 
 func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
 
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Println("Recovered in : ", r)
+			time.Sleep(10 * time.Second)
+			batchUpdateETHClient(cfg, endHeight, logger)
+		}
+	}()
+	batchUpdateETHClientRoutine(cfg, endHeight, logger)
+
+}
+
+func batchUpdateETHClientRoutine(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
+
 	options := []coretypes.Option{
 		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
 		coretypes.TimeoutOption(cfg.Chain.Source.Tendermint.RequestTimeout),
@@ -135,7 +148,8 @@ func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Ent
 		if len(msgs) == 2 || (len(msgs) == 1 && i == endHeight) {
 			resultTx, err := tClient.BuildAndSend(msgs, baseTx)
 			if err != nil {
-				logger.WithField("err_msg", err).Fatal("failed to tx")
+				logger.WithField("err_msg", err).Error("failed to tx")
+				panic("failed to BuildAndSend ")
 			}
 			logger.WithFields(log.Fields{
 				"tx_height":  resultTx.Height,
