@@ -459,7 +459,7 @@ func (channel *Channel) relay() error {
 		logger.Info("there are no packets to be relayed at the current altitude")
 		// When the packet is empty, tendermint does not need to update the client
 
-		if channel.source.ChainType() != constant.Tendermint {
+		if channel.source.ChainType() != constant.BSC {
 			//update client
 			err = channel.updateClient(
 				clientState.GetLatestHeight().GetRevisionHeight(),
