@@ -347,8 +347,6 @@ func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, 
 		vals    = []*tmtypes.Validator{}
 		page    = 1
 		total   = -1
-
-		maxRetryAttempts = 5
 	)
 	ctx := context.Background()
 
