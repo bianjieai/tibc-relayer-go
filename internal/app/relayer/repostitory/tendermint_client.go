@@ -3,7 +3,17 @@ package repostitory
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"math/rand"
+	"regexp"
 	"strconv"
+	"time"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
+
+	"github.com/tendermint/tendermint/light/provider"
+
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/irisnet/core-sdk-go/bank"
 	"github.com/irisnet/core-sdk-go/client"
@@ -13,7 +23,6 @@ import (
 
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	tibcnfttypes "github.com/bianjieai/tibc-sdk-go/nft_transfer"
@@ -28,10 +37,16 @@ import (
 	txtypes "github.com/irisnet/core-sdk-go/types/tx"
 	"github.com/tendermint/tendermint/libs/log"
 	tenderminttypes "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmttypes "github.com/tendermint/tendermint/types"
 )
 
 var _ IChain = new(Tendermint)
+
+var (
+	maxRetryAttempts    = 5
+	regexpTooHigh       = regexp.MustCompile(`height \d+ must be less than or equal to`)
+	regexpMissingHeight = regexp.MustCompile(`height \d+ is not available`)
+	regexpTimedOut      = regexp.MustCompile(`Timeout exceeded`)
+)
 
 type Tendermint struct {
 	logger log.Logger
@@ -68,6 +83,7 @@ func NewTendermintClient(
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(address)
 
 	return &Tendermint{
 		chainType:             chainType,
@@ -324,21 +340,76 @@ func (c *Tendermint) UpdateClientFrequency() uint64 {
 }
 
 func (c *Tendermint) getValidator(height int64) (*tenderminttypes.ValidatorSet, error) {
-	page := 1
-	prePage := 200
-	validators, err := c.terndermintCli.TIBC.Validators(
-		context.Background(),
-		&height,
-		&page, &prePage)
-	if err != nil {
-		return nil, err
+	const maxPages = 100
+
+	var (
+		perPage = 100
+		vals    = []*tmtypes.Validator{}
+		page    = 1
+		total   = -1
+	)
+	ctx := context.Background()
+
+OUTER_LOOP:
+	for len(vals) != total && page <= maxPages {
+		for attempt := 1; attempt <= maxRetryAttempts; attempt++ {
+			res, err := c.terndermintCli.TIBC.Validators(ctx, &height, &page, &perPage)
+			switch {
+			case err == nil:
+				// Validate response.
+				if len(res.Validators) == 0 {
+					return nil, provider.ErrBadLightBlock{
+						Reason: fmt.Errorf("validator set is empty (height: %d, page: %d, per_page: %d)",
+							height, page, perPage),
+					}
+				}
+				if res.Total <= 0 {
+					return nil, provider.ErrBadLightBlock{
+						Reason: fmt.Errorf("total number of vals is <= 0: %d (height: %d, page: %d, per_page: %d)",
+							res.Total, height, page, perPage),
+					}
+				}
+
+				total = res.Total
+				vals = append(vals, res.Validators...)
+				page++
+				continue OUTER_LOOP
+
+			case regexpTooHigh.MatchString(err.Error()):
+				return nil, fmt.Errorf("height requested is too high")
+
+			case regexpMissingHeight.MatchString(err.Error()):
+				return nil, provider.ErrLightBlockNotFound
+
+			// if we have exceeded retry attempts then return no response error
+			case attempt == maxRetryAttempts:
+				return nil, provider.ErrNoResponse
+
+			case regexpTimedOut.MatchString(err.Error()):
+				// we wait and try again with exponential backoff
+				time.Sleep(backoffTimeout(uint16(attempt)))
+				continue
+
+			// context canceled or connection refused we return the error
+			default:
+				return nil, err
+			}
+
+		}
 	}
-	validatorSet, err := tmttypes.NewValidatorSet(validators.Validators).ToProto()
+	validatorSet, err := tmtypes.NewValidatorSet(vals).ToProto()
 	if err != nil {
 		return nil, err
 	}
 
 	return validatorSet, nil
+}
+
+// exponential backoff (with jitter)
+// 0.5s -> 2s -> 4.5s -> 8s -> 12.5 with 1s variation
+func backoffTimeout(attempt uint16) time.Duration {
+	// nolint:gosec // G404: Use of weak random number generator
+	return time.Duration(500*attempt*attempt)*time.Millisecond + time.Duration(rand.Intn(1000))*time.Millisecond
 }
 
 func (c *Tendermint) getPacket(tx types.ResultQueryTx, destChainType string) ([]packet.Packet, error) {

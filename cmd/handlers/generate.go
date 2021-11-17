@@ -4,10 +4,15 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"os"
+	"regexp"
 	"time"
+
+	"github.com/tendermint/tendermint/light/provider"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
@@ -47,6 +52,13 @@ const (
 
 	EthConsensusStatePrefix = `{"@type":"/tibc.lightclients.eth.v1.ConsensusState",`
 	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.eth.v1.ClientState",`
+)
+
+var (
+	maxRetryAttempts    = 5
+	regexpTooHigh       = regexp.MustCompile(`height \d+ must be less than or equal to`)
+	regexpMissingHeight = regexp.MustCompile(`height \d+ is not available`)
+	regexpTimedOut      = regexp.MustCompile(`Timeout exceeded`)
 )
 
 func CreateClientFiles(cfg *configs.Config) {
@@ -377,10 +389,15 @@ func getTendermintJson(
 		TimeDelay:       0,
 	}
 	//ConsensusState
+	validatorSet, err := tendermintQueryValidatorSet(res.Block.Height, client)
+	if err != nil {
+		panic(err)
+	}
 	var consensusState = &tendermint.ConsensusState{
-		Timestamp:          tmHeader.Time,
-		Root:               commitment.NewMerkleRoot([]byte(tibcTendermintRoot)),
-		NextValidatorsHash: tendermintQueryValidatorSet(res.Block.Height, client).Hash(),
+		Timestamp: tmHeader.Time,
+		Root:      commitment.NewMerkleRoot([]byte(tibcTendermintRoot)),
+		//NextValidatorsHash: tendermintQueryValidatorSet(res.Block.Height, client).Hash(),
+		NextValidatorsHash: validatorSet.Hash(),
 	}
 
 	clientStateBytes, err := client.AppCodec().MarshalJSON(clientState)
@@ -416,14 +433,72 @@ func writeCreateClientFiles(filePath string, content string) {
 	writer.Flush()
 }
 
-func tendermintQueryValidatorSet(height int64, client coresdk.Client) *tmtypes.ValidatorSet {
-	validators, err := client.Validators(context.Background(), &height, nil, nil)
-	if err != nil {
-		fmt.Println("queryValidatorSet fail :", err)
+func tendermintQueryValidatorSet(height int64, client coresdk.Client) (*tmtypes.ValidatorSet, error) {
+	const maxPages = 100
+
+	var (
+		perPage = 100
+		vals    = []*tmtypes.Validator{}
+		page    = 1
+		total   = -1
+	)
+	ctx := context.Background()
+
+OUTER_LOOP:
+	for len(vals) != total && page <= maxPages {
+		for attempt := 1; attempt <= 5; attempt++ {
+			res, err := client.Validators(ctx, &height, &page, &perPage)
+			switch {
+			case err == nil:
+				// Validate response.
+				if len(res.Validators) == 0 {
+					return nil, provider.ErrBadLightBlock{
+						Reason: fmt.Errorf("validator set is empty (height: %d, page: %d, per_page: %d)",
+							height, page, perPage),
+					}
+				}
+				if res.Total <= 0 {
+					return nil, provider.ErrBadLightBlock{
+						Reason: fmt.Errorf("total number of vals is <= 0: %d (height: %d, page: %d, per_page: %d)",
+							res.Total, height, page, perPage),
+					}
+				}
+
+				total = res.Total
+				vals = append(vals, res.Validators...)
+				page++
+				continue OUTER_LOOP
+
+			case regexpTooHigh.MatchString(err.Error()):
+				return nil, errors.New("height requested is too high")
+
+			case regexpMissingHeight.MatchString(err.Error()):
+				return nil, provider.ErrLightBlockNotFound
+
+			// if we have exceeded retry attempts then return no response error
+			case attempt == maxRetryAttempts:
+				return nil, provider.ErrNoResponse
+
+			case regexpTimedOut.MatchString(err.Error()):
+				// we wait and try again with exponential backoff
+				time.Sleep(backoffTimeout(uint16(attempt)))
+				continue
+
+			// context canceled or connection refused we return the error
+			default:
+				return nil, err
+			}
+
+		}
 	}
-	validatorSet := tmtypes.NewValidatorSet(validators.Validators)
-	if err != nil {
-		fmt.Println("queryValidatorSet fail :", err)
-	}
-	return validatorSet
+	validatorSet := tmtypes.NewValidatorSet(vals)
+
+	return validatorSet, nil
+}
+
+// exponential backoff (with jitter)
+// 0.5s -> 2s -> 4.5s -> 8s -> 12.5 with 1s variation
+func backoffTimeout(attempt uint16) time.Duration {
+	// nolint:gosec // G404: Use of weak random number generator
+	return time.Duration(500*attempt*attempt)*time.Millisecond + time.Duration(rand.Intn(1000))*time.Millisecond
 }
