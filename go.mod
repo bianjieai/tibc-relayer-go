@@ -19,6 +19,6 @@ require (
 
 replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
-	github.com/irisnet/core-sdk-go => github.com/irisnet/core-sdk-go v0.0.0-20220126064947-34046bc65a06
+	github.com/irisnet/core-sdk-go => github.com/irisnet/core-sdk-go v0.0.0-20220126073615-12e94113dadf
 	github.com/tendermint/tendermint => github.com/bianjieai/tendermint v0.34.1-irita-210113
 )
