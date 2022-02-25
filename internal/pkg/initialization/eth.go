@@ -10,7 +10,7 @@ import (
 
 func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 	loggerEntry := logger.WithFields(log.Fields{
-		"chain_name": cfg.Tendermint.ChainName,
+		"chain_name": cfg.Eth.ChainName,
 	})
 
 	loggerEntry.Info(" init eth chain start")
@@ -50,9 +50,8 @@ func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {
 
 	ethRepo, err := repoeth.NewEth(ethChainCfg)
 	if err != nil {
-		logger.WithFields(log.Fields{
-			"chain_name": cfg.Tendermint.ChainName,
-			"err_msg":    err,
+		loggerEntry.WithFields(log.Fields{
+			"err_msg": err,
 		}).Fatal("failed to init chain")
 	}
 

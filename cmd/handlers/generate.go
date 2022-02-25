@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"time"
 
+	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
+
 	"github.com/tendermint/tendermint/light/provider"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -38,20 +40,27 @@ import (
 
 const TendermintAndTendermint = "tendermint_and_tendermint"
 const TendermintAndETH = "tendermint_and_eth"
+const TendermintAndBsc = "tendermint_and_bsc"
 
 const tibcTendermintMerklePrefix = "tibc"
 const tibcTendermintRoot = "app_hash"
 
 const Tendermint = "tendermint"
+const Bsc = "bsc"
 const ETH = "eth"
+
+const BSCEpoch = uint64(200)
 
 const (
 	clientStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ClientState",`
 
 	consensusStatePrefix = `{"@type":"/tibc.lightclients.tendermint.v1.ConsensusState",`
 
+	BscConsensusStatePrefix = `{"@type":"/tibc.lightclients.bsc.v1.ConsensusState",`
+	BscClientStatePrefix    = `{"@type":"/tibc.lightclients.bsc.v1.ClientState",`
+
 	EthConsensusStatePrefix = `{"@type":"/tibc.lightclients.eth.v1.ConsensusState",`
-	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.eth.v1.ClientState",`
+	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.S.v1.ClientState",`
 )
 
 var (
@@ -91,8 +100,8 @@ func CreateClientFiles(cfg *configs.Config) {
 
 			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == ETH {
 				logger := log.WithFields(log.Fields{
-					"source_chain": &cfg.Chain.Source.Tendermint.ChainName,
-					"dest_chain":   &cfg.Chain.Dest.Eth.ChainName,
+					"source_chain": cfg.Chain.Source.Tendermint.ChainName,
+					"dest_chain":   cfg.Chain.Dest.Eth.ChainName,
 				})
 				logger.Info("1. init source chain")
 				sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
@@ -108,8 +117,8 @@ func CreateClientFiles(cfg *configs.Config) {
 
 			if cfg.Chain.Source.ChainType == ETH && cfg.Chain.Dest.ChainType == Tendermint {
 				logger := log.WithFields(log.Fields{
-					"source_chain": &cfg.Chain.Source.Eth.ChainName,
-					"dest_chain":   &cfg.Chain.Dest.Tendermint.ChainName,
+					"source_chain": cfg.Chain.Source.Eth.ChainName,
+					"dest_chain":   cfg.Chain.Dest.Tendermint.ChainName,
 				})
 				logger.Info("1. init dest  chain")
 				destChain := tendermintCreateClientFiles(&cfg.Chain.Dest, logger)
@@ -122,7 +131,40 @@ func CreateClientFiles(cfg *configs.Config) {
 				logger.Info("2. init source chain")
 				getETHJson(&cfg.Chain.Source, destChain, logger)
 			}
+		case TendermintAndBsc:
+			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == Bsc {
+				logger := log.WithFields(log.Fields{
+					"source_chain": cfg.Chain.Source.Tendermint.ChainName,
+					"dest_chain":   cfg.Chain.Dest.Eth.ChainName,
+				})
+				logger.Info("1. init source chain")
+				sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
+				getTendermintHex(
+					sourceChain,
+					int64(cfg.Chain.Source.Cache.StartHeight),
+					cfg.Chain.Source.Tendermint.ChainName,
+					logger,
+				)
+				logger.Info("2. init dest chain")
+				getBscJson(&cfg.Chain.Dest, sourceChain, logger)
+			}
 
+			if cfg.Chain.Source.ChainType == Bsc && cfg.Chain.Dest.ChainType == Tendermint {
+				logger := log.WithFields(log.Fields{
+					"source_chain": cfg.Chain.Source.Eth.ChainName,
+					"dest_chain":   cfg.Chain.Dest.Tendermint.ChainName,
+				})
+				logger.Info("1. init dest  chain")
+				destChain := tendermintCreateClientFiles(&cfg.Chain.Dest, logger)
+				getTendermintHex(
+					destChain,
+					int64(cfg.Chain.Dest.Cache.StartHeight),
+					cfg.Chain.Dest.Tendermint.ChainName,
+					logger,
+				)
+				logger.Info("2. init source chain")
+				getBscJson(&cfg.Chain.Source, destChain, logger)
+			}
 		}
 	}
 }
@@ -204,6 +246,94 @@ func getETHJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry)
 	consensusStateStr := string(consensusStateBytes)
 	consensusStateStr = EthConsensusStatePrefix + consensusStateStr[1:]
 	consensusStateFilename1 := fmt.Sprintf("%s_consensusState.json", cfg.Eth.ChainName)
+	writeCreateClientFiles(consensusStateFilename1, consensusStateStr)
+}
+
+func getBscJson(cfg *configs.ChainCfg, client coresdk.Client, logger *log.Entry) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10)
+	defer cancel()
+	rpcClient, err := gethrpc.DialContext(ctx, cfg.Bsc.URI)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	ethClient := gethethclient.NewClient(rpcClient)
+	latestHeight, err := ethClient.BlockNumber(context.Background())
+	if err != nil {
+		logger.Fatal(err)
+	}
+	startHeight := latestHeight
+	if latestHeight%200 != 0 {
+		startHeight = latestHeight - latestHeight%200
+	}
+
+	logger.Info("bsc height = ", startHeight)
+
+	//gethCli := gethclient.New(rpcClient)
+	blockRes, err := ethClient.BlockByNumber(
+		context.Background(),
+		new(big.Int).SetUint64(startHeight))
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	blockHeader := blockRes.Header()
+
+	header := &tibcbcs.BscHeader{
+		ParentHash:  blockHeader.ParentHash,
+		UncleHash:   blockHeader.UncleHash,
+		Coinbase:    blockHeader.Coinbase,
+		Root:        blockHeader.Root,
+		TxHash:      blockHeader.TxHash,
+		ReceiptHash: blockHeader.ReceiptHash,
+		Difficulty:  blockHeader.Difficulty,
+		Number:      blockHeader.Number,
+		GasLimit:    blockHeader.GasLimit,
+		GasUsed:     blockHeader.GasUsed,
+		Time:        blockHeader.Time,
+		Extra:       blockHeader.Extra,
+		MixDigest:   blockHeader.MixDigest,
+		Nonce:       tibcbcs.BlockNonce(blockHeader.Nonce),
+		Bloom:       tibcbcs.Bloom(blockHeader.Bloom),
+	}
+
+	number := tibcclient.NewHeight(0, header.Number.Uint64())
+	hash := common.FromHex(cfg.Bsc.Contracts.Packet.Addr)
+
+	genesisValidators, err := tibcbcs.ParseValidators(header.Extra)
+
+	clientState := &tibcbcs.ClientState{
+		Header:          header.ToHeader(),
+		ChainId:         cfg.Bsc.ChainID,
+		ContractAddress: hash,
+		TrustingPeriod:  60 * 60 * 24 * 100,
+		Validators:      genesisValidators,
+		BlockInteval:    3,
+		Epoch:           BSCEpoch,
+	}
+	consensusState := &tibcbcs.ConsensusState{
+		Timestamp: header.Time,
+		Number:    number,
+		Root:      header.Root[:],
+	}
+
+	clientStateBytes, err := client.AppCodec().MarshalJSON(clientState)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	clientStateStr := string(clientStateBytes)
+	clientStateStr = BscClientStatePrefix + clientStateStr[1:]
+	clientStateFilename := fmt.Sprintf("%s_clientState.json", cfg.Bsc.ChainName)
+	writeCreateClientFiles(clientStateFilename, clientStateStr)
+
+	consensusStateBytes, err := client.AppCodec().MarshalJSON(consensusState)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	consensusStateStr := string(consensusStateBytes)
+	consensusStateStr = BscConsensusStatePrefix + consensusStateStr[1:]
+	consensusStateFilename1 := fmt.Sprintf("%s_consensusState.json", cfg.Bsc.ChainName)
 	writeCreateClientFiles(consensusStateFilename1, consensusStateStr)
 }
 

@@ -1,4 +1,4 @@
-package eth
+package bsc
 
 import (
 	"fmt"
@@ -41,6 +41,7 @@ func TestNewEth(t *testing.T) {
 	contractBindOptsCfg.ClientPrivKey = optPrivKey
 	contractBindOptsCfg.PacketPrivKey = optPrivKey
 	contractBindOptsCfg.GasLimit = 2000000
+	//contractBindOptsCfg.GasPrice = 1500000000
 
 	chainCfg := NewChainConfig()
 	chainCfg.ContractCfgGroup = contractCfgGroup
@@ -52,16 +53,16 @@ func TestNewEth(t *testing.T) {
 	chainCfg.Slot = 4
 	chainCfg.UpdateClientFrequency = 10
 
-	ethClient, err := NewEth(chainCfg)
+	bscClient, err := NewBsc(chainCfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	latestHeight, err := ethClient.GetLatestHeight()
+	latestHeight, err := bscClient.GetLatestHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(latestHeight)
-	ethClient.GetProof("eth-testnet", "irishub-testnet", 3, latestHeight, repotypes.CommitmentPoof)
+	bscClient.GetProof("eth-testnet", "irishub-testnet", 3, latestHeight, repotypes.CommitmentPoof)
 
 	//packets, err := ethClient.GetPackets(11128997)
 	////packets, err := ethClient.GetPackets(11128966)

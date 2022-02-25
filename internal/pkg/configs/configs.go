@@ -15,10 +15,11 @@ type (
 		Cache      Cache      `mapstructure:"cache"`
 		Tendermint Tendermint `mapstructure:"tendermint"`
 		Eth        Eth        `mapstructure:"eth"`
+		Bsc        Eth        `mapstructure:"bsc"`
 		ChainType  string     `mapstructure:"chain_type"`
 		Enabled    bool       `mapstructure:"enabled"`
 	}
-	// eth config============================================================
+	// Eth config============================================================
 	Eth struct {
 		URI                   string       `mapstructure:"uri"`
 		ChainID               uint64       `mapstructure:"chain_id"`

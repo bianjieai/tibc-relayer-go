@@ -160,6 +160,17 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 			logger.WithField("err_msg", err).Error("failed to get block header")
 			return typeserr.ErrGetBlockHeader
 		}
+	case constant.BSC:
+		req := &repotypes.GetBlockHeaderReq{
+			LatestHeight:   latestHeight,
+			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
+			RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+		}
+		header, err = channel.source.GetBlockHeader(req)
+		if err != nil {
+			logger.WithField("err_msg", err).Error("failed to get block header")
+			return typeserr.ErrGetBlockHeader
+		}
 
 	}
 

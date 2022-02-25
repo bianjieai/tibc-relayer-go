@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"time"
 
+	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
@@ -34,31 +36,171 @@ const SendMsgDelayTime = 7 * time.Second
 func BatchUpdateETHClient(cfg *configs.Config, endHeight uint64) {
 	logger := log.WithFields(log.Fields{
 		"source_chain": cfg.Chain.Source.Tendermint.ChainName,
-		"dest_chain":   cfg.Chain.Dest.Eth.ChainName,
+		"dest_chain":   cfg.Chain.Dest.Bsc.ChainName,
 	})
 	if len(cfg.App.ChannelTypes) != 1 {
 		logger.Fatal("channel_types length must be 1")
 	}
 	for _, channelType := range cfg.App.ChannelTypes {
-		if channelType != TendermintAndETH {
+
+		if channelType != TendermintAndETH && channelType != TendermintAndBsc {
 			logger.Fatal("only applicable for eth and tendermint")
 		}
-		batchUpdateETHClient(cfg, endHeight, logger)
+		batchUpdateETHClient(cfg, channelType, endHeight, logger)
 	}
 
 }
 
-func batchUpdateETHClient(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
+func batchUpdateETHClient(cfg *configs.Config, channelType string, endHeight uint64, logger *log.Entry) {
 
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Println("Recovered in : ", r)
 			time.Sleep(10 * time.Second)
-			batchUpdateETHClient(cfg, endHeight, logger)
+			batchUpdateETHClient(cfg, channelType, endHeight, logger)
 		}
 	}()
-	batchUpdateETHClientRoutine(cfg, endHeight, logger)
+	switch channelType {
+	case TendermintAndETH:
+		batchUpdateETHClientRoutine(cfg, endHeight, logger)
+	case TendermintAndBsc:
+		batchUpdateBscClientRoutine(cfg, endHeight, logger)
+	}
 
+}
+
+func batchUpdateBscClientRoutine(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
+
+	options := []coretypes.Option{
+		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
+		coretypes.TimeoutOption(cfg.Chain.Source.Tendermint.RequestTimeout),
+		coretypes.ModeOption(coretypes.Async),
+		coretypes.GasOption(cfg.Chain.Source.Tendermint.Gas),
+		coretypes.CachedOption(true),
+	}
+	if cfg.Chain.Source.Tendermint.Algo != "" {
+		options = append(options, coretypes.AlgoOption(cfg.Chain.Source.Tendermint.Algo))
+	}
+	chainCfg, err := coretypes.NewClientConfig(
+		cfg.Chain.Source.Tendermint.RPCAddr,
+		cfg.Chain.Source.Tendermint.GrpcAddr,
+		cfg.Chain.Source.Tendermint.ChainID,
+		options...,
+	)
+	if err != nil {
+		logger.WithField("err_msg", err).Fatal("failed to init chain cfg")
+	}
+
+	fee := coretypes.NewDecCoins(
+		coretypes.NewDecCoin(
+			cfg.Chain.Source.Tendermint.Fee.Denom,
+			coretypes.NewInt(cfg.Chain.Source.Tendermint.Fee.Amount)))
+	baseTx := coretypes.BaseTx{
+		From:               cfg.Chain.Source.Tendermint.Key.Name,
+		Password:           cfg.Chain.Source.Tendermint.Key.Password,
+		Gas:                cfg.Chain.Source.Tendermint.Gas,
+		Mode:               coretypes.Commit,
+		Fee:                fee,
+		SimulateAndExecute: false,
+		GasAdjustment:      1.5,
+	}
+
+	tClient := newTendermintClient(chainCfg, cfg.Chain.Source.Tendermint.ChainName)
+	address, err := tClient.BaseClient.Import(
+		cfg.Chain.Source.Tendermint.Key.Name,
+		cfg.Chain.Source.Tendermint.Key.Password,
+		cfg.Chain.Source.Tendermint.Key.PrivKeyArmor)
+	if err != nil {
+		logger.WithField("err_msg", err).Fatal("failed to get owner err")
+	}
+	logger.WithField("address", address).Info("address output")
+
+	owner, err := tClient.QueryAddress(baseTx.From, baseTx.Password)
+	if err != nil {
+		logger.WithField("err_msg", err).Fatal("failed to get owner err")
+	}
+	logger.WithField("owner", owner.String()).Info("owner output")
+	ethCli, err := newEthClient(cfg.Chain.Dest.Bsc.URI)
+	if err != nil {
+		logger.WithField("err_msg", err).Fatal("failed to eth client")
+	}
+
+	clientStatus, err := tClient.TIBC.GetClientState(cfg.Chain.Dest.Bsc.ChainName)
+	if err != nil {
+		logger.WithField("err_msg", err).Fatal("failed to get eth light client status")
+	}
+
+	startHeight := clientStatus.GetLatestHeight().GetRevisionHeight() + 1
+	logger.WithFields(log.Fields{
+		"latest_height": clientStatus.GetLatestHeight().GetRevisionHeight(),
+		"start_height":  startHeight,
+	}).Info()
+
+	var msgs []types.Msg
+	for i := startHeight; i <= endHeight; i++ {
+		header, err := getBscHeader(ethCli, i)
+		if err != nil {
+			logger.WithField("err_msg", err).Fatal("failed to eth client")
+		}
+		anyHeader, err := cryptotypes.NewAnyWithValue(header)
+		if err != nil {
+			logger.WithField("err_msg", err).Fatal("failed to get owner err")
+		}
+		msg := &tibcclient.MsgUpdateClient{
+			ChainName: cfg.Chain.Dest.Bsc.ChainName,
+			Header:    anyHeader,
+			Signer:    owner.String(),
+		}
+
+		msgs = append(msgs, msg)
+		if len(msgs) == 10 || (len(msgs) == 1 && i == endHeight) {
+			resultTx, err := tClient.BuildAndSend(msgs, baseTx)
+			if err != nil {
+				logger.WithField("err_msg", err).Error("failed to tx")
+				panic("failed to BuildAndSend ")
+			}
+			logger.WithFields(log.Fields{
+				"tx_height":  resultTx.Height,
+				"tx_hash":    resultTx.Hash,
+				"gas_wanted": resultTx.GasWanted,
+				"gas_used":   resultTx.GasUsed,
+			}).Info("success")
+			msgs = []types.Msg{}
+			//time.Sleep(SendMsgDelayTime)
+		}
+	}
+
+}
+
+func getBscHeader(ethCli *gethethclient.Client, height uint64) (tibctypes.Header, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), CtxTimeout)
+	defer cancel()
+	blockRes, err := ethCli.BlockByNumber(ctx, new(big.Int).SetUint64(height))
+	if err != nil {
+		return nil, err
+	}
+
+	return &tibcbcs.Header{
+		ParentHash:  blockRes.ParentHash().Bytes(),
+		UncleHash:   blockRes.UncleHash().Bytes(),
+		Coinbase:    blockRes.Coinbase().Bytes(),
+		Root:        blockRes.Root().Bytes(),
+		TxHash:      blockRes.TxHash().Bytes(),
+		ReceiptHash: blockRes.ReceiptHash().Bytes(),
+		Bloom:       blockRes.Bloom().Bytes(),
+		Difficulty:  blockRes.Difficulty().Uint64(),
+		Height: tibcclient.Height{
+			RevisionNumber: 0,
+			RevisionHeight: height,
+		},
+		GasLimit:  blockRes.GasLimit(),
+		GasUsed:   blockRes.GasUsed(),
+		Time:      blockRes.Time(),
+		Extra:     blockRes.Extra(),
+		MixDigest: blockRes.MixDigest().Bytes(),
+		Nonce:     blockRes.Header().Nonce[:],
+	}, nil
 }
 
 func batchUpdateETHClientRoutine(cfg *configs.Config, endHeight uint64, logger *log.Entry) {
