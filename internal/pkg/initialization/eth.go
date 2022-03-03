@@ -1,11 +1,12 @@
 package initialization
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	repoeth "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/eth"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	log "github.com/sirupsen/logrus"
 )
 
 func ethChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {

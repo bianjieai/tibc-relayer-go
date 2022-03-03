@@ -1,11 +1,12 @@
 package initialization
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
 	repobsc "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/bsc"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	log "github.com/sirupsen/logrus"
 )
 
 func bscChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.IChain {

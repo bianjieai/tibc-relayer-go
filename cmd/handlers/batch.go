@@ -5,10 +5,8 @@ import (
 	"math/big"
 	"time"
 
-	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
-
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 	tibc "github.com/bianjieai/tibc-sdk-go"
+	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	tibceth "github.com/bianjieai/tibc-sdk-go/eth"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
@@ -28,6 +26,8 @@ import (
 	txtypes "github.com/irisnet/core-sdk-go/types/tx"
 	"github.com/irisnet/irismod-sdk-go/nft"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/configs"
 )
 
 const CtxTimeout = 10 * time.Second

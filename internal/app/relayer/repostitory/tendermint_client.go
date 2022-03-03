@@ -21,8 +21,6 @@ import (
 	"github.com/irisnet/core-sdk-go/staking"
 	"github.com/irisnet/irismod-sdk-go/nft"
 
-	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
 	tibcnfttypes "github.com/bianjieai/tibc-sdk-go/nft_transfer"
@@ -37,6 +35,9 @@ import (
 	txtypes "github.com/irisnet/core-sdk-go/types/tx"
 	"github.com/tendermint/tendermint/libs/log"
 	tenderminttypes "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
 )
 
 var _ IChain = new(Tendermint)
