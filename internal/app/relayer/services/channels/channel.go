@@ -5,16 +5,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/irisnet/core-sdk-go/types"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
+	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 )
 
 var _ IChannel = new(Channel)
@@ -150,6 +151,17 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 			return typeserr.ErrGetBlockHeader
 		}
 	case constant.ETH:
+		req := &repotypes.GetBlockHeaderReq{
+			LatestHeight:   latestHeight,
+			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
+			RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+		}
+		header, err = channel.source.GetBlockHeader(req)
+		if err != nil {
+			logger.WithField("err_msg", err).Error("failed to get block header")
+			return typeserr.ErrGetBlockHeader
+		}
+	case constant.BSC:
 		req := &repotypes.GetBlockHeaderReq{
 			LatestHeight:   latestHeight,
 			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
