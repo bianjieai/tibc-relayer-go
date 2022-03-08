@@ -23,6 +23,7 @@ import (
 
 	tibc "github.com/bianjieai/tibc-sdk-go"
 	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
+	tibcmttypes "github.com/bianjieai/tibc-sdk-go/mt_transfer"
 	tibcnfttypes "github.com/bianjieai/tibc-sdk-go/nft_transfer"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	"github.com/bianjieai/tibc-sdk-go/tendermint"
@@ -438,31 +439,57 @@ func (c *Tendermint) getPacket(tx types.ResultQueryTx, destChainType string) ([]
 			Data:             []byte(datas[i]),
 		}
 
-		nonFungibleTokenPacketData := &tibcnfttypes.NonFungibleTokenPacketData{}
-		if err := nonFungibleTokenPacketData.Unmarshal(tmpPack.Data); err != nil {
-			continue
-		}
-		//msgNftTransfer.DestContract
-
-		//allowList set
-		//msg.sender not in allowList, skip
-		senders, ok := c.allowMapSender[nonFungibleTokenPacketData.DestContract]
-		if ok && !c.isExitsFromStringList(senders, nonFungibleTokenPacketData.Sender) {
-			continue
-		}
-
-		// 1. iris to iris?
-		// 2. iris to eth?
-
-		if destChainType == constant.ETH && !ok {
-			// if nonFungibleTokenPacketData.DestContract not in allowList, skip
-			continue
+		switch destChainType {
+		case constant.ETH, constant.BSC:
+			if !c.isNftPacketToEVMClass(tmpPack.Data) && !c.isMtPacketToEVMClass(tmpPack.Data) {
+				continue
+			}
 		}
 
 		packets = append(packets, tmpPack)
 	}
 
 	return packets, nil
+}
+
+func (c *Tendermint) isMtPacketToEVMClass(data []byte) bool {
+
+	multiTokenPacketData := &tibcmttypes.MultiTokenPacketData{}
+	if err := multiTokenPacketData.Unmarshal(data); err != nil {
+		return false
+	}
+	//msgMtTransfer.DestContract
+
+	//Is destContract in the allow list
+	senders, ok := c.allowMapSender[multiTokenPacketData.DestContract]
+	if !ok {
+		return false
+	}
+	//Is msg.sender in the allow list
+	if ok && !c.isExitsFromStringList(senders, multiTokenPacketData.Sender) {
+		return false
+	}
+	return true
+}
+
+func (c *Tendermint) isNftPacketToEVMClass(data []byte) bool {
+
+	nonFungibleTokenPacketData := &tibcnfttypes.NonFungibleTokenPacketData{}
+	if err := nonFungibleTokenPacketData.Unmarshal(data); err != nil {
+		return false
+	}
+	//msgNftTransfer.DestContract
+
+	//Is destContract in the allow list
+	senders, ok := c.allowMapSender[nonFungibleTokenPacketData.DestContract]
+	if !ok {
+		return false
+	}
+	//Is msg.sender in the allow list
+	if ok && !c.isExitsFromStringList(senders, nonFungibleTokenPacketData.Sender) {
+		return false
+	}
+	return true
 }
 
 func (c *Tendermint) getAckPackets(tx types.ResultQueryTx, destChainType string) ([]packet.Packet, [][]byte, error) {
@@ -606,6 +633,7 @@ func makeEncodingConfig() types.EncodingConfig {
 	}
 	registerLegacyAminoCodec(encodingConfig.Amino)
 	registerInterfaces(encodingConfig.InterfaceRegistry)
+	tibcmttypes.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }
 

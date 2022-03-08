@@ -44,8 +44,7 @@ type (
 		Topic      string `mapstructure:"topic"`
 		OptPrivKey string `mapstructure:"opt_priv_key"`
 	}
-	// =====================================================================
-	// Tendermit config=====================================================
+	// Tendermint =====================================================================
 	Tendermint struct {
 		ChainName string   `mapstructure:"chain_name"`
 		ChainID   string   `mapstructure:"chain_id"`
@@ -75,8 +74,8 @@ type (
 	}
 
 	Allow struct {
-		Erc1155Addr string   `mapstructure:"erc115_addr"`
-		Senders     []string `mapstructure:"senders"`
+		ContractAddr string   `mapstructure:"contract_addr"`
+		Senders      []string `mapstructure:"senders"`
 	}
 
 	// =====================================================================

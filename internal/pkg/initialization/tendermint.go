@@ -52,7 +52,7 @@ func tendermintChain(cfg *configs.ChainCfg, logger *log.Logger) repostitory.ICha
 
 	allowMapSender := map[string][]string{}
 	for _, allow := range cfg.Tendermint.Allows {
-		allowMapSender[allow.Erc1155Addr] = allow.Senders
+		allowMapSender[allow.ContractAddr] = allow.Senders
 	}
 
 	chainRepo, err := repostitory.NewTendermintClient(
