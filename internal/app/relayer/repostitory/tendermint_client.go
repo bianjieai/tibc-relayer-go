@@ -633,6 +633,7 @@ func makeEncodingConfig() types.EncodingConfig {
 	}
 	registerLegacyAminoCodec(encodingConfig.Amino)
 	registerInterfaces(encodingConfig.InterfaceRegistry)
+	tibcmttypes.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }
 
