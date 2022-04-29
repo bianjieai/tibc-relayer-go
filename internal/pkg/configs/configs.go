@@ -16,9 +16,34 @@ type (
 		Tendermint Tendermint `mapstructure:"tendermint"`
 		Eth        Eth        `mapstructure:"eth"`
 		Bsc        Eth        `mapstructure:"bsc"`
+		Ethermint  Ethermint  `mapstructure:"ethermint"`
 		ChainType  string     `mapstructure:"chain_type"`
 		Enabled    bool       `mapstructure:"enabled"`
 	}
+
+	Ethermint struct {
+		// comment
+		ChainName             string `mapstructure:"chain_name"`
+		UpdateClientFrequency uint64 `mapstructure:"update_client_frequency"`
+
+		// eth
+		URI            string       `mapstructure:"uri"`
+		EthChainID     uint64       `mapstructure:"eth_chain_id"`
+		Contracts      EthContracts `mapstructure:"eth_contracts"`
+		GasLimit       uint64       `mapstructure:"gas_limit"`
+		MaxGasPrice    uint64       `mapstructure:"max_gas_price"`
+		CommentSlot    int64        `mapstructure:"comment_slot"`
+		TipCoefficient float64      `mapstructure:"tip_coefficient"`
+
+		// tendermint
+		TendermintChainID string `mapstructure:"tendermint_chain_id"`
+		RPCAddr           string `mapstructure:"rpc_addr"`
+		GrpcAddr          string `mapstructure:"grpc_addr"`
+		Algo              string `mapstructure:"algo"`
+		Gas               uint64 `mapstructure:"gas"`
+		RequestTimeout    uint   `mapstructure:"request_timeout"`
+	}
+
 	// Eth config============================================================
 	Eth struct {
 		URI                   string       `mapstructure:"uri"`
