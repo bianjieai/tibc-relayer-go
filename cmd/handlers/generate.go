@@ -62,7 +62,7 @@ const (
 	BscClientStatePrefix    = `{"@type":"/tibc.lightclients.bsc.v1.ClientState",`
 
 	EthConsensusStatePrefix = `{"@type":"/tibc.lightclients.eth.v1.ConsensusState",`
-	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.S.v1.ClientState",`
+	EthClientStatePrefix    = `{"@type":"/tibc.lightclients.eth.v1.ClientState",`
 )
 
 var (
