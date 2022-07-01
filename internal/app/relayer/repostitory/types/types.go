@@ -1,6 +1,6 @@
 package types
 
-import "github.com/bianjieai/tibc-sdk-go/packet"
+import "github.com/bianjieai/tibc-sdk-go/modules/core/packet"
 
 type GetBlockHeaderReq struct {
 	LatestHeight   uint64

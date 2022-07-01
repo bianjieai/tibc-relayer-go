@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"time"
 
-	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
+	tibcbcs "github.com/bianjieai/tibc-sdk-go/modules/light-clients/bsc"
 
 	"github.com/tendermint/tendermint/light/provider"
 
@@ -20,14 +20,14 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	tibceth "github.com/bianjieai/tibc-sdk-go/eth"
+	tibceth "github.com/bianjieai/tibc-sdk-go/modules/light-clients/eth"
 
 	gethethclient "github.com/ethereum/go-ethereum/ethclient"
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
 
-	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
-	"github.com/bianjieai/tibc-sdk-go/commitment"
-	"github.com/bianjieai/tibc-sdk-go/tendermint"
+	tibcclient "github.com/bianjieai/tibc-sdk-go/modules/core/client"
+	"github.com/bianjieai/tibc-sdk-go/modules/core/commitment"
+	"github.com/bianjieai/tibc-sdk-go/modules/light-clients/tendermint"
 	coresdk "github.com/irisnet/core-sdk-go"
 	coretypes "github.com/irisnet/core-sdk-go/types"
 	corestore "github.com/irisnet/core-sdk-go/types/store"

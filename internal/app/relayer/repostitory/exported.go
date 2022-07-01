@@ -1,7 +1,7 @@
 package repostitory
 
 import (
-	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
+	tibctypes "github.com/bianjieai/tibc-sdk-go/modules/types"
 	"github.com/irisnet/core-sdk-go/types"
 
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"

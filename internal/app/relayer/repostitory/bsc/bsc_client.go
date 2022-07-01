@@ -28,11 +28,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	gethrpc "github.com/ethereum/go-ethereum/rpc"
 
-	tibcbcs "github.com/bianjieai/tibc-sdk-go/bsc"
-	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
-	"github.com/bianjieai/tibc-sdk-go/packet"
-	tibctendermint "github.com/bianjieai/tibc-sdk-go/tendermint"
-	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
+	tibcclient "github.com/bianjieai/tibc-sdk-go/modules/core/client"
+	"github.com/bianjieai/tibc-sdk-go/modules/core/packet"
+	tibcbcs "github.com/bianjieai/tibc-sdk-go/modules/light-clients/bsc"
+	tibctendermint "github.com/bianjieai/tibc-sdk-go/modules/light-clients/tendermint"
+	tibctypes "github.com/bianjieai/tibc-sdk-go/modules/types"
 	"github.com/irisnet/core-sdk-go/types"
 )
 
