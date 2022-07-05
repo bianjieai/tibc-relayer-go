@@ -19,7 +19,6 @@ import (
 const TendermintAndTendermint = "tendermint_and_tendermint"
 const TendermintAndETH = "tendermint_and_eth"
 const TendermintAndBsc = "tendermint_and_bsc"
-const TendermintAndEthermint = "tendermint_and_ethermint"
 
 const TypSource = "source"
 const TypDest = "dest"
@@ -41,10 +40,6 @@ func ChannelMap(cfg *configs.Config, logger *log.Logger) map[string]channels.ICh
 		case TendermintAndBsc:
 			sourceChain := tendermintChain(&cfg.Chain.Source, logger)
 			destChain := bscChain(&cfg.Chain.Dest, logger)
-			return channelMap(cfg, sourceChain, destChain, logger)
-		case TendermintAndEthermint:
-			sourceChain := tendermintChain(&cfg.Chain.Source, logger)
-			destChain := ethermintChain(&cfg.Chain.Dest, logger)
 			return channelMap(cfg, sourceChain, destChain, logger)
 		default:
 			logger.WithFields(log.Fields{

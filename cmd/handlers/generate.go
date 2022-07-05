@@ -41,7 +41,6 @@ import (
 const TendermintAndTendermint = "tendermint_and_tendermint"
 const TendermintAndETH = "tendermint_and_eth"
 const TendermintAndBsc = "tendermint_and_bsc"
-const TendermintAndEthermint = "tendermint_and_ethermint"
 
 const tibcTendermintMerklePrefix = "tibc"
 const tibcTendermintRoot = "app_hash"
@@ -49,7 +48,6 @@ const tibcTendermintRoot = "app_hash"
 const Tendermint = "tendermint"
 const Bsc = "bsc"
 const ETH = "eth"
-const Ethermint = "ethermint"
 
 const BSCEpoch = uint64(200)
 
@@ -166,56 +164,6 @@ func CreateClientFiles(cfg *configs.Config) {
 				)
 				logger.Info("2. init source chain")
 				getBscJson(&cfg.Chain.Source, destChain, logger)
-			}
-		case TendermintAndEthermint:
-			if cfg.Chain.Source.ChainType == Tendermint && cfg.Chain.Dest.ChainType == Ethermint {
-				logger := log.WithFields(log.Fields{
-					"source_chain": cfg.Chain.Source.Tendermint.ChainName,
-					"dest_chain":   cfg.Chain.Dest.Eth.ChainName,
-				})
-				logger.Info("1. init source chain")
-				sourceChain := tendermintCreateClientFiles(&cfg.Chain.Source, logger)
-				getTendermintHex(
-					sourceChain,
-					int64(cfg.Chain.Source.Cache.StartHeight),
-					cfg.Chain.Source.Tendermint.ChainName,
-					logger,
-				)
-				logger.Info("2. init dest chain")
-
-				destChain := ethermintCreateClientFiles(&cfg.Chain.Dest, logger)
-				getEthermintJson(
-					destChain,
-					int64(cfg.Chain.Dest.Cache.StartHeight),
-					cfg.Chain.Dest.Ethermint.ChainName,
-					cfg.Chain.Dest.Ethermint.Contracts.Packet.Addr,
-				)
-			}
-
-			if cfg.Chain.Source.ChainType == Ethermint && cfg.Chain.Dest.ChainType == Tendermint {
-				logger := log.WithFields(log.Fields{
-					"source_chain": cfg.Chain.Source.Eth.ChainName,
-					"dest_chain":   cfg.Chain.Dest.Tendermint.ChainName,
-				})
-				logger.Info("1. init source chain")
-
-				sourceChain := ethermintCreateClientFiles(&cfg.Chain.Source, logger)
-				getEthermintJson(
-					sourceChain,
-					int64(cfg.Chain.Source.Cache.StartHeight),
-					cfg.Chain.Source.Ethermint.ChainName,
-					cfg.Chain.Source.Ethermint.Contracts.Packet.Addr,
-				)
-
-				logger.Info("2. init dest chain")
-				destChain := tendermintCreateClientFiles(&cfg.Chain.Dest, logger)
-				getTendermintHex(
-					destChain,
-					int64(cfg.Chain.Dest.Cache.StartHeight),
-					cfg.Chain.Dest.Tendermint.ChainName,
-					logger,
-				)
-
 			}
 		}
 	}
@@ -429,27 +377,6 @@ func tendermintCreateClientFiles(cfg *configs.ChainCfg, logger *log.Entry) cores
 	return coresdk.NewClient(coreSdkCfg)
 }
 
-func ethermintCreateClientFiles(cfg *configs.ChainCfg, logger *log.Entry) coresdk.Client {
-	options := []coretypes.Option{
-		coretypes.KeyDAOOption(corestore.NewMemory(corestore.NewMemory(nil))),
-		coretypes.TimeoutOption(10),
-		coretypes.ModeOption(coretypes.Commit),
-		coretypes.GasOption(cfg.Tendermint.Gas),
-		coretypes.CachedOption(true),
-	}
-
-	coreSdkCfg, err := coretypes.NewClientConfig(
-		cfg.Ethermint.RPCAddr,
-		cfg.Ethermint.GrpcAddr,
-		cfg.Ethermint.TendermintChainID,
-		options...)
-	if err != nil {
-		logger.Fatal(err)
-	}
-
-	return coresdk.NewClient(coreSdkCfg)
-}
-
 func getTendermintHex(
 	client coresdk.Client,
 	height int64,
@@ -590,85 +517,6 @@ func getTendermintJson(
 		ProofSpecs:      commitment.GetSDKSpecs(),
 		MerklePrefix:    commitment.MerklePrefix{KeyPrefix: []byte(tibcTendermintMerklePrefix)},
 		TimeDelay:       0,
-	}
-	//ConsensusState
-	validatorSet, err := tendermintQueryValidatorSet(res.Block.Height, client)
-	if err != nil {
-		panic(err)
-	}
-	var consensusState = &tendermint.ConsensusState{
-		Timestamp: tmHeader.Time,
-		Root:      commitment.NewMerkleRoot([]byte(tibcTendermintRoot)),
-		//NextValidatorsHash: tendermintQueryValidatorSet(res.Block.Height, client).Hash(),
-		NextValidatorsHash: validatorSet.Hash(),
-	}
-
-	clientStateBytes, err := client.AppCodec().MarshalJSON(clientState)
-	if err != nil {
-		panic(err)
-	}
-	// write file
-	clientStateStr := string(clientStateBytes)
-	clientStateStr = clientStatePrefix + clientStateStr[1:]
-	clientStateFilename := fmt.Sprintf("%s_clientState.json", chainName)
-	writeCreateClientFiles(clientStateFilename, clientStateStr)
-
-	consensusStateBytes, err := client.AppCodec().MarshalJSON(consensusState)
-	if err != nil {
-		panic(err)
-	}
-	consensusStateStr := string(consensusStateBytes)
-	consensusStateStr = consensusStatePrefix + consensusStateStr[1:]
-	consensusStateFilename := fmt.Sprintf("%s_consensusState.json", chainName)
-	writeCreateClientFiles(consensusStateFilename, consensusStateStr)
-}
-
-func getEthermintJson(
-	client coresdk.Client,
-	height int64,
-	chainName string,
-	ContractAddress string,
-) {
-
-	//ClientState
-	var fra = tendermint.Fraction{
-		Numerator:   1,
-		Denominator: 3,
-	}
-	res, err := client.QueryBlock(height)
-	if err != nil {
-		fmt.Println("QueryBlock fail:  ", err)
-	}
-	tmHeader := res.Block.Header
-
-	prHeader := tendermint.TmHeaderToPrHeader(tmHeader)
-
-	lastHeight := tibcclient.NewHeight(
-		prHeader.GetHeight().GetRevisionNumber(),
-		prHeader.GetHeight().GetRevisionHeight())
-
-	ethermintConfig := &tendermint.EthermintConfig{
-		ContractAddress: ContractAddress,
-		Prefix:          []byte("evm"),
-	}
-
-	extra, err := json.Marshal(ethermintConfig)
-
-	if err != nil {
-		panic(err)
-	}
-
-	var clientState = &tendermint.ClientState{
-		ChainId:         tmHeader.ChainID,
-		TrustLevel:      fra,
-		TrustingPeriod:  time.Hour * 24 * 100,
-		UnbondingPeriod: time.Hour * 24 * 110,
-		MaxClockDrift:   time.Second * 10,
-		LatestHeight:    lastHeight,
-		ProofSpecs:      commitment.GetSDKSpecs(),
-		MerklePrefix:    commitment.MerklePrefix{KeyPrefix: []byte(tibcTendermintMerklePrefix)},
-		TimeDelay:       0,
-		Extra:           extra,
 	}
 	//ConsensusState
 	validatorSet, err := tendermintQueryValidatorSet(res.Block.Height, client)

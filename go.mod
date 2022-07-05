@@ -3,7 +3,7 @@ module github.com/bianjieai/tibc-relayer-go
 go 1.17
 
 require (
-	github.com/bianjieai/tibc-sdk-go v0.0.0-20220701022618-62f95eee5558
+	github.com/bianjieai/tibc-sdk-go v0.0.0-20220705060506-0b02fac639eb
 	github.com/ethereum/go-ethereum v1.10.8
 	github.com/go-kit/kit v0.11.0
 	github.com/irisnet/core-sdk-go v0.0.0-20211019075829-8bb6cca8d315
