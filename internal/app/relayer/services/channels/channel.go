@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bianjieai/tibc-sdk-go/client"
-	"github.com/bianjieai/tibc-sdk-go/packet"
-	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
+	"github.com/bianjieai/tibc-sdk-go/modules/core/client"
+	"github.com/bianjieai/tibc-sdk-go/modules/core/packet"
+	tibctypes "github.com/bianjieai/tibc-sdk-go/modules/types"
 	"github.com/irisnet/core-sdk-go/types"
 	log "github.com/sirupsen/logrus"
 

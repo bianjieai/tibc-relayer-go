@@ -13,19 +13,19 @@ import (
 	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-relayer-go/tools"
 
-	tibcclient "github.com/bianjieai/tibc-sdk-go/client"
+	tibcclient "github.com/bianjieai/tibc-sdk-go/modules/core/client"
 
 	"github.com/irisnet/core-sdk-go/types"
 
-	commitmenttypes "github.com/bianjieai/tibc-sdk-go/commitment"
-	tibctendermint "github.com/bianjieai/tibc-sdk-go/tendermint"
-	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
+	commitmenttypes "github.com/bianjieai/tibc-sdk-go/modules/core/commitment"
+	tibctendermint "github.com/bianjieai/tibc-sdk-go/modules/light-clients/tendermint"
+	tibctypes "github.com/bianjieai/tibc-sdk-go/modules/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/ethermint/contracts"
 	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
-	"github.com/bianjieai/tibc-sdk-go/packet"
+	"github.com/bianjieai/tibc-sdk-go/modules/core/packet"
 	geth "github.com/ethereum/go-ethereum"
 	gethcmn "github.com/ethereum/go-ethereum/common"
 	gethtypes "github.com/ethereum/go-ethereum/core/types"
