@@ -198,7 +198,7 @@ func (c *Tendermint) RecvPackets(msgs types.Msgs) (*repotypes.ResultTx, types.Er
 
 	resultTx, err := c.terndermintCli.TIBC.RecvPackets(msgs, c.baseTx)
 	if err != nil {
-		return nil, err
+		return nil, types.Wrap(err)
 	}
 	return &repotypes.ResultTx{
 		GasWanted: resultTx.GasWanted,
