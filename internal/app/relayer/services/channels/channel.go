@@ -5,16 +5,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
-	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
-	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
-	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
-	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 	"github.com/bianjieai/tibc-sdk-go/client"
 	"github.com/bianjieai/tibc-sdk-go/packet"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/irisnet/core-sdk-go/types"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/domain"
+	"github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory"
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
+	"github.com/bianjieai/tibc-relayer-go/internal/pkg/types/constant"
+	typeserr "github.com/bianjieai/tibc-relayer-go/internal/pkg/types/errors"
 )
 
 var _ IChannel = new(Channel)
@@ -43,7 +44,7 @@ func NewChannel(
 	source repostitory.IChain,
 	dest repostitory.IChain, height uint64, logger *log.Logger) (IChannel, error) {
 	var startHeight uint64 = 0
-	if source.ChainType() == constant.Tendermint {
+	if source.ChainType() == constant.Tendermint || source.ChainType() == constant.Ethermint {
 		startHeight = height
 	} else {
 		clientStatus, err := dest.GetLightClientState(source.ChainName())
@@ -129,16 +130,19 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 		return typeserr.ErrGetLightClientState
 	}
 
-	if channel.source.ChainType() == constant.Tendermint {
+	switch channel.source.ChainType() {
+	case constant.Tendermint:
+	case constant.Ethermint:
 		if clientState.GetLatestHeight().GetRevisionHeight() >= latestHeight {
 			return nil
 		}
+
 	}
 
 	var header tibctypes.Header
 	var err error
 	switch channel.source.ChainType() {
-	case constant.Tendermint:
+	case constant.Tendermint, constant.Ethermint:
 		req := &repotypes.GetBlockHeaderReq{
 			LatestHeight:   latestHeight,
 			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
@@ -150,6 +154,17 @@ func (channel *Channel) updateClient(trustedHeight, latestHeight uint64) error {
 			return typeserr.ErrGetBlockHeader
 		}
 	case constant.ETH:
+		req := &repotypes.GetBlockHeaderReq{
+			LatestHeight:   latestHeight,
+			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
+			RevisionNumber: clientState.GetLatestHeight().GetRevisionNumber(),
+		}
+		header, err = channel.source.GetBlockHeader(req)
+		if err != nil {
+			logger.WithField("err_msg", err).Error("failed to get block header")
+			return typeserr.ErrGetBlockHeader
+		}
+	case constant.BSC:
 		req := &repotypes.GetBlockHeaderReq{
 			LatestHeight:   latestHeight,
 			TrustedHeight:  clientState.GetLatestHeight().GetRevisionHeight(),
@@ -458,8 +473,8 @@ func (channel *Channel) relay() error {
 	if (len(packets.CleanPackets) == 0 && len(packets.AckPackets) == 0 && len(packets.BizPackets) == 0) || len(recvPackets) == 0 {
 		logger.Info("there are no packets to be relayed at the current altitude")
 		// When the packet is empty, tendermint does not need to update the client
-
-		if channel.source.ChainType() != constant.Tendermint {
+		switch channel.source.ChainType() {
+		case constant.ETH, constant.BSC:
 			//update client
 			err = channel.updateClient(
 				clientState.GetLatestHeight().GetRevisionHeight(),

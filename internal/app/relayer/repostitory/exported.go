@@ -1,9 +1,10 @@
 package repostitory
 
 import (
-	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
 	tibctypes "github.com/bianjieai/tibc-sdk-go/types"
 	"github.com/irisnet/core-sdk-go/types"
+
+	repotypes "github.com/bianjieai/tibc-relayer-go/internal/app/relayer/repostitory/types"
 )
 
 type IChain interface {

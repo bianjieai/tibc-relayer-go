@@ -52,11 +52,11 @@ password = "your_dest_chain_relayer_password"
 priv_key_armor = "your_dest_chain_relayer_priv_key_armor"
 
 [[chain.dest.tendermint.allows]]
-erc115_addr = "addr_00"
+contract_addr = "addr_00"
 senders = ["xxxxxxx000"]
 
 [[chain.dest.tendermint.allows]]
-erc115_addr = "addr_01"
+contract_addr = "addr_01"
 senders = ["xxxxxxx001"]
 
 #==========================#
@@ -133,11 +133,11 @@ password = "your_source_chain_relayer_password"
 priv_key_armor = "your_source_chain_relayer_priv_key_armor"
 
 [[chain.source.tendermint.allows]]
-erc115_addr = "addr_00"
+contract_addr = "addr_00"
 senders = ["xxxxxxx000"]
 
 [[chain.source.tendermint.allows]]
-erc115_addr = "addr_01"
+contract_addr = "addr_01"
 senders = ["xxxxxxx001"]
 
 
